@@ -49,7 +49,7 @@
           <b id="breadcrumb-name">Seu espaço de música</b>
         </div>
         <div class="top-actions">
-          <span class="version">v0.8</span
+          <span class="version">v0.9</span
           ><button id="refine-audio" class="button secondary" disabled>
             Refinar faixas
           </button
@@ -119,7 +119,9 @@
             processamentos usam os modelos salvos.
           </p>
         </div>
-        <div id="warnings" class="warnings" hidden></div>
+        <div id="audio-update-notice" class="audio-update-notice" hidden><span>Novas faixas prontas.</span><button id="apply-audio-update" class="button secondary">Atualizar faixas</button></div>
+          <p id="playback-status" class="playback-status" role="status" hidden></p>
+          <div id="warnings" class="warnings" hidden></div>
         <div id="previous-analysis" class="previous-analysis" hidden><span id="previous-analysis-text"></span><button id="update-existing-chords" class="text-button">Atualizar somente a cifra</button></div>
         <div
           class="workspace-tabs"
@@ -449,7 +451,7 @@
     <dialog id="about-dialog">
       <button class="dialog-close icon-button" data-close="about-dialog">
         ×</button
-      ><span class="eyebrow">FAIXALAB 0.8</span>
+      ><span class="eyebrow">FAIXALAB 0.9</span>
       <h2>Da música ao seu instrumento.</h2>
       <p>
         Aplicativo independente para separar faixas, estudar cifras e acompanhar

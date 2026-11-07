@@ -8,6 +8,9 @@ from pathlib import Path
 import hashlib
 import json
 import math
+import os
+from collections import deque
+from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 
 from .media import Cancelled
@@ -67,34 +70,54 @@ def read(path):
     return audio.astype('float32')
 
 
-def analyze_audio(audio, cancel=None, report=None, window=5., hop=2.5, normalize=False):
+def analyze_audio(audio, cancel=None, report=None, window=5., hop=2.5, normalize=False, workers=None):
     _,meta,_,_=resources()
     count=round(window*SR)
     starts=list(range(0,max(1,len(audio)-count+1),round(hop*SR)))
     if len(audio)>count and starts[-1]!=len(audio)-count:
         starts.append(len(audio)-count)
-    rows=[]
-    for index,start in enumerate(starts):
-        if cancel and cancel.is_set():
-            raise Cancelled()
+    budget=max(1,min(4,int(os.environ.get('FAIXALAB_CPU_THREADS',os.cpu_count() or 1))))
+    concurrency=(2 if budget>=4 else 1) if workers is None else max(1,min(2,int(workers)))
+
+    def classify(start):
+        if cancel and cancel.is_set():raise Cancelled()
         chunk=audio[start:start+count]
-        if not len(chunk):
-            continue
+        if not len(chunk):return None
         rms=float(np.sqrt(np.mean(chunk**2)))
         if rms<2e-5:
             probabilities=np.zeros(len(meta['labels']),dtype='float32')
         else:
-            # Verification of separated sources must not depend on their fader
-            # level. Limit the gain so numerical leakage is not amplified freely.
-            # This changes only the classifier input, never a saved audio sample.
-            if normalize:
-                chunk=chunk*min(100.,.05/max(rms,1e-9))
+            # Identical per-context input and pretrained graph; only independent
+            # contexts overlap in execution. No windows or labels are discarded.
+            if normalize:chunk=chunk*min(100.,.05/max(rms,1e-9))
             probabilities=score(chunk)
-        rows.append({'time':(start+len(chunk)/2)/SR, 'scores':probabilities})
-        if report:
-            report(index+1,len(starts))
-    if not rows:
-        rows=[{'time':0.,'scores':np.zeros(len(meta['labels']),dtype='float32')}]
+        if cancel and cancel.is_set():raise Cancelled()
+        return {'time':(start+len(chunk)/2)/SR,'scores':probabilities}
+
+    rows=[]
+    def consume(index,row):
+        if row is not None:rows.append(row)
+        if report:report(index+1,len(starts))
+
+    if concurrency==1 or len(starts)<2:
+        for index,start in enumerate(starts):consume(index,classify(start))
+    else:
+        pool=ThreadPoolExecutor(max_workers=concurrency,thread_name_prefix='timbre')
+        pending=deque();remaining=iter(starts)
+        try:
+            for start in remaining:
+                pending.append(pool.submit(classify,start))
+                if len(pending)>=concurrency*2:break
+            index=0
+            while pending:
+                consume(index,pending.popleft().result());index+=1
+                if cancel and cancel.is_set():raise Cancelled()
+                start=next(remaining,None)
+                if start is not None:pending.append(pool.submit(classify,start))
+        finally:
+            for future in pending:future.cancel()
+            pool.shutdown(wait=True,cancel_futures=True)
+    if not rows:rows=[{'time':0.,'scores':np.zeros(len(meta['labels']),dtype='float32')}]
     return np.array([r['time'] for r in rows]),np.stack([r['scores'] for r in rows]),meta['labels']
 
 

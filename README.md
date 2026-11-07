@@ -1,11 +1,11 @@
-# FaixaLab no GitHub Codespaces
+# FaixaLab 0.9
 
 Separação de instrumentos, cifras, letra e tablatura com modelos públicos, executados em uma máquina CPU do GitHub. O PC pode ficar desligado. O celular acessa a porta privada 7860; a backing track pode ser reproduzida pela saída Bluetooth do aparelho ou baixada em M4A.
 
 ## Ativar o FaixaLab neste repositório
 
 1. A configuração de inicialização fica neste repositório. O código-fonte editável fica na pasta `app/`. Os modelos grandes são obtidos do ZIP do release.
-2. Crie um release com a tag **v0.8.0** e anexe **FaixaLab_0_8_Windows.zip**, o aplicativo completo recebido nesta atualização. O nome contém Windows por compatibilidade com o pacote existente; ele também contém o servidor Linux.
+2. Crie um release com a tag **v0.9.0** e anexe **FaixaLab_0_9_Windows.zip**, o aplicativo completo recebido nesta atualização. O nome contém Windows por compatibilidade com o pacote existente; ele também contém o servidor Linux.
 3. Abra **Code → Codespaces → Create codespace**, escolhendo **2 núcleos / 8 GB**.
 4. Aguarde o `postCreateCommand`; ele baixa o release com a identidade do Codespace, confere tamanho, SHA-256 e CRC, extrai o app e instala Python/PyTorch CPU. Os modelos maiores ainda ausentes serão baixados no primeiro processamento.
 5. Na aba **Ports**, abra a porta **7860**, mantendo visibilidade **Private**. No celular, entre no mesmo GitHub e abra essa URL.

@@ -1,10 +1,22 @@
-# FaixaLab 0.8
+# FaixaLab 0.9
 
-Aplicativo independente para Windows ou servidor Linux em Codespaces: link YouTube ou arquivo MP3, separação de instrumentos, cifras, letra sincronizada e tablatura da guitarra solo. A importação padrão usa um fluxo geral para todas as músicas. Não há regras por título, artista, ID de vídeo ou posições fixas de solos.
+Aplicativo independente para Windows ou servidor Linux: link YouTube ou arquivo MP3, separação de instrumentos, cifras, letra sincronizada e tablatura da guitarra solo. A importação padrão usa um fluxo geral para todas as músicas. Não há regras por título, artista, ID de vídeo ou posições fixas de solos.
+
+## Reprodução e entrega das faixas — versão 0.9
+
+- O refinamento pode concluir enquanto você ouve a música. O áudio em reprodução continua com a mesma revisão; o aviso **Novas faixas prontas** permite aplicar o resultado com **Atualizar faixas**, mantendo a posição e os volumes/M/S das faixas existentes. Ao pausar e tocar novamente, o mixer adota a revisão mais recente.
+- Cada URL de faixa identifica a revisão dos arquivos. Requisições de novos trechos do áudio continuam lendo os mesmos bytes, mesmo após a separação de solo/base ou outro refinamento.
+- Faixas silenciadas deixam de ser decodificadas desnecessariamente. Ao ativá-las novamente, o player as posiciona no tempo atual antes de reproduzir.
+- O sincronismo aguarda uma faixa terminar de carregar/buscar antes de corrigir seu tempo. Há recuperação limitada para interrupções e um estado visível quando o áudio não responde.
+- No aplicativo local Windows, o mixer reproduz o WAV salvo diretamente. A conversão AAC/M4A fica para acesso remoto e backing tracks.
+- A verificação de timbres processa dois contextos independentes em paralelo quando o orçamento é de quatro threads; com duas threads, continua sequencial. Os mesmos 33 candidatos, pesos, entradas, limiares e janelas permanecem avaliados.
+- Os subprocessos de áudio executam com prioridade inferior à interface quando o sistema oferece esse recurso.
+
+Em sete controles gravados de 60 s, a verificação de timbres levou 2,222 s na versão anterior e 1,164 s nesta revisão, com scores idênticos. Essa redução de 47,6% pertence à verificação de timbres, não ao tempo total de separação. A duração completa ainda depende da música e da máquina. Medições e testes estão em **VALIDACAO.md**.
 
 ## Usar pelo celular com o PC desligado
 
-A configuração de GitHub Codespaces fica no pacote complementar **FaixaLab_GitHub_Codespaces.zip**. O repositório guarda a configuração de inicialização; o aplicativo completo fica no release `v0.8.0`, como `FaixaLab_0_8_Windows.zip`. Esse ZIP inclui código Python, interface e modelos distribuídos. O download do release é autenticado pelo token temporário do próprio Codespaces, sem gravar tokens no código.
+A configuração de GitHub Codespaces fica no repositório `Marcelo-Preigschadt/FaixaLab`. O código editável é executado a partir da pasta `app/`; o manifesto `release.json` fixa o pacote do release que fornece os modelos binários. Publicar o app na nuvem exige concluir essa instalação; o código no repositório, sozinho, não inicia um servidor.
 
 1. Abra um Codespace do repositório, na máquina de **2 núcleos / 8 GB**.
 2. Aguarde a instalação automática. A primeira instalação baixa dependências e, no primeiro processamento, os modelos maiores ainda ausentes.
@@ -37,7 +49,7 @@ As medições desta revisão e suas limitações estão em **VALIDACAO.md**.
 2. Abra **FaixaLab.exe**. Mantenha o executável e todos os arquivos do pacote juntos.
 3. Seus projetos continuam em `%LOCALAPPDATA%\FaixaLab` e aparecem automaticamente.
 
-O iniciador verifica o perfil 0.8.0 em `.runtime/ready` e prepara um Python privado. Os modelos de acordes, detector de solo MERT, Basic Pitch, reconhecedor de timbres EfficientAT e dicionário acompanham o pacote. O separador detalhado MVSep Mega53 (aproximadamente 1,37 GB) e outros modelos ausentes são baixados no primeiro uso e ficam no cache. No Windows, separação, identificação e refinamento executam no computador; no Codespaces, executam na máquina do GitHub. Os motores não exigem API paga. CPU funciona; o modo automático exige mais processamento que as opções tradicionais.
+O iniciador verifica o perfil 0.9.0 em `.runtime/ready` e prepara um Python privado. Os modelos de acordes, detector de solo MERT, Basic Pitch, reconhecedor de timbres EfficientAT e dicionário acompanham o pacote. O separador detalhado MVSep Mega53 (aproximadamente 1,37 GB) e outros modelos ausentes são baixados no primeiro uso e ficam no cache. No Windows, separação, identificação e refinamento executam no computador; no Codespaces, executam na máquina do GitHub. Os motores não exigem API paga. CPU funciona; o modo automático exige mais processamento que as opções tradicionais.
 
 Se a janela não abrir, execute **INICIAR_COM_DIAGNOSTICO.bat**. O log fica em `%LOCALAPPDATA%\FaixaLab\FaixaLab.log`.
 

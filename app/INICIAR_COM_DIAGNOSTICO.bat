@@ -1,7 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-findstr /x /c:"0.8.0" ".runtime\ready" >nul 2>nul
+findstr /x /c:"0.9.0" ".runtime\ready" >nul 2>nul
 if errorlevel 1 (
   call "%~dp0INSTALAR.bat"
   if errorlevel 1 exit /b 1

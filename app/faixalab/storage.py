@@ -35,6 +35,21 @@ def update_project(identifier, **changes):
     with LOCK:
         p = project_dir(identifier) / 'project.json'
         data = json.loads(p.read_text('utf-8')) if p.exists() else {'id': identifier, 'created_at': now()}
+        # Streaming URLs name an immutable audio revision. Keep only file
+        # references, never duplicate waveforms/annotations on progress writes.
+        if 'stems' in changes or 'audio_revision' in changes:
+            previous = data.get('stems') or []
+            updated = changes.get('stems', previous)
+            before = [(stem.get('name'), stem.get('file')) for stem in previous]
+            after = [(stem.get('name'), stem.get('file')) for stem in updated]
+            if previous and before != after and changes.get('audio_revision', data.get('audio_revision')) == data.get('audio_revision'):
+                changes['audio_revision'] = uuid.uuid4().hex
+            old_revision = data.get('audio_revision') or 'original'
+            new_revision = changes.get('audio_revision', data.get('audio_revision')) or 'original'
+            if previous and (before != after or old_revision != new_revision):
+                history = dict(data.get('audio_history') or {})
+                history[old_revision] = {stem['name']: stem['file'] for stem in previous}
+                data['audio_history'] = history
         data.update(changes, updated_at=now())
         tmp = p.with_suffix('.tmp')
         tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), 'utf-8')

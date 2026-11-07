@@ -106,204 +106,207 @@ function audioKey(project) {
 
 class StemPlayer {
   constructor() {
-    this.tracks = [];
-    this.original = null;
-    this.context = null;
-    this.playing = false;
-    this.comparing = false;
-    this.position = 0;
-    this.duration = 0;
-    this.speed = 1;
-    this.key = "";
-    this.syncTimer = null;
+    this.tracks=[];this.original=null;this.context=null;this.backingAudio=null;
+    this.playing=false;this.wantsPlay=false;this.starting=false;this.buffering=false;
+    this.comparing=false;this.backingMode=false;this.position=0;this.duration=0;
+    this.speed=1;this.key='';this.projectId=null;this.revision='original';
+    this.operation=0;this.loadId=0;this.pendingProject=null;this.reference=null;
+    this.syncTimer=null;this.waitTimer=null;this.message='';this.recoveries=0;
+    this.lastSeek=new WeakMap();this.lastClock=0;this.lastAdvance=0;
   }
-  async load(project) {
-    const key = audioKey(project);
-    if (key === this.key) return;
-    this.dispose();
-    this.key = key;
-    this.position = 0;
-    this.duration = project.duration || 0;
-    for (const stem of project.stems) {
-      const audio = new Audio(`/api/projects/${project.id}/audio/${stem.name}?format=m4a&v=${project.audio_revision || "original"}`);
-      audio.preload = "none";
-      audio.preservesPitch = true;
-      audio.addEventListener("loadedmetadata", () => {
-        audio.currentTime = this.position;
-        audio.playbackRate = this.speed;
-      });
-      this.tracks.push({
-        ...stem,
-        audio,
-        gain: 1,
-        mute: false,
-        solo: false,
-        node: null,
-        gainNode: null,
-      });
-      audio.addEventListener("error", () =>
-        toast(`Não foi possível abrir a faixa ${stem.label}.`),
-      );
+  emit() {
+    const button=$('#play');
+    button.textContent=this.wantsPlay?'Ⅱ':'▶';
+    button.setAttribute('aria-label',this.wantsPlay?'Pausar':'Reproduzir');
+    this.onState?.();updateMediaSession();
+  }
+  format() {
+    return ['localhost','127.0.0.1','::1','[::1]'].includes(location.hostname)?'wav':'m4a';
+  }
+  makeAudio(url) {
+    const audio=new Audio(url),epoch=this.loadId;
+    audio.preload='none';audio.preservesPitch=true;audio.playbackRate=this.speed;
+    audio.addEventListener('loadedmetadata',()=>{if(epoch===this.loadId)this.place(audio,this.position);});
+    const ready=()=>{if(epoch===this.loadId&&this.wantsPlay&&this.buffering&&!this.starting&&this.audios().every(a=>a.readyState>=3&&!a.seeking))this.play(true);};
+    audio.addEventListener('canplay',ready);audio.addEventListener('seeked',ready);
+    const wait=()=>{
+      if(epoch!==this.loadId||!this.wantsPlay||!this.audios().includes(audio))return;
+      clearTimeout(this.waitTimer);
+      this.waitTimer=setTimeout(()=>{if(epoch===this.loadId&&this.wantsPlay&&this.audios().includes(audio)&&audio.readyState<3)this.buffer(audio);},400);
+    };
+    audio.addEventListener('waiting',wait);audio.addEventListener('stalled',wait);
+    audio.addEventListener('error',()=>{if(epoch===this.loadId&&this.wantsPlay&&this.audios().includes(audio))this.recover(audio,true);});
+    audio.addEventListener('ended',()=>{
+      if(epoch!==this.loadId||!this.wantsPlay||audio!==this.clock())return;
+      if(audio.currentTime>=this.duration-.3){this.pause();this.seek(0);}else this.recover(audio,false);
+    });
+    return audio;
+  }
+  load(project,acceptUpdate=false) {
+    const key=audioKey(project);
+    if(key===this.key)return false;
+    if(this.projectId===project.id&&(this.wantsPlay||this.backingMode)&&!acceptUpdate){this.pendingProject=project;this.emit();return false;}
+    const same=this.projectId===project.id,position=same?this.current():0;
+    const mix=new Map(this.tracks.map(t=>[t.name,{gain:t.gain,mute:t.mute,solo:t.solo}]));
+    const comparing=same&&this.comparing;
+    this.dispose();this.projectId=project.id;this.revision=project.audio_revision||'original';
+    this.key=key;this.duration=project.duration||0;this.position=Math.min(position,this.duration);this.comparing=comparing;
+    for(const stem of project.stems){
+      const audio=this.makeAudio(`/api/projects/${project.id}/audio/${stem.name}?format=${this.format()}&v=${encodeURIComponent(this.revision)}`);
+      this.tracks.push({...stem,audio,gain:1,mute:false,solo:false,...(same?mix.get(stem.name):{}),node:null,gainNode:null});
     }
-    this.original = new Audio(`/api/projects/${project.id}/audio/original?format=m4a`);
-    this.original.preload = "none";
-    this.original.preservesPitch = true;
-    this.original.addEventListener("loadedmetadata", () => {
-      this.original.currentTime = this.position;
-      this.original.playbackRate = this.speed;
-    });
-    this.tracks[0]?.audio.addEventListener("ended", () => {
-      if (!this.comparing) {
-        this.pause();
-        this.seek(0);
-      }
-    });
-    this.original.addEventListener("ended", () => {
-      if (this.comparing) {
-        this.pause();
-        this.seek(0);
-      }
-    });
-    $("#play").disabled = !this.tracks.length;
+    this.original=this.makeAudio(`/api/projects/${project.id}/audio/original?format=${this.format()}`);
+    $('#play').disabled=!this.tracks.length;
+    this.onLoad?.();this.emit();return true;
   }
-  clock() {
-    return this.backingMode ? this.backingAudio : this.comparing ? this.original : this.tracks[0]?.audio;
+  audios() {
+    if(this.backingMode)return this.backingAudio?[this.backingAudio]:[];
+    if(this.comparing)return this.original?[this.original]:[];
+    const solo=this.tracks.some(t=>t.solo);
+    const active=this.tracks.filter(t=>!t.mute&&(!solo||t.solo)&&t.gain>0).map(t=>t.audio);
+    // One silent stream keeps a useful song clock when all faders are muted.
+    return active.length?active:this.tracks[0]?[this.tracks[0].audio]:[];
   }
+  clock(){return this.reference||this.audios()[0];}
   current() {
-    return this.playing
-      ? this.clock()?.currentTime || this.position
-      : this.position;
+    const audio=this.clock();
+    return this.wantsPlay&&!this.buffering&&audio?.paused!==true&&Number.isFinite(audio?.currentTime)?audio.currentTime:this.position;
   }
   async ensureContext() {
-    if (!this.context) {
-      this.context = new AudioContext();
-      const master = this.context.createDynamicsCompressor();
-      master.threshold.value = -1;
-      master.knee.value = 0;
-      master.ratio.value = 20;
-      master.connect(this.context.destination);
-      for (const t of this.tracks) {
-        t.node = this.context.createMediaElementSource(t.audio);
-        t.gainNode = this.context.createGain();
-        t.node.connect(t.gainNode);
-        t.gainNode.connect(master);
-      }
+    if(!this.context){
+      const Constructor=typeof AudioContext!=='undefined'?AudioContext:window.webkitAudioContext;
+      if(!Constructor)throw new Error('Este navegador não oferece o mixer de áudio.');
+      this.context=new Constructor();
+      const master=this.context.createDynamicsCompressor();master.threshold.value=-1;master.knee.value=0;master.ratio.value=20;master.connect(this.context.destination);
+      for(const t of this.tracks){t.node=this.context.createMediaElementSource(t.audio);t.gainNode=this.context.createGain();t.node.connect(t.gainNode);t.gainNode.connect(master);}
     }
-    await this.context.resume();
-    this.applyMix();
+    await this.context.resume();this.applyMix();
   }
   applyMix() {
-    const solo = this.tracks.some((t) => t.solo);
-    for (const t of this.tracks) {
-      const audible = !t.mute && (!solo || t.solo);
-      if (t.gainNode) t.gainNode.gain.value = audible ? t.gain : 0;
-      else t.audio.volume = audible ? Math.min(t.gain, 1) : 0;
+    const position=this.current(),solo=this.tracks.some(t=>t.solo);
+    for(const t of this.tracks){const audible=!t.mute&&(!solo||t.solo);if(t.gainNode)t.gainNode.gain.value=audible?t.gain:0;else t.audio.volume=audible?Math.min(t.gain,1):0;}
+    if(!this.wantsPlay||!this.playing||this.starting||this.backingMode||this.comparing)return;
+    const active=this.audios(),token=this.operation;
+    if(!active.includes(this.reference)){this.position=position;this.reference=active[0];this.place(this.reference,position);}
+    for(const t of this.tracks){
+      if(!active.includes(t.audio)){t.audio.pause();continue;}
+      if(t.audio.paused!==false){this.place(t.audio,position);t.audio.play().catch(()=>{if(token===this.operation&&this.wantsPlay)this.recover(t.audio,true);});}
     }
+    this.lastClock=position;this.lastAdvance=performance.now();
   }
-  async play() {
-    if (!this.tracks.length && !this.backingMode) return;
-    if (!this.backingMode) await this.ensureContext();
-    this.seek(this.position);
-    const audios = this.backingMode ? [this.backingAudio] : this.comparing
-      ? [this.original]
-      : this.tracks.map((t) => t.audio);
-    try {
-      await Promise.all(audios.map((a) => a.play()));
-      this.playing = true;
-      updateMediaSession();
-      $("#play").textContent = "Ⅱ";
-      $("#play").setAttribute("aria-label", "Pausar");
-      clearInterval(this.syncTimer);
-      this.syncTimer = setInterval(() => this.synchronize(), 350);
-    } catch (e) {
-      this.pause();
-      toast("A reprodução não pôde iniciar. Tente novamente.");
-    }
+  place(audio,value,force=false) {
+    if(!audio||!Number.isFinite(audio.duration)||audio.duration<=0)return;
+    const target=Math.min(Math.max(0,value),Math.max(0,audio.duration-.001));
+    if((force||!audio.seeking)&&Math.abs(audio.currentTime-target)>.025){try{audio.currentTime=target;this.lastSeek.set(audio,performance.now());}catch{}}
+    audio.playbackRate=this.speed;
+  }
+  async play(recovery=false) {
+    if(this.wantsPlay&&this.playing&&!recovery)return;
+    if(this.pendingProject&&!this.wantsPlay&&!this.backingMode)this.load(this.pendingProject,true);
+    const active=this.audios();if(!active.length)return;
+    const token=++this.operation;
+    this.wantsPlay=true;this.starting=true;this.buffering=!!recovery;this.message='Carregando áudio…';this.reference=active.includes(this.reference)?this.reference:active[0];this.emit();
+    clearInterval(this.syncTimer);this.syncTimer=setInterval(()=>this.synchronize(),350);
+    let deadline;
+    try{
+      if(!this.backingMode&&!this.comparing)await this.ensureContext();
+      if(token!==this.operation||!this.wantsPlay)return;
+      for(const t of this.tracks)if(!active.includes(t.audio))t.audio.pause();
+      for(const a of active)this.place(a,this.position);
+      await Promise.race([Promise.all(active.map(a=>a.play())),new Promise((_,reject)=>{deadline=setTimeout(()=>reject(new Error('O áudio não respondeu. Tente reproduzir novamente.')),20000);})]);
+      if(token!==this.operation||!this.wantsPlay)return;
+      this.playing=true;this.starting=false;this.buffering=false;this.message='';this.lastClock=this.current();this.lastAdvance=performance.now();this.emit();
+    }catch(error){if(token===this.operation&&this.wantsPlay)this.fail(error?.name==='NotAllowedError'?'Toque em Reproduzir para retomar o áudio.':error?.message||'Não foi possível iniciar o áudio.');}
+    finally{clearTimeout(deadline);}
   }
   pause() {
-    this.position = this.current();
-    this.playing = false;
-    for (const t of this.tracks) t.audio.pause();
-    this.original?.pause();
-    this.backingAudio?.pause();
-    updateMediaSession();
-    clearInterval(this.syncTimer);
-    $("#play").textContent = "▶";
-    $("#play").setAttribute("aria-label", "Reproduzir");
+    this.position=this.current();++this.operation;this.wantsPlay=false;this.playing=false;this.starting=false;this.buffering=false;
+    clearInterval(this.syncTimer);clearTimeout(this.waitTimer);
+    for(const t of this.tracks)t.audio.pause();this.original?.pause();this.backingAudio?.pause();this.message='';this.emit();
   }
   seek(value) {
-    this.position = Math.max(0, Math.min(Number(value) || 0, this.duration));
-    if (this.backingAudio && Number.isFinite(this.backingAudio.duration)) this.backingAudio.currentTime=this.position;
-    for (const t of this.tracks) {
-      if (Number.isFinite(t.audio.duration))
-        t.audio.currentTime = this.position;
-    }
-    if (this.original && Number.isFinite(this.original.duration))
-      this.original.currentTime = this.position;
+    this.position=Math.max(0,Math.min(Number(value)||0,this.duration));
+    for(const a of this.audios())this.place(a,this.position,true);
+    this.lastClock=this.position;this.lastAdvance=performance.now();updateMediaPosition();
+  }
+  buffer(audio) {
+    if(!this.wantsPlay||this.buffering)return;
+    this.position=this.current();++this.operation;this.playing=false;this.starting=false;this.buffering=true;
+    this.waitingAudio=audio;this.waitSince=performance.now();
+    for(const a of this.audios())a.pause();
+    this.message='Carregando áudio…';this.emit();
   }
   synchronize() {
-    if (!this.playing || this.comparing || this.backingMode) return;
-    const reference = this.tracks[0]?.audio.currentTime || 0;
-    for (const t of this.tracks.slice(1)) {
-      if (Math.abs(t.audio.currentTime - reference) > 0.045)
-        t.audio.currentTime = reference;
+    if(!this.wantsPlay)return;
+    const active=this.audios(),now=performance.now();
+    const context=this.context;
+    if(!this.backingMode&&!this.comparing&&context?.state&&context.state!=='running'&&context.state!=='closed'){
+      if(this.contextResuming)return;
+      if(this.recoveries>=2){this.fail('Toque em Reproduzir para retomar a saída de áudio.');return;}
+      ++this.recoveries;this.lastRecovery=now;this.contextResuming=true;this.buffer(this.clock());
+      Promise.resolve(context.resume()).then(()=>{
+        if(!this.wantsPlay||this.context!==context)return;
+        if(context.state==='running')return this.play(true);
+        this.fail('Toque em Reproduzir para retomar a saída de áudio.');
+      }).catch(()=>{if(this.wantsPlay&&this.context===context)this.fail('Toque em Reproduzir para retomar a saída de áudio.');}).finally(()=>{this.contextResuming=false;});
+      return;
+    }
+    if(this.buffering&&!this.starting){
+      if(active.every(a=>a.readyState>=3&&!a.seeking)){this.play(true);return;}
+      if(now-this.waitSince>6000)this.recover(this.waitingAudio||this.clock(),false);
+      return;
+    }
+    if(!this.playing||this.starting)return;
+    const master=this.clock(),reference=this.current();
+    if(reference>this.lastClock+.02){this.lastClock=reference;this.lastAdvance=now;if(now-(this.lastRecovery||0)>15000)this.recoveries=0;}
+    else if(!master?.seeking&&now-this.lastAdvance>4000&&reference<this.duration-.25){this.recover(master,false);return;}
+    for(const audio of active){
+      if(audio===master||audio.seeking||audio.readyState<3||now-(this.lastSeek.get(audio)||-Infinity)<1500)continue;
+      if(Math.abs(audio.currentTime-reference)<=.12)continue;
+      const ranges=audio.buffered;
+      if(ranges&&ranges.length&&!Array.from({length:ranges.length},(_,i)=>i).some(i=>reference>=ranges.start(i)&&reference<ranges.end(i)-.05))continue;
+      this.place(audio,reference);
     }
   }
-  setSpeed(speed) {
-    this.speed = speed;
-    if (this.backingAudio) this.backingAudio.playbackRate=speed;
-    for (const t of this.tracks) t.audio.playbackRate = speed;
-    if (this.original) this.original.playbackRate = speed;
+  async recover(audio,formatError=false) {
+    if(!this.wantsPlay||this.recovering)return;
+    if(this.recoveries>=2){this.fail('O áudio foi interrompido. Toque em Reproduzir para tentar novamente.');return;}
+    this.recovering=true;++this.recoveries;this.lastRecovery=performance.now();
+    this.position=this.current();++this.operation;this.playing=false;this.starting=false;this.buffering=true;
+    for(const a of this.audios())a.pause();
+    this.message='Retomando áudio…';this.emit();
+    try{
+      if(audio){
+        if(formatError&&!audio.formatFallback){
+          const url=new URL(audio.src,location.href||'http://localhost');
+          if(url.searchParams.has('format')){url.searchParams.set('format',url.searchParams.get('format')==='m4a'?'wav':'m4a');audio.formatFallback=true;audio.src=url.href;}
+        }
+        audio.load();
+      }
+      await this.play(true);
+    }finally{this.recovering=false;}
   }
-  async compare(on) {
-    const was = this.playing;
-    this.pause();
-    this.backingMode=false;this.comparing = on;
-    this.seek(this.position);
-    if (was) await this.play();
-  }
-  async useBacking(url) {
-    this.pause();
-    this.backingAudio?.removeAttribute('src');
-    this.backingAudio=new Audio(url);
-    this.backingAudio.preload='metadata';
-    this.backingAudio.preservesPitch=true;
-    this.backingAudio.playbackRate=this.speed;
-    this.backingMode=true;this.comparing=false;
-    $('#compare-original').checked=false;
-    this.backingAudio.addEventListener('loadedmetadata',()=>{this.backingAudio.currentTime=Math.min(this.position,this.duration);});
-    this.backingAudio.addEventListener('ended',()=>{this.pause();this.seek(0);});
-    this.backingAudio.addEventListener('timeupdate',updateMediaPosition);
-    $('#play').disabled=false;
-    updateMediaSession();
-  }
-  useStems() {
-    if (!this.backingMode) return;
-    const was=this.playing;
-    this.pause();this.backingMode=false;this.seek(this.position);
-    if(was)this.play().catch(error=>toast(error.message));
-  }
-  dispose() {
-    this.pause();
-    this.backingAudio?.removeAttribute('src');
-    this.backingAudio=null;this.backingMode=false;
-    for (const t of this.tracks) {
-      t.audio.removeAttribute("src");
-      t.audio.load();
-      t.node?.disconnect();
-      t.gainNode?.disconnect();
-    }
-    this.original?.removeAttribute("src");
-    this.tracks = [];
-    this.original = null;
-    if (this.context) {
-      this.context.close();
-      this.context = null;
-    }
-    this.key = "";
+  fail(message){this.pause();this.message=message;this.emit();toast(message);}
+  setSpeed(speed){this.position=this.current();this.speed=speed;for(const t of this.tracks)t.audio.playbackRate=speed;if(this.original)this.original.playbackRate=speed;if(this.backingAudio)this.backingAudio.playbackRate=speed;updateMediaPosition();}
+  async compare(on){const was=this.wantsPlay;this.pause();this.backingMode=false;this.comparing=on;this.reference=null;this.seek(this.position);if(was)await this.play();}
+  async useBacking(url){this.pause();this.backingAudio?.removeAttribute('src');this.backingAudio=this.makeAudio(url);this.backingAudio.preload='metadata';this.backingMode=true;this.comparing=false;this.reference=null;$('#compare-original').checked=false;this.backingAudio.addEventListener('timeupdate',updateMediaPosition);$('#play').disabled=false;this.emit();}
+  useStems(){if(!this.backingMode)return;const was=this.wantsPlay;this.pause();this.backingMode=false;this.reference=null;if(was)this.play();}
+  async applyPending(){if(!this.pendingProject)return;const p=this.pendingProject,was=this.wantsPlay;this.pause();this.load(p,true);if(was)await this.play();}
+  dispose(){
+    this.pause();++this.loadId;this.pendingProject=null;
+    this.backingAudio?.removeAttribute('src');this.backingAudio=null;this.backingMode=false;
+    for(const t of this.tracks){t.audio.removeAttribute('src');t.audio.load();t.node?.disconnect();t.gainNode?.disconnect();}
+    this.original?.removeAttribute('src');this.tracks=[];this.original=null;this.reference=null;
+    if(this.context){try{this.context.close()?.catch?.(()=>{});}catch{}this.context=null;}
+    this.key='';this.lastSeek=new WeakMap();this.recoveries=0;this.recovering=false;
   }
 }
 const player = new StemPlayer();
+player.onLoad=()=>{renderTracks();$('#total-time').textContent=time(player.duration);drawWave();};
+player.onState=()=>{
+  const status=$('#playback-status');if(status){status.textContent=player.message;status.hidden=!player.message;}
+  const notice=$('#audio-update-notice');if(notice)notice.hidden=!player.pendingProject;
+};
 
 function openImport() {
   $("#import-error").hidden = true;
@@ -391,10 +394,13 @@ async function refreshLibrary() {
     (b) => (b.onclick = () => selectProject(b.dataset.id)),
   );
 }
+let projectSelection=0;
 async function selectProject(id) {
+  const selection=++projectSelection;
   player.pause();
   document.body.classList.remove("library-open");
   const p = await api("/api/projects/" + id);
+  if(selection!==projectSelection)return;
   state.project = p;
   state.activeChord = -1;
   state.activeLine = -1;
@@ -478,14 +484,10 @@ function renderProject(p, force = false) {
   if (p.stems?.length) {
     const changed =
       player.key !== audioKey(p);
-    if (changed) {
-      player.load(p);
-      renderTracks();
-      $("#total-time").textContent = time(p.duration);
-      drawWave();
-    }
+    const loaded=changed&&player.load(p);
+    const revisionChanged=!previous||previous.audio_revision!==p.audio_revision;
     const contentChanged = !previous || JSON.stringify([previous.chords,previous.lyrics,previous.key,previous.bpm,previous.chord_analysis]) !== JSON.stringify([p.chords,p.lyrics,p.key,p.bpm,p.chord_analysis]);
-    if (force || changed || contentChanged) {
+    if (force || loaded || revisionChanged || contentChanged) {
       renderStudy();
       renderDetails();
       renderStudioPanels();
@@ -505,7 +507,7 @@ function renderTracks() {
   $("#track-list").innerHTML = player.tracks
     .map(
       (t, i) =>
-        `<div class="track ${t.name === (state.selectedTrack || (player.tracks.some(s=>s.name==='guitar_rhythm')?'guitar_rhythm':player.tracks.some(s=>s.name==='guitar')?'guitar':'other')) ? 'selected' : ''}" data-track="${i}"><div class="track-controls"><div class="track-name-line"><button class="track-select" data-track-name="${t.name}" title="${t.name==='guitar_lead'?'Abrir tablatura da guitarra solo':'Selecionar faixa'}">${escapeHTML(t.label)}${t.name==='guitar_lead'?'<small>TAB</small>':''}</button><a href="/api/projects/${state.project.id}/audio/${t.name}?download=true" title="Baixar faixa" aria-label="Baixar ${escapeHTML(t.label)}">↓</a></div><div class="track-controls-bottom"><input class="volume" type="range" min="0" max="150" value="100" aria-label="Volume de ${escapeHTML(t.label)}"><button class="square mute" aria-label="Silenciar ${escapeHTML(t.label)}" aria-pressed="false">M</button><button class="square solo" aria-label="Ouvir somente ${escapeHTML(t.label)}" aria-pressed="false">S</button><span class="track-db">0 dB</span></div></div><button class="track-audio" aria-label="Posição na faixa ${escapeHTML(t.label)}">${trackWave(t)}</button></div>`,
+        `<div class="track ${t.name === (state.selectedTrack || (player.tracks.some(s=>s.name==='guitar_rhythm')?'guitar_rhythm':player.tracks.some(s=>s.name==='guitar')?'guitar':'other')) ? 'selected' : ''}" data-track="${i}"><div class="track-controls"><div class="track-name-line"><button class="track-select" data-track-name="${t.name}" title="${t.name==='guitar_lead'?'Abrir tablatura da guitarra solo':'Selecionar faixa'}">${escapeHTML(t.label)}${t.name==='guitar_lead'?'<small>TAB</small>':''}</button><a href="/api/projects/${state.project.id}/audio/${t.name}?download=true&v=${encodeURIComponent(player.revision)}" title="Baixar faixa" aria-label="Baixar ${escapeHTML(t.label)}">↓</a></div><div class="track-controls-bottom"><input class="volume" type="range" min="0" max="150" value="100" aria-label="Volume de ${escapeHTML(t.label)}"><button class="square mute" aria-label="Silenciar ${escapeHTML(t.label)}" aria-pressed="false">M</button><button class="square solo" aria-label="Ouvir somente ${escapeHTML(t.label)}" aria-pressed="false">S</button><span class="track-db">0 dB</span></div></div><button class="track-audio" aria-label="Posição na faixa ${escapeHTML(t.label)}">${trackWave(t)}</button></div>`,
     )
     .join("");
   $$(".track").forEach((row) => {
@@ -563,7 +565,7 @@ $$("[data-view]").forEach(
       if(state.view==='tab')renderTabUI(true);
     }),
 );
-$("#play").onclick = () => (player.playing ? player.pause() : player.play());
+$("#play").onclick = () => (player.wantsPlay ? player.pause() : player.play());
 $("#skip-back").onclick = () => player.seek(player.current() - 10);
 $("#skip-forward").onclick = () => player.seek(player.current() + 10);
 $("#seek").oninput = (e) =>
@@ -905,21 +907,24 @@ document.addEventListener("keydown", (e) => {
     !$("dialog[open]")
   ) {
     e.preventDefault();
-    if (player.tracks.length) player.playing ? player.pause() : player.play();
+    if (player.tracks.length) player.wantsPlay ? player.pause() : player.play();
   }
 });
+let pollInFlight=false;
 async function poll() {
-  try {
-    if (state.project) {
-      const p = await api("/api/projects/" + state.project.id);
-      if (p.updated_at !== state.project.updated_at) {
-        renderProject(p);
-        await refreshLibrary();
-      }
+  if(pollInFlight||!state.project)return;
+  pollInFlight=true;
+  const id=state.project.id,selection=projectSelection,controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);
+  try{
+    const p=await api('/api/projects/'+id,{signal:controller.signal});
+    if(state.project?.id!==id||selection!==projectSelection)return;
+    if(p.updated_at!==state.project.updated_at){
+      const statusChanged=p.status!==state.project.status;
+      renderProject(p);
+      if(statusChanged)await refreshLibrary();
     }
-  } catch (e) {
-    toast(e.message);
-  }
+  }catch(error){if(error.name!=='AbortError')toast(error.message);}
+  finally{clearTimeout(timeout);pollInFlight=false;}
 }
 setInterval(()=>{
   const p=state.project,tab=p?.tablature;
@@ -1330,7 +1335,7 @@ function updateMediaSession(){
   if(!navigator.mediaSession)return;
   const p=state.project;
   if(p&&typeof MediaMetadata!=='undefined')navigator.mediaSession.metadata=new MediaMetadata({title:p.title||'Backing track',artist:'FaixaLab',album:player.backingMode?'Sua backing track':'Estúdio de estudo'});
-  navigator.mediaSession.playbackState=player.playing?'playing':'paused';
+  navigator.mediaSession.playbackState=player.wantsPlay?'playing':'paused';
   updateMediaPosition();
 }
 function initializeBacking(){
@@ -1365,3 +1370,5 @@ function initializeBacking(){
   if('serviceWorker' in navigator&&window.isSecureContext)navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
 }
 initializeBacking();
+
+$('#apply-audio-update').onclick=()=>player.applyPending();

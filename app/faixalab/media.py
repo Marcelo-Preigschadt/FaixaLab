@@ -24,10 +24,15 @@ def ffmpeg_executable():
 def run_process(args, cancel, on_line=None, env=None, cwd=None, on_tick=None):
     if cancel.is_set():
         raise Cancelled()
-    flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+    flags = (subprocess.CREATE_NO_WINDOW | subprocess.BELOW_NORMAL_PRIORITY_CLASS) if os.name == 'nt' else 0
     process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                text=True, encoding='utf-8', errors='replace',
                                creationflags=flags, env=env, cwd=cwd)
+    # Audio inference may use every CPU core. Let the window and audio decoder
+    # run first when they need CPU, while workers retain the idle compute time.
+    if os.name != 'nt' and hasattr(os, 'setpriority'):
+        try:os.setpriority(os.PRIO_PROCESS, process.pid, 5)
+        except (OSError, AttributeError):pass
     tail, callback_errors = [], []
     started = last_output = time.monotonic()
 

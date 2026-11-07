@@ -27,7 +27,7 @@ if not exist ".runtime\deno.exe" (
 )
 echo.
 echo  FaixaLab preparado. Os modelos de IA serao baixados ao processar a primeira musica.
-echo 0.8.0>".runtime\ready"
+echo 0.9.0>".runtime\ready"
 exit /b 0
 :erro
 echo.

@@ -32,7 +32,7 @@ w.fetch=async(url,options={})=>{
   return {ok:true,json:async()=>JSON.parse(JSON.stringify(data))};
 };
 w.eval(fs.readFileSync(path.join(root,'faixalab/web/guitar.js'),'utf8'));
-w.eval(fs.readFileSync(path.join(root,'faixalab/web/app.js'),'utf8')+'\nwindow.__checks={state,player,options};');
+w.eval(fs.readFileSync(path.join(root,'faixalab/web/app.js'),'utf8')+'\nwindow.__checks={state,player,options,selectProject,poll};');
 const settle=()=>new Promise(resolve=>setTimeout(resolve,30));
 (async()=>{
   await settle();const doc=w.document;
@@ -66,6 +66,14 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(doc.querySelector('#download-backing').hidden,false);
   assert.equal(JSON.parse(requests.find(r=>r.url.endsWith('/backing')).options.body).preset,'no_vocals_lead');
   w.__checks.player.useStems();assert.equal(w.__checks.player.backingMode,false);
+  const fetchBefore=w.fetch,waiting=new Map();
+  const b={...project,id:'b'.repeat(32),title:'Music B'},c={...project,id:'c'.repeat(32),title:'Music C'};
+  w.fetch=(url,options)=>url==='/api/projects/'+b.id||url==='/api/projects/'+c.id?new Promise(resolve=>waiting.set(url,resolve)):fetchBefore(url,options);
+  const firstSelection=w.__checks.selectProject(b.id),lastSelection=w.__checks.selectProject(c.id);
+  waiting.get('/api/projects/'+c.id)({ok:true,json:async()=>c});await lastSelection;
+  waiting.get('/api/projects/'+b.id)({ok:true,json:async()=>b});await firstSelection;
+  assert.equal(w.__checks.state.project.id,c.id,'A late response must not replace the music most recently selected');
+  w.__checks.player.dispose();
   assert.deepEqual(errors,[]);
   console.log(JSON.stringify({default_automatic:true,categories:33,mixer_tracks:11,uncertainty_label:true,parent_child_constraints:true,automatic_action:true,accordion_does_not_request_guitar_tab:true,views:5,DOM_errors:errors}));
   dom.window.close();

@@ -2,7 +2,7 @@
 import os
 import tempfile
 
-__version__ = '0.8.0'
+__version__ = '0.9.0'
 
 # Native librosa/Numba stencils must not reuse stale machine-code caches from
 # another installation/process. Model downloads remain in persistent storage.

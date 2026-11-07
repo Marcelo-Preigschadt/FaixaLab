@@ -1,8 +1,8 @@
 {
   "repository": "Marcelo-Preigschadt/FaixaLab",
-  "tag": "v0.8.0",
-  "asset": "FaixaLab_0_8_Windows.zip",
-  "sha256": "464d32f6e13694e7234e9239f34d7817121de36161e6632e6b5800963769c3a3",
-  "bytes": 149031878,
+  "tag": "v0.9.0",
+  "asset": "FaixaLab_0_9_Windows.zip",
+  "sha256": "77ed96b4657831b2980da602fa2aa193ffb856477f80b2f49b0bc4df0e47f275",
+  "bytes": 149047274,
   "root": "FaixaLab"
 }

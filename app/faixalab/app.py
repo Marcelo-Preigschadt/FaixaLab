@@ -348,9 +348,14 @@ def delete_solo_note(identifier: str, index: int):
 
 
 @app.get('/api/projects/{identifier}/audio/{name}')
-def audio(identifier: str, name: str, download: bool = False, format: str = 'wav'):
+def audio(identifier: str, name: str, download: bool = False, format: str = 'wav', v: str | None = None):
     p = project(identifier)
-    entry = next((s['file'] for s in p.get('stems', []) if s['name'] == name), None)
+    if v is not None and len(v) > 128:raise HTTPException(404)
+    revision = p.get('audio_revision') or 'original'
+    if v is not None and v != revision:
+        entry = (p.get('audio_history') or {}).get(v, {}).get(name)
+    else:
+        entry = next((s['file'] for s in p.get('stems', []) if s['name'] == name), None)
     if name == 'original':
         entry = 'original.wav'
     if entry is None:
@@ -364,7 +369,8 @@ def audio(identifier: str, name: str, download: bool = False, format: str = 'wav
         from .backing import stream
         path=stream(path,root)
     return FileResponse(path, media_type='audio/mp4' if format=='m4a' else 'audio/wav',
-                        filename=name+'.'+format if download else None)
+                        filename=name+'.'+format if download else None,
+                        headers={'Cache-Control':'private, max-age=31536000, immutable'} if v else {'Cache-Control':'no-cache'})
 
 
 class BackingInput(BaseModel):
