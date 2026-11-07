@@ -6,3 +6,11 @@ __pycache__/
 *.zip
 *.pyc
 *.log
+
+**/.runtime/
+**/.venv/
+**/__pycache__/
+*.onnx
+*.pt
+*.npz
+*.exe

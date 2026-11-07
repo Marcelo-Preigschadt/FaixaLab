@@ -1,0 +1,75 @@
+FAIXALAB 0.7 - WINDOWS 64 BITS
+
+ATUALIZAR
+1. Feche o FaixaLab anterior.
+2. Extraia este ZIP inteiro para uma pasta nova.
+3. Abra FaixaLab.exe.
+
+Seus projetos aparecem automaticamente: ficam em %LOCALAPPDATA%\FaixaLab.
+Mantenha o executavel e todos os arquivos do pacote juntos.
+
+SEPARACAO AUTOMATICA PARA CADA MUSICA
+- Nova musica > cole o link YouTube ou escolha o MP3.
+- Mantenha Automatico por IA - todos os candidatos.
+- O app avalia as mesmas 33 categorias e verifica os resultados em cada musica.
+- Nao e necessario selecionar os instrumentos nem fazer ajustes por musica.
+- Para atualizar uma musica existente: Stems > Separacao de stems > Refinar instrumentos por IA.
+- Fontes sem confirmacao do timbre aparecem como estimativa; o restante fica em Outros.
+- O primeiro uso baixa um modelo de 1,37 GB. O processamento e local e pode demorar em CPU.
+- Os modelos podem produzir vazamentos ou omissoes; resultados variam com a gravacao.
+
+OUTROS REFINAMENTOS
+- Abra a musica em Stems e clique em Separacao de stems.
+- Escolha Separar novamente as faixas, ou Separar guitarra solo e guitarra base.
+- Para atualizar os acordes: Separacao de stems > Cifra > Estavel > Recalcular somente a cifra.
+- Se uma separacao estiver em andamento, use Parar separacao e recalcular a cifra.
+  As faixas que ja estavam salvas continuam disponiveis.
+- A letra e os acordes corrigidos por voce serao preservados.
+
+PARA UMA MUSICA NOVA
+- Clique em Nova musica e escolha o MP3 ou cole o link YouTube.
+- O padrao Automatico por IA separa os candidatos e verifica os timbres.
+- A opcao 7 faixas inclui solo e base (experimental, pode haver vazamentos).
+- Equilibrado e o modo padrao. Estudio usa mais modelos e leva mais tempo.
+- O progresso passa a indicar cada trecho processado e o tempo decorrido.
+
+O primeiro uso do modo Estudio baixa modelos adicionais de separacao.
+A IA de acordes ja acompanha este pacote.
+O acesso ao YouTube depende da disponibilidade do video e da sua conexao.
+
+Se a janela nao abrir, execute INICIAR_COM_DIAGNOSTICO.bat.
+Detalhes tecnicos e testes: README.md e VALIDACAO.md.
+
+INTERFACE
+Stems: mixer e ondas alinhadas. Letra: cifra sobre o texto.
+Acordes: sequencia completa. Formas: diagramas sincronizados.
+O reconhecedor usa o acompanhamento, sem a voz e a guitarra solo.
+
+ACORDES E NAVEGACAO
+O modo Estavel reduz trocas muito curtas e inversoes de notas passageiras.
+Detalhada mantem extensoes, inversoes e mudancas mais rapidas.
+Bm usa a digitação com pestana x24432, com indicacao dos dedos.
+A linha do tempo abre oito compassos; + e - ajustam o zoom.
+A regua identifica minutos/segundos e numero do compasso.
+
+TABLATURA DA GUITARRA SOLO
+1. Abra a musica com guitarra solo e base separadas.
+2. Clique no nome Guitarra solo. A aba Tablatura abre automaticamente.
+3. Mantenha Somente solos: a IA detecta os trechos de cada musica antes de transcrever.
+   Solo 1, Solo 2 etc. mostram os tempos encontrados. Sem solo confirmado, a tablatura fica vazia.
+   Tablaturas antigas sao recalculadas automaticamente ao abrir a aba.
+   Para estudar toda a guitarra, escolha Faixa inteira e recalcule.
+   O detector e a transcricao sao locais; os modelos desta etapa acompanham o ZIP.
+4. Dois cliques numa nota permitem corrigir ou excluir.
+5. TXT e MIDI exportam a tablatura. O ZIP tambem inclui esses arquivos.
+6. Manter minhas correcoes preserva edicoes e exclusoes ao recalcular.
+Para ouvir apenas a guitarra, use S na faixa Guitarra solo.
+As posicoes sao sugeridas em afinacao padrao, casas 0 a 24.
+
+DICIONARIO DE ACORDES
+Abra o botao de grade na barra lateral.
+Pesquise Bm, C7M, C6/9, D/F# etc.; compare varias posicoes.
+Sao 1.047 cifras, 3.078 posicoes e 44 familias.
+Dois cliques num acorde da musica abrem o dicionario para corrigi-lo.
+Usar esta posicao nos diagramas grava sua digitacao preferida.
+O dicionario confere desenhos; a escolha automatica do acorde depende do audio.

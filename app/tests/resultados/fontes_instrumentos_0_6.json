@@ -1,0 +1,44 @@
+[
+  {
+    "file": "egset12_01.wav",
+    "size_bytes": 8640044,
+    "sha256": "f7d5bd85dfaf4e5262599cc5b07ff40ced6516690698021f16e1ce23a80d791d",
+    "source": "https://zenodo.org/records/11406378"
+  },
+  {
+    "file": "exp1159_acoustic_guitar_target.wav",
+    "size_bytes": 640044,
+    "sha256": "53bcbe597fb14c3aa00d2514ff81d4f4c171e8375f0821f44edc285066578110",
+    "source": "https://github.com/Audio-AGI/Separate-Anything-You-Describe/tree/main/demos"
+  },
+  {
+    "file": "exp122_accordion_mixture.wav",
+    "size_bytes": 640044,
+    "sha256": "f9cfbd035d2f6e490ba1154d0d23df8044153606464a7747acb9df02c024c5e4",
+    "source": "https://github.com/Audio-AGI/Separate-Anything-You-Describe/tree/main/demos"
+  },
+  {
+    "file": "exp122_accordion_target.wav",
+    "size_bytes": 640044,
+    "sha256": "f8974fd010c20906535c736e06678ff75ab2d492a38bb997f49e1d78c70fce5b",
+    "source": "https://github.com/Audio-AGI/Separate-Anything-You-Describe/tree/main/demos"
+  },
+  {
+    "file": "exp1758_cello_target.wav",
+    "size_bytes": 640044,
+    "sha256": "54d7d52e7db3262ab9e41cc7354aa7ebd8b6e291def7dc62ccfdfad18f3e0932",
+    "source": "https://github.com/Audio-AGI/Separate-Anything-You-Describe/tree/main/demos"
+  },
+  {
+    "file": "exp2448_saxophone_target.wav",
+    "size_bytes": 640044,
+    "sha256": "730a1b0aa1a3f34e97aaa96caf71a4a15023a2f5dd8538da5ebe9487facbe7dd",
+    "source": "https://github.com/Audio-AGI/Separate-Anything-You-Describe/tree/main/demos"
+  },
+  {
+    "file": "flute.wav",
+    "size_bytes": 640044,
+    "sha256": "c888254de85769730850117462abf48374bf1906e7d5c9df10e2bf111bb7a5bf",
+    "source": "https://github.com/Audio-AGI/Separate-Anything-You-Describe/tree/main/demos"
+  }
+]

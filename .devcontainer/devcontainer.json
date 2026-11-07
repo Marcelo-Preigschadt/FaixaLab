@@ -8,5 +8,5 @@
   "postCreateCommand": "bash cloud/install.sh",
   "postStartCommand": "bash cloud/start.sh",
   "waitFor": "postCreateCommand",
-  "customizations": {"vscode": {"settings": {"python.defaultInterpreterPath": "${containerWorkspaceFolder}/.app/FaixaLab/.runtime/venv/bin/python"}}}
+  "customizations": {"vscode": {"settings": {"python.defaultInterpreterPath": "${containerWorkspaceFolder}/app/.runtime/venv/bin/python"}}}
 }

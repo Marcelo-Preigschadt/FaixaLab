@@ -1,0 +1,4 @@
+UI_ERRORS [] TOAST 
+{"dictionary_positions":3078,"solo_selection_opens_tab":true,"tab_notes":2,"tab_note_edit_dialog":true,"MIDI_enabled":true}
+{"long_song_seconds":203,"rail_width_pixels":17485.066666666666,"first_chord_width_pixels":137.81333333333336,"stale_analysis_notice":true,"recalculate_while_busy":true,"Bm_barre":true}
+{"dom_ui":"passed","tracks":7,"views":["mixer","study","chords","forms","tab"],"forms":4,"lyrics":3,"controls":["mute","separation settings","zoom"],"visual_rendering":"not evaluated"}

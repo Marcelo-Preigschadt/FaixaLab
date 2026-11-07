@@ -1,0 +1,207 @@
+{
+  "identity": [
+    {
+      "file": "egset12_01.wav",
+      "guitar_confirmed": true,
+      "top": [
+        {
+          "label": "Music",
+          "score": 0.8728
+        },
+        {
+          "label": "Guitar",
+          "score": 0.6772
+        },
+        {
+          "label": "Musical instrument",
+          "score": 0.6304
+        },
+        {
+          "label": "Plucked string instrument",
+          "score": 0.6142
+        },
+        {
+          "label": "Electronic tuner",
+          "score": 0.4233
+        },
+        {
+          "label": "Bass guitar",
+          "score": 0.2467
+        }
+      ]
+    },
+    {
+      "file": "exp1159_acoustic_guitar_target.wav",
+      "guitar_confirmed": true,
+      "top": [
+        {
+          "label": "Music",
+          "score": 0.7779
+        },
+        {
+          "label": "Musical instrument",
+          "score": 0.5016
+        },
+        {
+          "label": "Guitar",
+          "score": 0.4999
+        },
+        {
+          "label": "Plucked string instrument",
+          "score": 0.4427
+        },
+        {
+          "label": "Acoustic guitar",
+          "score": 0.3119
+        },
+        {
+          "label": "Strum",
+          "score": 0.1603
+        }
+      ]
+    },
+    {
+      "file": "exp122_accordion_target.wav",
+      "guitar_confirmed": false,
+      "top": [
+        {
+          "label": "Music",
+          "score": 0.6343
+        },
+        {
+          "label": "Accordion",
+          "score": 0.3102
+        },
+        {
+          "label": "Musical instrument",
+          "score": 0.2301
+        },
+        {
+          "label": "Harmonica",
+          "score": 0.1741
+        },
+        {
+          "label": "Wind instrument, woodwind instrument",
+          "score": 0.0699
+        },
+        {
+          "label": "Piano",
+          "score": 0.05
+        }
+      ]
+    },
+    {
+      "file": "exp1758_cello_target.wav",
+      "guitar_confirmed": false,
+      "top": [
+        {
+          "label": "Music",
+          "score": 0.6601
+        },
+        {
+          "label": "Cello",
+          "score": 0.3989
+        },
+        {
+          "label": "Double bass",
+          "score": 0.3787
+        },
+        {
+          "label": "Musical instrument",
+          "score": 0.3142
+        },
+        {
+          "label": "Bowed string instrument",
+          "score": 0.2876
+        },
+        {
+          "label": "Guitar",
+          "score": 0.2811
+        }
+      ]
+    },
+    {
+      "file": "exp2448_saxophone_target.wav",
+      "guitar_confirmed": false,
+      "top": [
+        {
+          "label": "Music",
+          "score": 0.5268
+        },
+        {
+          "label": "Wind instrument, woodwind instrument",
+          "score": 0.5231
+        },
+        {
+          "label": "Saxophone",
+          "score": 0.4215
+        },
+        {
+          "label": "Brass instrument",
+          "score": 0.3207
+        },
+        {
+          "label": "Musical instrument",
+          "score": 0.2159
+        },
+        {
+          "label": "Inside, small room",
+          "score": 0.0674
+        }
+      ]
+    },
+    {
+      "file": "flute.wav",
+      "guitar_confirmed": false,
+      "top": [
+        {
+          "label": "Flute",
+          "score": 0.6459
+        },
+        {
+          "label": "Music",
+          "score": 0.5905
+        },
+        {
+          "label": "Wind instrument, woodwind instrument",
+          "score": 0.3675
+        },
+        {
+          "label": "Musical instrument",
+          "score": 0.2956
+        },
+        {
+          "label": "Speech",
+          "score": 0.0779
+        },
+        {
+          "label": "Whistle",
+          "score": 0.0537
+        }
+      ]
+    }
+  ],
+  "separation": [
+    {
+      "target": "accordion",
+      "seconds": 5.0,
+      "baseline_SI_SDR_dB": -0.047,
+      "separated_SI_SDR_dB": 7.511,
+      "improvement_dB": 7.558
+    },
+    {
+      "target": "acoustic_guitar",
+      "seconds": 5.0,
+      "baseline_SI_SDR_dB": -0.047,
+      "separated_SI_SDR_dB": 15.068,
+      "improvement_dB": 15.115
+    }
+  ],
+  "accordion_wrongly_named_guitar": {
+    "automatic_notes": 0,
+    "message": "A fonte não foi confirmada como guitarra ou violão. Nenhuma tablatura automática foi criada; refine os instrumentos para isolar a guitarra.",
+    "guitar_contexts": 0
+  },
+  "forward_seconds": 13.61,
+  "scope": "Recorded-source controlled mixture; excludes upstream separation and arbitrary-repertoire guarantees."
+}

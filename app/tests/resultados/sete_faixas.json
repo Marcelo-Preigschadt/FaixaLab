@@ -1,0 +1,15 @@
+{
+  "default_seven_stem_pipeline": "passed",
+  "project_id": "b612e6de06f04207852fa0b23776228d",
+  "seconds": 66.63,
+  "stems": [
+    "vocals",
+    "drums",
+    "bass",
+    "guitar_lead",
+    "guitar_rhythm",
+    "piano",
+    "other"
+  ],
+  "chord_engine": "BTC + CQT"
+}

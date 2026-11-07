@@ -1,0 +1,9 @@
+{
+  "duration_seconds": 203,
+  "expected_notes": 296,
+  "detected_notes": 296,
+  "pitch_and_onset_matches": 296,
+  "matching_tolerance_seconds": 0.12,
+  "max_onset_error_seconds": 0.023400000000002308,
+  "seconds": 15.51
+}

@@ -1,0 +1,98 @@
+[
+  {
+    "source": "https://zenodo.org/records/11406378",
+    "file": "egset12/01.wav",
+    "size": 8640044,
+    "sha256": "f7d5bd85dfaf4e5262599cc5b07ff40ced6516690698021f16e1ce23a80d791d"
+  },
+  {
+    "source": "https://zenodo.org/records/11406378",
+    "file": "egset12/02.wav",
+    "size": 8886896,
+    "sha256": "1f58d1b81669f559aeb1d6d53a3f83ebfd93627f4c1cc525884827d789ff428a"
+  },
+  {
+    "source": "https://zenodo.org/records/11406378",
+    "file": "egset12/06.wav",
+    "size": 8723924,
+    "sha256": "b892b6d70bb631b16cb33023bbdf3fe15174b76ecf373eb53ec7d3b664f8da4d"
+  },
+  {
+    "source": "https://zenodo.org/records/11406378",
+    "file": "egset12/07.wav",
+    "size": 8755244,
+    "sha256": "db1585f1b4d6c2328d86df3d846bb9cbce01f8717cfd3a8cda17ff10ee84f884"
+  },
+  {
+    "source": "https://zenodo.org/records/3371780",
+    "file": "guitarset/00_BN1-129-Eb_comp_mic.wav",
+    "size": 1969056,
+    "sha256": "59e1e3c9bebdabd48afe28050a2c031e6cf36e5697268301cdf2e74bc66b71f1"
+  },
+  {
+    "source": "https://zenodo.org/records/3371780",
+    "file": "guitarset/00_BN1-129-Eb_solo_mic.wav",
+    "size": 1969056,
+    "sha256": "2a6057d0485d8ee2f4a04175ee085d610c0f7a13194e083b13ce803bec091d43"
+  },
+  {
+    "source": "https://zenodo.org/records/3371780",
+    "file": "guitarset/00_BN1-147-Gb_comp_mic.wav",
+    "size": 1727494,
+    "sha256": "699b80b22b903b0ed58529fa0d68eb843ad1693430baf10f0c5bd882229b3e9d"
+  },
+  {
+    "source": "https://zenodo.org/records/3371780",
+    "file": "guitarset/00_BN1-147-Gb_solo_mic.wav",
+    "size": 1727494,
+    "sha256": "07bb305f064e77312319aada10b1acf7c326b1ec7506f5a456748f04c8c06e9e"
+  },
+  {
+    "source": "https://zenodo.org/records/3371780",
+    "file": "guitarset/00_Jazz1-130-D_comp_mic.wav",
+    "size": 1953428,
+    "sha256": "b686a47b0a0a58dbdd818d2ebc9c31da87e4bed1af889dd62b1ffd1d1496f827"
+  },
+  {
+    "source": "https://zenodo.org/records/3371780",
+    "file": "guitarset/00_Jazz1-130-D_solo_mic.wav",
+    "size": 1953428,
+    "sha256": "275623936a0f6cf7cb959a7e81ff801c6fcc4d3128a939e1ba7ef89b8dbb413d"
+  },
+  {
+    "source": "https://zenodo.org/records/3371780",
+    "file": "guitarset/00_Jazz1-200-B_comp_mic.wav",
+    "size": 1270124,
+    "sha256": "eb4be0b56d1100fc0b168a11c2f4dc6c7e5090a11847b3967e8b21ac2cd05252"
+  },
+  {
+    "source": "https://zenodo.org/records/3371780",
+    "file": "guitarset/00_Jazz1-200-B_solo_mic.wav",
+    "size": 1270124,
+    "sha256": "d8df477ac8d17da5df76bbfafe94449b9f1c398e120db99d5765deeab59fbfb6"
+  },
+  {
+    "source": "https://zenodo.org/records/3371780",
+    "file": "guitarset/00_Rock2-142-D_solo_mic.wav",
+    "size": 2385114,
+    "sha256": "a85fbf8dec3090f8521b5d2878ee9e96229b11e2516c9adf9e188eddea810667"
+  },
+  {
+    "source": "https://zenodo.org/records/3371780",
+    "file": "guitarset/03_Funk1-97-C_solo_mic.wav",
+    "size": 2618560,
+    "sha256": "efbe697c928f77cddb8ee612919c86f9ee04ff1490f89c6dd16284f8ded3c5c8"
+  },
+  {
+    "source": "https://zenodo.org/records/3371780",
+    "file": "guitarset/05_Jazz3-150-C_comp_mic.wav",
+    "size": 2257964,
+    "sha256": "665e9a0968ec0d81e8cab504d39a4ffbf4249099cf87700c122607be000f508c"
+  },
+  {
+    "source": "https://zenodo.org/records/3371780",
+    "file": "guitarset/05_Rock3-117-Bb_comp_mic.wav",
+    "size": 2894450,
+    "sha256": "83c65847d6cc0a8b2a2a291ace59a2c97b7c91bc51d1295ba6acf51240de087d"
+  }
+]

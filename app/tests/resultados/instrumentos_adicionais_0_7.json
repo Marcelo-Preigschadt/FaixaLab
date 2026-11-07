@@ -1,0 +1,4050 @@
+[
+  {
+    "case": "quiet_flute_minus36dB",
+    "source_segment_seconds": [
+      5.0,
+      10.0
+    ],
+    "retained": [
+      "cello"
+    ],
+    "measurements": [
+      {
+        "target": "flute",
+        "retained": false,
+        "baseline_SI_SDR_dB": -33.667
+      },
+      {
+        "target": "cello",
+        "retained": true,
+        "baseline_SI_SDR_dB": 36.001,
+        "separated_SI_SDR_dB": 27.32,
+        "improvement_dB": -8.68
+      }
+    ],
+    "sum_max_absolute_error": 3.725290298461914e-09,
+    "temporary_work_files": 0,
+    "seconds": 23.5,
+    "details": {
+      "model": "MVSep Mega53 v1 · comprehensive candidates + timbre verification",
+      "checkpoint_sha256": "c62820893bbf86d4e734f966bd142d9157cfc8bb8e79e9d8f9ea553f3ff3519f",
+      "device": "cpu",
+      "drums_preserved": true,
+      "drums_sha256": "df23480edbf9daafc6910fb0229b4659cc1b4eecd432936fa9a437893736f787",
+      "selected": [
+        "vocals",
+        "bass",
+        "guitar",
+        "acoustic_guitar",
+        "accordion",
+        "harmonica",
+        "piano",
+        "organ",
+        "synth",
+        "bowed_strings",
+        "brass",
+        "woodwind",
+        "banjo",
+        "mandolin",
+        "ukulele",
+        "harp",
+        "percussion",
+        "bells",
+        "electric_piano",
+        "saxophone",
+        "flute",
+        "violin",
+        "cello",
+        "trumpet",
+        "clarinet",
+        "trombone",
+        "french_horn",
+        "harpsichord",
+        "sitar",
+        "marimba",
+        "tambourine",
+        "timpani",
+        "wind_chimes"
+      ],
+      "retained": [
+        "cello"
+      ],
+      "policy_version": "0.7.0",
+      "mode": "automatic",
+      "discovery": {
+        "policy": "separate_then_verify",
+        "candidate_count": 33,
+        "prefiltered_by_existing_stems": false
+      },
+      "validation": {
+        "vocals": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000677,
+          "relative_peak_rms": 0.000817,
+          "target_score": 0.0395,
+          "competing_score": 0.0843,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5618
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1752
+            },
+            {
+              "label": "Piano",
+              "score": 0.0843
+            },
+            {
+              "label": "Keyboard (musical)",
+              "score": 0.0832
+            },
+            {
+              "label": "Harpsichord",
+              "score": 0.0491
+            },
+            {
+              "label": "Organ",
+              "score": 0.0445
+            }
+          ]
+        },
+        "bass": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.00725,
+          "relative_peak_rms": 0.009163,
+          "target_score": 0.0096,
+          "competing_score": 0.0403,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5316
+            },
+            {
+              "label": "Heart murmur",
+              "score": 0.0697
+            },
+            {
+              "label": "Heart sounds, heartbeat",
+              "score": 0.0602
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0443
+            },
+            {
+              "label": "Speech",
+              "score": 0.0403
+            },
+            {
+              "label": "Guitar",
+              "score": 0.0357
+            }
+          ]
+        },
+        "guitar": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.002135,
+          "relative_peak_rms": 0.00261,
+          "target_score": 0.0544,
+          "competing_score": 0.046,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.7457
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.2636
+            },
+            {
+              "label": "Guitar",
+              "score": 0.2283
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.1646
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.0698
+            },
+            {
+              "label": "Electric guitar",
+              "score": 0.0544
+            }
+          ]
+        },
+        "acoustic_guitar": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.039762,
+          "relative_peak_rms": 0.054484,
+          "target_score": 0.0439,
+          "competing_score": 0.1132,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.628
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.2468
+            },
+            {
+              "label": "Guitar",
+              "score": 0.2437
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.1582
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.1419
+            },
+            {
+              "label": "Speech",
+              "score": 0.1132
+            }
+          ]
+        },
+        "accordion": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 2.9e-05,
+          "relative_peak_rms": 3.6e-05,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "harmonica": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 6.8e-05,
+          "relative_peak_rms": 8.1e-05,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "piano": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.002026,
+          "relative_peak_rms": 0.002487,
+          "target_score": 0.0638,
+          "competing_score": 0.0296,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.7172
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.2677
+            },
+            {
+              "label": "Guitar",
+              "score": 0.147
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.1158
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0847
+            },
+            {
+              "label": "Distortion",
+              "score": 0.064
+            }
+          ]
+        },
+        "organ": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 1.9e-05,
+          "relative_peak_rms": 2.6e-05,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "synth": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.000261,
+          "relative_peak_rms": 0.000296,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "bowed_strings": {
+          "accepted": true,
+          "reason": "separator_candidate",
+          "identity_state": "uncertain",
+          "relative_rms": 0.870595,
+          "relative_peak_rms": 1.186095,
+          "target_score": 0.0558,
+          "competing_score": 0.089,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.6287
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.3016
+            },
+            {
+              "label": "Guitar",
+              "score": 0.2806
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.1736
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.1664
+            },
+            {
+              "label": "Distortion",
+              "score": 0.1182
+            }
+          ]
+        },
+        "brass": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.000299,
+          "relative_peak_rms": 0.000355,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "woodwind": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.000257,
+          "relative_peak_rms": 0.000335,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "banjo": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.156681,
+          "relative_peak_rms": 0.197322,
+          "target_score": 0.0023,
+          "competing_score": 0.0859,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.6569
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.2036
+            },
+            {
+              "label": "Piano",
+              "score": 0.0859
+            },
+            {
+              "label": "Keyboard (musical)",
+              "score": 0.0726
+            },
+            {
+              "label": "Brass instrument",
+              "score": 0.0562
+            },
+            {
+              "label": "Trombone",
+              "score": 0.0522
+            }
+          ]
+        },
+        "mandolin": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000793,
+          "relative_peak_rms": 0.001014,
+          "target_score": 0.0006,
+          "competing_score": 0.0546,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5916
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0788
+            },
+            {
+              "label": "Speech",
+              "score": 0.0546
+            },
+            {
+              "label": "Guitar",
+              "score": 0.034
+            },
+            {
+              "label": "Inside, small room",
+              "score": 0.0309
+            },
+            {
+              "label": "Sine wave",
+              "score": 0.0219
+            }
+          ]
+        },
+        "ukulele": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.333253,
+          "relative_peak_rms": 0.415319,
+          "target_score": 0.0019,
+          "competing_score": 0.0886,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.6783
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.3429
+            },
+            {
+              "label": "Guitar",
+              "score": 0.3133
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.187
+            },
+            {
+              "label": "Speech",
+              "score": 0.0886
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.0865
+            }
+          ]
+        },
+        "harp": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.013555,
+          "relative_peak_rms": 0.018344,
+          "target_score": 0.0002,
+          "competing_score": 0.0283,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.7394
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0874
+            },
+            {
+              "label": "Guitar",
+              "score": 0.0753
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0462
+            },
+            {
+              "label": "Electronic music",
+              "score": 0.0364
+            },
+            {
+              "label": "Speech",
+              "score": 0.0283
+            }
+          ]
+        },
+        "percussion": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.014503,
+          "relative_peak_rms": 0.019321,
+          "target_score": 0.0021,
+          "competing_score": 0.057,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.6321
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1486
+            },
+            {
+              "label": "Guitar",
+              "score": 0.1441
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.1086
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0863
+            },
+            {
+              "label": "Speech",
+              "score": 0.057
+            }
+          ]
+        },
+        "bells": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.001026,
+          "relative_peak_rms": 0.001239,
+          "target_score": 0.0006,
+          "competing_score": 0.0461,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.6998
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0653
+            },
+            {
+              "label": "Guitar",
+              "score": 0.0615
+            },
+            {
+              "label": "Speech",
+              "score": 0.0461
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0418
+            },
+            {
+              "label": "Inside, small room",
+              "score": 0.0384
+            }
+          ]
+        },
+        "electric_piano": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.001087,
+          "relative_peak_rms": 0.00135,
+          "target_score": 0.0414,
+          "competing_score": 0.0505,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.6151
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1132
+            },
+            {
+              "label": "Piano",
+              "score": 0.0505
+            },
+            {
+              "label": "Ambient music",
+              "score": 0.045
+            },
+            {
+              "label": "Cello",
+              "score": 0.0416
+            },
+            {
+              "label": "Keyboard (musical)",
+              "score": 0.0414
+            }
+          ]
+        },
+        "saxophone": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000644,
+          "relative_peak_rms": 0.000815,
+          "target_score": 0.0002,
+          "competing_score": 0.0708,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.4601
+            },
+            {
+              "label": "Speech",
+              "score": 0.0708
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0272
+            },
+            {
+              "label": "Inside, small room",
+              "score": 0.0254
+            },
+            {
+              "label": "Coin (dropping)",
+              "score": 0.0132
+            },
+            {
+              "label": "Electric shaver, electric razor",
+              "score": 0.0105
+            }
+          ]
+        },
+        "flute": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 5e-06,
+          "relative_peak_rms": 6e-06,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "violin": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.000228,
+          "relative_peak_rms": 0.000489,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "cello": {
+          "accepted": true,
+          "reason": "separator_candidate",
+          "identity_state": "uncertain",
+          "relative_rms": 0.955662,
+          "relative_peak_rms": 1.271305,
+          "target_score": 0.0489,
+          "competing_score": 0.0925,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.6174
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.2967
+            },
+            {
+              "label": "Guitar",
+              "score": 0.2647
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.1726
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.1565
+            },
+            {
+              "label": "Distortion",
+              "score": 0.122
+            }
+          ],
+          "reconstruction_support": 1.090757
+        },
+        "trumpet": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 5e-06,
+          "relative_peak_rms": 7e-06,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "clarinet": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.000141,
+          "relative_peak_rms": 0.00018,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "trombone": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.0038,
+          "relative_peak_rms": 0.004367,
+          "target_score": 0.0006,
+          "competing_score": 0.0299,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.7656
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.045
+            },
+            {
+              "label": "Speech",
+              "score": 0.0299
+            },
+            {
+              "label": "Guitar",
+              "score": 0.0188
+            },
+            {
+              "label": "Inside, small room",
+              "score": 0.0162
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0158
+            }
+          ]
+        },
+        "french_horn": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.000336,
+          "relative_peak_rms": 0.000442,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "harpsichord": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.00086,
+          "relative_peak_rms": 0.00108,
+          "target_score": 0.0054,
+          "competing_score": 0.0555,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.584
+            },
+            {
+              "label": "Speech",
+              "score": 0.0555
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0543
+            },
+            {
+              "label": "Inside, small room",
+              "score": 0.0268
+            },
+            {
+              "label": "Electronic music",
+              "score": 0.0204
+            },
+            {
+              "label": "Synthesizer",
+              "score": 0.0192
+            }
+          ]
+        },
+        "sitar": {
+          "accepted": false,
+          "reason": "unconfirmed_in_residual",
+          "identity_state": "uncertain",
+          "relative_rms": 0.406965,
+          "relative_peak_rms": 0.503966,
+          "target_score": 0.0019,
+          "competing_score": 0.044,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.706
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.2583
+            },
+            {
+              "label": "Guitar",
+              "score": 0.0949
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0673
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.0661
+            },
+            {
+              "label": "Bowed string instrument",
+              "score": 0.0452
+            }
+          ],
+          "reconstruction_support": -0.81005
+        },
+        "marimba": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.002102,
+          "relative_peak_rms": 0.002686,
+          "target_score": 0.0008,
+          "competing_score": 0.0419,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.6679
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.2287
+            },
+            {
+              "label": "Guitar",
+              "score": 0.178
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0984
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.068
+            },
+            {
+              "label": "Bowed string instrument",
+              "score": 0.0471
+            }
+          ]
+        },
+        "tambourine": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 7.9e-05,
+          "relative_peak_rms": 0.000124,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "timpani": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.004823,
+          "relative_peak_rms": 0.005939,
+          "target_score": 0.0022,
+          "competing_score": 0.048,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.7594
+            },
+            {
+              "label": "Guitar",
+              "score": 0.1506
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1138
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0889
+            },
+            {
+              "label": "Bass guitar",
+              "score": 0.048
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.0475
+            }
+          ]
+        },
+        "wind_chimes": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.000201,
+          "relative_peak_rms": 0.000283,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        }
+      },
+      "resolution": [
+        {
+          "discarded": "bowed_strings",
+          "reason": "confirmed_children",
+          "kept": [
+            "cello"
+          ]
+        },
+        {
+          "discarded": "sitar",
+          "reason": "unconfirmed_in_residual",
+          "kept": []
+        }
+      ],
+      "chunk_seconds": 6.0,
+      "overlap": 0.25,
+      "mixture_consistent": true,
+      "remainder": "other",
+      "source_names": {
+        "vocals": "vocal",
+        "bass": "bass",
+        "guitar": "electric-guitar",
+        "acoustic_guitar": "acoustic-guitar",
+        "accordion": "accordion",
+        "harmonica": "harmonica",
+        "piano": "piano",
+        "organ": "organ",
+        "synth": "synth",
+        "bowed_strings": "bowed_strings",
+        "brass": "brass",
+        "woodwind": "woodwind",
+        "banjo": "banjo",
+        "mandolin": "mandolin",
+        "ukulele": "ukulele",
+        "harp": "harp",
+        "percussion": "percussion",
+        "bells": "bells",
+        "electric_piano": "digital-piano",
+        "saxophone": "saxophone",
+        "flute": "flute",
+        "violin": "violin",
+        "cello": "cello",
+        "trumpet": "trumpet",
+        "clarinet": "clarinet",
+        "trombone": "trombone",
+        "french_horn": "french-horn",
+        "harpsichord": "harpsichord",
+        "sitar": "sitar",
+        "marimba": "marimba",
+        "tambourine": "tambourine",
+        "timpani": "timpani",
+        "wind_chimes": "wind-chimes"
+      }
+    }
+  },
+  {
+    "case": "heldout_electric_accordion",
+    "source_segment_seconds": [
+      5.0,
+      10.0
+    ],
+    "retained": [
+      "guitar",
+      "accordion"
+    ],
+    "measurements": [
+      {
+        "target": "guitar",
+        "retained": true,
+        "baseline_SI_SDR_dB": 0.033,
+        "separated_SI_SDR_dB": 20.604,
+        "improvement_dB": 20.571
+      },
+      {
+        "target": "accordion",
+        "retained": true,
+        "baseline_SI_SDR_dB": 0.033,
+        "separated_SI_SDR_dB": 15.844,
+        "improvement_dB": 15.811
+      }
+    ],
+    "sum_max_absolute_error": 5.960464477539063e-08,
+    "temporary_work_files": 0,
+    "seconds": 23.48,
+    "details": {
+      "model": "MVSep Mega53 v1 · comprehensive candidates + timbre verification",
+      "checkpoint_sha256": "c62820893bbf86d4e734f966bd142d9157cfc8bb8e79e9d8f9ea553f3ff3519f",
+      "device": "cpu",
+      "drums_preserved": true,
+      "drums_sha256": "828c3abed43a63ba2ac0c9b226c375786a33ef8c9c827f9efa54d9cee665ab1c",
+      "selected": [
+        "vocals",
+        "bass",
+        "guitar",
+        "acoustic_guitar",
+        "accordion",
+        "harmonica",
+        "piano",
+        "organ",
+        "synth",
+        "bowed_strings",
+        "brass",
+        "woodwind",
+        "banjo",
+        "mandolin",
+        "ukulele",
+        "harp",
+        "percussion",
+        "bells",
+        "electric_piano",
+        "saxophone",
+        "flute",
+        "violin",
+        "cello",
+        "trumpet",
+        "clarinet",
+        "trombone",
+        "french_horn",
+        "harpsichord",
+        "sitar",
+        "marimba",
+        "tambourine",
+        "timpani",
+        "wind_chimes"
+      ],
+      "retained": [
+        "guitar",
+        "accordion"
+      ],
+      "policy_version": "0.7.0",
+      "mode": "automatic",
+      "discovery": {
+        "policy": "separate_then_verify",
+        "candidate_count": 33,
+        "prefiltered_by_existing_stems": false
+      },
+      "validation": {
+        "vocals": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.001249,
+          "relative_peak_rms": 0.001573,
+          "target_score": 0.0268,
+          "competing_score": 0.1616,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.4398
+            },
+            {
+              "label": "Accordion",
+              "score": 0.1616
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1332
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.0787
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.0669
+            },
+            {
+              "label": "Speech",
+              "score": 0.0268
+            }
+          ]
+        },
+        "bass": {
+          "accepted": false,
+          "reason": "unconfirmed_in_residual",
+          "identity_state": "confirmed",
+          "relative_rms": 0.00189,
+          "relative_peak_rms": 0.0025,
+          "target_score": 0.1516,
+          "competing_score": 0.1824,
+          "confirmed_contexts": 1,
+          "normalized_for_identity": true,
+          "confirmed_times": [
+            2.5
+          ],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.6489
+            },
+            {
+              "label": "Cello",
+              "score": 0.1824
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1694
+            },
+            {
+              "label": "Bowed string instrument",
+              "score": 0.1641
+            },
+            {
+              "label": "Double bass",
+              "score": 0.1516
+            },
+            {
+              "label": "Pizzicato",
+              "score": 0.1115
+            }
+          ],
+          "reconstruction_support": 20.406747,
+          "residual_verification": {
+            "accepted": false,
+            "reason": "unconfirmed_timbre",
+            "identity_state": "unconfirmed",
+            "relative_rms": 0.104052,
+            "relative_peak_rms": 0.140899,
+            "target_score": 0.0119,
+            "competing_score": 0.1124,
+            "confirmed_contexts": 0,
+            "normalized_for_identity": true,
+            "confirmed_times": [],
+            "top": [
+              {
+                "label": "Music",
+                "score": 0.5485
+              },
+              {
+                "label": "Musical instrument",
+                "score": 0.1749
+              },
+              {
+                "label": "Accordion",
+                "score": 0.1124
+              },
+              {
+                "label": "Plucked string instrument",
+                "score": 0.05
+              },
+              {
+                "label": "Wind instrument, woodwind instrument",
+                "score": 0.0495
+              },
+              {
+                "label": "Speech",
+                "score": 0.0494
+              }
+            ]
+          }
+        },
+        "guitar": {
+          "accepted": true,
+          "reason": "separator_candidate",
+          "identity_state": "uncertain",
+          "relative_rms": 0.692784,
+          "relative_peak_rms": 1.024727,
+          "target_score": 0.0215,
+          "competing_score": 0.0246,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.737
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.2811
+            },
+            {
+              "label": "Guitar",
+              "score": 0.1196
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.1051
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0977
+            },
+            {
+              "label": "Distortion",
+              "score": 0.0725
+            }
+          ],
+          "reconstruction_support": 1.042997
+        },
+        "acoustic_guitar": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.057684,
+          "relative_peak_rms": 0.092281,
+          "target_score": 0.0364,
+          "competing_score": 0.0909,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.7286
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.3258
+            },
+            {
+              "label": "Guitar",
+              "score": 0.2024
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.1471
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.1241
+            },
+            {
+              "label": "Bass guitar",
+              "score": 0.0909
+            }
+          ]
+        },
+        "accordion": {
+          "accepted": true,
+          "reason": "",
+          "identity_state": "confirmed",
+          "relative_rms": 0.661507,
+          "relative_peak_rms": 0.886886,
+          "target_score": 0.1478,
+          "competing_score": 0.1125,
+          "confirmed_contexts": 1,
+          "normalized_for_identity": true,
+          "confirmed_times": [
+            2.5
+          ],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.607
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1646
+            },
+            {
+              "label": "Accordion",
+              "score": 0.1478
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.1125
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.0506
+            },
+            {
+              "label": "Speech",
+              "score": 0.0298
+            }
+          ]
+        },
+        "harmonica": {
+          "accepted": false,
+          "reason": "unconfirmed_in_residual",
+          "identity_state": "confirmed",
+          "relative_rms": 0.005446,
+          "relative_peak_rms": 0.009008,
+          "target_score": 0.4372,
+          "competing_score": 0.0793,
+          "confirmed_contexts": 1,
+          "normalized_for_identity": true,
+          "confirmed_times": [
+            2.5
+          ],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.4767
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.4372
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.2232
+            },
+            {
+              "label": "Speech",
+              "score": 0.0793
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0538
+            },
+            {
+              "label": "Accordion",
+              "score": 0.0243
+            }
+          ],
+          "reconstruction_support": 3.760539,
+          "residual_verification": {
+            "accepted": false,
+            "reason": "unconfirmed_timbre",
+            "identity_state": "unconfirmed",
+            "relative_rms": 0.104586,
+            "relative_peak_rms": 0.141108,
+            "target_score": 0.0484,
+            "competing_score": 0.0992,
+            "confirmed_contexts": 0,
+            "normalized_for_identity": true,
+            "confirmed_times": [],
+            "top": [
+              {
+                "label": "Music",
+                "score": 0.5297
+              },
+              {
+                "label": "Musical instrument",
+                "score": 0.1762
+              },
+              {
+                "label": "Accordion",
+                "score": 0.0992
+              },
+              {
+                "label": "Plucked string instrument",
+                "score": 0.0599
+              },
+              {
+                "label": "Wind instrument, woodwind instrument",
+                "score": 0.0529
+              },
+              {
+                "label": "Effects unit",
+                "score": 0.0502
+              }
+            ]
+          }
+        },
+        "piano": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.014141,
+          "relative_peak_rms": 0.027466,
+          "target_score": 0.0148,
+          "competing_score": 0.2089,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.552
+            },
+            {
+              "label": "Accordion",
+              "score": 0.2089
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.141
+            },
+            {
+              "label": "Bowed string instrument",
+              "score": 0.0891
+            },
+            {
+              "label": "Cello",
+              "score": 0.0878
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.0791
+            }
+          ]
+        },
+        "organ": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.520343,
+          "relative_peak_rms": 0.678827,
+          "target_score": 0.0084,
+          "competing_score": 0.2377,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.689
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.255
+            },
+            {
+              "label": "Accordion",
+              "score": 0.2377
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.0681
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.0333
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.0269
+            }
+          ]
+        },
+        "synth": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.001952,
+          "relative_peak_rms": 0.003626,
+          "target_score": 0.0586,
+          "competing_score": 0.1441,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5792
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1759
+            },
+            {
+              "label": "Organ",
+              "score": 0.1441
+            },
+            {
+              "label": "Accordion",
+              "score": 0.1234
+            },
+            {
+              "label": "Hammond organ",
+              "score": 0.0804
+            },
+            {
+              "label": "Keyboard (musical)",
+              "score": 0.077
+            }
+          ]
+        },
+        "bowed_strings": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000493,
+          "relative_peak_rms": 0.000703,
+          "target_score": 0.0229,
+          "competing_score": 0.1688,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5075
+            },
+            {
+              "label": "Accordion",
+              "score": 0.1688
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1383
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.1121
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.0411
+            },
+            {
+              "label": "Speech",
+              "score": 0.0404
+            }
+          ]
+        },
+        "brass": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000506,
+          "relative_peak_rms": 0.000752,
+          "target_score": 0.0021,
+          "competing_score": 0.1548,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5212
+            },
+            {
+              "label": "Accordion",
+              "score": 0.1548
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.138
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1152
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.0687
+            },
+            {
+              "label": "Speech",
+              "score": 0.0587
+            }
+          ]
+        },
+        "woodwind": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.002069,
+          "relative_peak_rms": 0.003361,
+          "target_score": 0.0471,
+          "competing_score": 0.1799,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5856
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1843
+            },
+            {
+              "label": "Accordion",
+              "score": 0.1799
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.0822
+            },
+            {
+              "label": "Guitar",
+              "score": 0.073
+            },
+            {
+              "label": "Speech",
+              "score": 0.0677
+            }
+          ]
+        },
+        "banjo": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.004242,
+          "relative_peak_rms": 0.005461,
+          "target_score": 0.0023,
+          "competing_score": 0.1246,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5018
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1883
+            },
+            {
+              "label": "Accordion",
+              "score": 0.1246
+            },
+            {
+              "label": "Bowed string instrument",
+              "score": 0.031
+            },
+            {
+              "label": "Keyboard (musical)",
+              "score": 0.0298
+            },
+            {
+              "label": "Organ",
+              "score": 0.0293
+            }
+          ]
+        },
+        "mandolin": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000695,
+          "relative_peak_rms": 0.000897,
+          "target_score": 0.0006,
+          "competing_score": 0.2336,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.4586
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.2336
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.0969
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0621
+            },
+            {
+              "label": "Accordion",
+              "score": 0.0566
+            },
+            {
+              "label": "Speech",
+              "score": 0.0511
+            }
+          ]
+        },
+        "ukulele": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.002189,
+          "relative_peak_rms": 0.002853,
+          "target_score": 0.001,
+          "competing_score": 0.1096,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.4991
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1741
+            },
+            {
+              "label": "Accordion",
+              "score": 0.1096
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.0571
+            },
+            {
+              "label": "Bowed string instrument",
+              "score": 0.0423
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.036
+            }
+          ]
+        },
+        "harp": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000598,
+          "relative_peak_rms": 0.001117,
+          "target_score": 0.0002,
+          "competing_score": 0.0941,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.3845
+            },
+            {
+              "label": "Speech",
+              "score": 0.0941
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0684
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.0668
+            },
+            {
+              "label": "Accordion",
+              "score": 0.0532
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.042
+            }
+          ]
+        },
+        "percussion": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.000117,
+          "relative_peak_rms": 0.000249,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "bells": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.000164,
+          "relative_peak_rms": 0.000232,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "electric_piano": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.039004,
+          "relative_peak_rms": 0.080211,
+          "target_score": 0.0544,
+          "competing_score": 0.0784,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.4959
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1887
+            },
+            {
+              "label": "Organ",
+              "score": 0.0784
+            },
+            {
+              "label": "Synthesizer",
+              "score": 0.0604
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.0571
+            },
+            {
+              "label": "Keyboard (musical)",
+              "score": 0.0544
+            }
+          ]
+        },
+        "saxophone": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.002266,
+          "relative_peak_rms": 0.00296,
+          "target_score": 0.0017,
+          "competing_score": 0.1713,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5544
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.2142
+            },
+            {
+              "label": "Accordion",
+              "score": 0.1713
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.0984
+            },
+            {
+              "label": "Speech",
+              "score": 0.0802
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.0418
+            }
+          ]
+        },
+        "flute": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.000113,
+          "relative_peak_rms": 0.000177,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "violin": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.002042,
+          "relative_peak_rms": 0.002951,
+          "target_score": 0.0062,
+          "competing_score": 0.1917,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5666
+            },
+            {
+              "label": "Accordion",
+              "score": 0.1917
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1756
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.1756
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.0772
+            },
+            {
+              "label": "Speech",
+              "score": 0.0332
+            }
+          ]
+        },
+        "cello": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.003263,
+          "relative_peak_rms": 0.00564,
+          "target_score": 0.0179,
+          "competing_score": 0.1516,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.7361
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.2986
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.296
+            },
+            {
+              "label": "Guitar",
+              "score": 0.223
+            },
+            {
+              "label": "Distortion",
+              "score": 0.1829
+            },
+            {
+              "label": "Bass guitar",
+              "score": 0.1516
+            }
+          ]
+        },
+        "trumpet": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000415,
+          "relative_peak_rms": 0.000592,
+          "target_score": 0.0004,
+          "competing_score": 0.2235,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.4862
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.2235
+            },
+            {
+              "label": "Accordion",
+              "score": 0.1104
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.1098
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0767
+            },
+            {
+              "label": "Speech",
+              "score": 0.0382
+            }
+          ]
+        },
+        "clarinet": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.003985,
+          "relative_peak_rms": 0.006149,
+          "target_score": 0.0065,
+          "competing_score": 0.1575,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5538
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1987
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.1575
+            },
+            {
+              "label": "Accordion",
+              "score": 0.107
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.0609
+            },
+            {
+              "label": "Bowed string instrument",
+              "score": 0.0602
+            }
+          ]
+        },
+        "trombone": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.000306,
+          "relative_peak_rms": 0.000391,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "french_horn": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.000348,
+          "relative_peak_rms": 0.000465,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "harpsichord": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.245912,
+          "relative_peak_rms": 0.400499,
+          "target_score": 0.0017,
+          "competing_score": 0.1608,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.6645
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1883
+            },
+            {
+              "label": "Accordion",
+              "score": 0.1608
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.136
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.0614
+            },
+            {
+              "label": "Synthesizer",
+              "score": 0.0467
+            }
+          ]
+        },
+        "sitar": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000667,
+          "relative_peak_rms": 0.000974,
+          "target_score": 0.001,
+          "competing_score": 0.1059,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.4756
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.131
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.1078
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.1059
+            },
+            {
+              "label": "Speech",
+              "score": 0.045
+            },
+            {
+              "label": "Synthesizer",
+              "score": 0.0377
+            }
+          ]
+        },
+        "marimba": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000614,
+          "relative_peak_rms": 0.001086,
+          "target_score": 0.0004,
+          "competing_score": 0.1087,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.431
+            },
+            {
+              "label": "Accordion",
+              "score": 0.1087
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.1047
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.099
+            },
+            {
+              "label": "Speech",
+              "score": 0.0709
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.0588
+            }
+          ]
+        },
+        "tambourine": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 5.9e-05,
+          "relative_peak_rms": 8.5e-05,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "timpani": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000357,
+          "relative_peak_rms": 0.000765,
+          "target_score": 0.0005,
+          "competing_score": 0.0956,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.3621
+            },
+            {
+              "label": "Speech",
+              "score": 0.0956
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0768
+            },
+            {
+              "label": "Guitar",
+              "score": 0.0392
+            },
+            {
+              "label": "Bowed string instrument",
+              "score": 0.0335
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.031
+            }
+          ]
+        },
+        "wind_chimes": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 8.3e-05,
+          "relative_peak_rms": 0.000133,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        }
+      },
+      "resolution": [
+        {
+          "discarded": "bass",
+          "reason": "unconfirmed_in_residual",
+          "kept": []
+        },
+        {
+          "discarded": "harmonica",
+          "reason": "unconfirmed_in_residual",
+          "kept": []
+        }
+      ],
+      "chunk_seconds": 6.0,
+      "overlap": 0.25,
+      "mixture_consistent": true,
+      "remainder": "other",
+      "source_names": {
+        "vocals": "vocal",
+        "bass": "bass",
+        "guitar": "electric-guitar",
+        "acoustic_guitar": "acoustic-guitar",
+        "accordion": "accordion",
+        "harmonica": "harmonica",
+        "piano": "piano",
+        "organ": "organ",
+        "synth": "synth",
+        "bowed_strings": "bowed_strings",
+        "brass": "brass",
+        "woodwind": "woodwind",
+        "banjo": "banjo",
+        "mandolin": "mandolin",
+        "ukulele": "ukulele",
+        "harp": "harp",
+        "percussion": "percussion",
+        "bells": "bells",
+        "electric_piano": "digital-piano",
+        "saxophone": "saxophone",
+        "flute": "flute",
+        "violin": "violin",
+        "cello": "cello",
+        "trumpet": "trumpet",
+        "clarinet": "clarinet",
+        "trombone": "trombone",
+        "french_horn": "french-horn",
+        "harpsichord": "harpsichord",
+        "sitar": "sitar",
+        "marimba": "marimba",
+        "tambourine": "tambourine",
+        "timpani": "timpani",
+        "wind_chimes": "wind-chimes"
+      }
+    }
+  },
+  {
+    "case": "heldout_three_sources",
+    "source_segment_seconds": [
+      5.0,
+      10.0
+    ],
+    "retained": [
+      "guitar",
+      "harmonica",
+      "saxophone",
+      "cello"
+    ],
+    "measurements": [
+      {
+        "target": "guitar",
+        "retained": true,
+        "baseline_SI_SDR_dB": 1.054,
+        "separated_SI_SDR_dB": 14.638,
+        "improvement_dB": 13.584
+      },
+      {
+        "target": "cello",
+        "retained": true,
+        "baseline_SI_SDR_dB": -2.5,
+        "separated_SI_SDR_dB": 10.6,
+        "improvement_dB": 13.1
+      },
+      {
+        "target": "saxophone",
+        "retained": true,
+        "baseline_SI_SDR_dB": -9.985,
+        "separated_SI_SDR_dB": 10.537,
+        "improvement_dB": 20.522
+      }
+    ],
+    "sum_max_absolute_error": 5.960464477539063e-08,
+    "temporary_work_files": 0,
+    "seconds": 23.67,
+    "details": {
+      "model": "MVSep Mega53 v1 · comprehensive candidates + timbre verification",
+      "checkpoint_sha256": "c62820893bbf86d4e734f966bd142d9157cfc8bb8e79e9d8f9ea553f3ff3519f",
+      "device": "cpu",
+      "drums_preserved": true,
+      "drums_sha256": "c62d79ef973ce2aac519c7c503ec44fbec21e8eab765003890145eb432a10779",
+      "selected": [
+        "vocals",
+        "bass",
+        "guitar",
+        "acoustic_guitar",
+        "accordion",
+        "harmonica",
+        "piano",
+        "organ",
+        "synth",
+        "bowed_strings",
+        "brass",
+        "woodwind",
+        "banjo",
+        "mandolin",
+        "ukulele",
+        "harp",
+        "percussion",
+        "bells",
+        "electric_piano",
+        "saxophone",
+        "flute",
+        "violin",
+        "cello",
+        "trumpet",
+        "clarinet",
+        "trombone",
+        "french_horn",
+        "harpsichord",
+        "sitar",
+        "marimba",
+        "tambourine",
+        "timpani",
+        "wind_chimes"
+      ],
+      "retained": [
+        "guitar",
+        "harmonica",
+        "saxophone",
+        "cello"
+      ],
+      "policy_version": "0.7.0",
+      "mode": "automatic",
+      "discovery": {
+        "policy": "separate_then_verify",
+        "candidate_count": 33,
+        "prefiltered_by_existing_stems": false
+      },
+      "validation": {
+        "vocals": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000446,
+          "relative_peak_rms": 0.000573,
+          "target_score": 0.0873,
+          "competing_score": 0.0494,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5625
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1546
+            },
+            {
+              "label": "Speech",
+              "score": 0.0873
+            },
+            {
+              "label": "Guitar",
+              "score": 0.0641
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0595
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.0494
+            }
+          ]
+        },
+        "bass": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.006524,
+          "relative_peak_rms": 0.007553,
+          "target_score": 0.0276,
+          "competing_score": 0.024,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.664
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1052
+            },
+            {
+              "label": "Guitar",
+              "score": 0.0365
+            },
+            {
+              "label": "Electronic music",
+              "score": 0.0363
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0308
+            },
+            {
+              "label": "Double bass",
+              "score": 0.0276
+            }
+          ]
+        },
+        "guitar": {
+          "accepted": true,
+          "reason": "separator_candidate",
+          "identity_state": "uncertain",
+          "relative_rms": 0.708213,
+          "relative_peak_rms": 1.06173,
+          "target_score": 0.0112,
+          "competing_score": 0.0434,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.698
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1805
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.1217
+            },
+            {
+              "label": "Distortion",
+              "score": 0.065
+            },
+            {
+              "label": "Guitar",
+              "score": 0.0622
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0468
+            }
+          ],
+          "reconstruction_support": 1.165804
+        },
+        "acoustic_guitar": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.0554,
+          "relative_peak_rms": 0.089202,
+          "target_score": 0.0308,
+          "competing_score": 0.0531,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.6742
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.2559
+            },
+            {
+              "label": "Guitar",
+              "score": 0.1713
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.134
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.0747
+            },
+            {
+              "label": "Bowed string instrument",
+              "score": 0.0715
+            }
+          ]
+        },
+        "accordion": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.006284,
+          "relative_peak_rms": 0.011055,
+          "target_score": 0.0338,
+          "competing_score": 0.6229,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Harmonica",
+              "score": 0.6229
+            },
+            {
+              "label": "Music",
+              "score": 0.5143
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.3151
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0872
+            },
+            {
+              "label": "Accordion",
+              "score": 0.0338
+            },
+            {
+              "label": "Speech",
+              "score": 0.0252
+            }
+          ]
+        },
+        "harmonica": {
+          "accepted": true,
+          "reason": "",
+          "identity_state": "confirmed",
+          "relative_rms": 0.135223,
+          "relative_peak_rms": 0.173598,
+          "target_score": 0.2119,
+          "competing_score": 0.0504,
+          "confirmed_contexts": 1,
+          "normalized_for_identity": true,
+          "confirmed_times": [
+            2.5
+          ],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.3521
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.2119
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.0906
+            },
+            {
+              "label": "Mantra",
+              "score": 0.0622
+            },
+            {
+              "label": "Singing",
+              "score": 0.0504
+            },
+            {
+              "label": "A capella",
+              "score": 0.0496
+            }
+          ]
+        },
+        "piano": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000804,
+          "relative_peak_rms": 0.000989,
+          "target_score": 0.0273,
+          "competing_score": 0.0455,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.7068
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1928
+            },
+            {
+              "label": "Guitar",
+              "score": 0.1089
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.074
+            },
+            {
+              "label": "Bowed string instrument",
+              "score": 0.0478
+            },
+            {
+              "label": "Speech",
+              "score": 0.0455
+            }
+          ]
+        },
+        "organ": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.000173,
+          "relative_peak_rms": 0.000251,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "synth": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000581,
+          "relative_peak_rms": 0.000898,
+          "target_score": 0.009,
+          "competing_score": 0.0942,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.4848
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1736
+            },
+            {
+              "label": "Accordion",
+              "score": 0.0942
+            },
+            {
+              "label": "Guitar",
+              "score": 0.0729
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.064
+            },
+            {
+              "label": "Speech",
+              "score": 0.0563
+            }
+          ]
+        },
+        "bowed_strings": {
+          "accepted": true,
+          "reason": "separator_candidate",
+          "identity_state": "uncertain",
+          "relative_rms": 0.538011,
+          "relative_peak_rms": 0.721283,
+          "target_score": 0.0183,
+          "competing_score": 0.1154,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.7629
+            },
+            {
+              "label": "Guitar",
+              "score": 0.489
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.382
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.3456
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.296
+            },
+            {
+              "label": "Distortion",
+              "score": 0.2084
+            }
+          ]
+        },
+        "brass": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.045307,
+          "relative_peak_rms": 0.075466,
+          "target_score": 0.0061,
+          "competing_score": 0.3868,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Harmonica",
+              "score": 0.3868
+            },
+            {
+              "label": "Music",
+              "score": 0.33
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.3264
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0365
+            },
+            {
+              "label": "Speech",
+              "score": 0.0284
+            },
+            {
+              "label": "Inside, small room",
+              "score": 0.0166
+            }
+          ]
+        },
+        "woodwind": {
+          "accepted": true,
+          "reason": "separator_candidate",
+          "identity_state": "uncertain",
+          "relative_rms": 0.250964,
+          "relative_peak_rms": 0.319358,
+          "target_score": 0.107,
+          "competing_score": 0.0984,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.3425
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.107
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.0984
+            },
+            {
+              "label": "Mantra",
+              "score": 0.0588
+            },
+            {
+              "label": "Singing",
+              "score": 0.0259
+            },
+            {
+              "label": "Vocal music",
+              "score": 0.0257
+            }
+          ]
+        },
+        "banjo": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.094034,
+          "relative_peak_rms": 0.127241,
+          "target_score": 0.011,
+          "competing_score": 0.0554,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.77
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.431
+            },
+            {
+              "label": "Guitar",
+              "score": 0.3132
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.2619
+            },
+            {
+              "label": "Acoustic guitar",
+              "score": 0.0554
+            },
+            {
+              "label": "Strum",
+              "score": 0.0495
+            }
+          ]
+        },
+        "mandolin": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.003188,
+          "relative_peak_rms": 0.004005,
+          "target_score": 0.0012,
+          "competing_score": 0.3926,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5032
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.3926
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.2372
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1115
+            },
+            {
+              "label": "Speech",
+              "score": 0.0898
+            },
+            {
+              "label": "Accordion",
+              "score": 0.0307
+            }
+          ]
+        },
+        "ukulele": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.160176,
+          "relative_peak_rms": 0.202139,
+          "target_score": 0.0028,
+          "competing_score": 0.0685,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.6737
+            },
+            {
+              "label": "Guitar",
+              "score": 0.4194
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.3644
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.2909
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.1073
+            },
+            {
+              "label": "Acoustic guitar",
+              "score": 0.0685
+            }
+          ]
+        },
+        "harp": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.022142,
+          "relative_peak_rms": 0.029253,
+          "target_score": 0.0,
+          "competing_score": 0.0386,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.6328
+            },
+            {
+              "label": "Guitar",
+              "score": 0.0398
+            },
+            {
+              "label": "Speech",
+              "score": 0.0386
+            },
+            {
+              "label": "Hum",
+              "score": 0.0376
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0373
+            },
+            {
+              "label": "Throbbing",
+              "score": 0.0336
+            }
+          ]
+        },
+        "percussion": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000609,
+          "relative_peak_rms": 0.001061,
+          "target_score": 0.0003,
+          "competing_score": 0.0883,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5015
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1034
+            },
+            {
+              "label": "Speech",
+              "score": 0.0883
+            },
+            {
+              "label": "Guitar",
+              "score": 0.078
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0615
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.0388
+            }
+          ]
+        },
+        "bells": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000644,
+          "relative_peak_rms": 0.00115,
+          "target_score": 0.0006,
+          "competing_score": 0.0556,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5792
+            },
+            {
+              "label": "Speech",
+              "score": 0.0556
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0327
+            },
+            {
+              "label": "Inside, small room",
+              "score": 0.0258
+            },
+            {
+              "label": "Clock",
+              "score": 0.0231
+            },
+            {
+              "label": "Radio",
+              "score": 0.0215
+            }
+          ]
+        },
+        "electric_piano": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.001278,
+          "relative_peak_rms": 0.002006,
+          "target_score": 0.004,
+          "competing_score": 0.0241,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5233
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0751
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0299
+            },
+            {
+              "label": "Speech",
+              "score": 0.0241
+            },
+            {
+              "label": "Guitar",
+              "score": 0.0213
+            },
+            {
+              "label": "Bowed string instrument",
+              "score": 0.0194
+            }
+          ]
+        },
+        "saxophone": {
+          "accepted": true,
+          "reason": "separator_candidate",
+          "identity_state": "uncertain",
+          "relative_rms": 0.257967,
+          "relative_peak_rms": 0.321525,
+          "target_score": 0.0847,
+          "competing_score": 0.1038,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.4995
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.3701
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1164
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.1038
+            },
+            {
+              "label": "Saxophone",
+              "score": 0.0847
+            },
+            {
+              "label": "Brass instrument",
+              "score": 0.0625
+            }
+          ],
+          "reconstruction_support": 0.242716
+        },
+        "flute": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000709,
+          "relative_peak_rms": 0.001521,
+          "target_score": 0.0007,
+          "competing_score": 0.0947,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.0959
+            },
+            {
+              "label": "Speech",
+              "score": 0.0947
+            },
+            {
+              "label": "Inside, small room",
+              "score": 0.0242
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.0124
+            },
+            {
+              "label": "Writing",
+              "score": 0.0096
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0082
+            }
+          ]
+        },
+        "violin": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.002952,
+          "relative_peak_rms": 0.00473,
+          "target_score": 0.0027,
+          "competing_score": 0.3147,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.4115
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.3147
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.1828
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1055
+            },
+            {
+              "label": "Speech",
+              "score": 0.0627
+            },
+            {
+              "label": "Accordion",
+              "score": 0.0562
+            }
+          ]
+        },
+        "cello": {
+          "accepted": true,
+          "reason": "separator_candidate",
+          "identity_state": "uncertain",
+          "relative_rms": 0.561992,
+          "relative_peak_rms": 0.752388,
+          "target_score": 0.0065,
+          "competing_score": 0.1122,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.76
+            },
+            {
+              "label": "Guitar",
+              "score": 0.5003
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.3946
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.357
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.271
+            },
+            {
+              "label": "Distortion",
+              "score": 0.1876
+            }
+          ],
+          "reconstruction_support": 1.026366
+        },
+        "trumpet": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.002917,
+          "relative_peak_rms": 0.005458,
+          "target_score": 0.0004,
+          "competing_score": 0.5926,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Harmonica",
+              "score": 0.5926
+            },
+            {
+              "label": "Music",
+              "score": 0.4666
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.2582
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0424
+            },
+            {
+              "label": "Speech",
+              "score": 0.0268
+            },
+            {
+              "label": "Inside, small room",
+              "score": 0.0187
+            }
+          ]
+        },
+        "clarinet": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.022744,
+          "relative_peak_rms": 0.034784,
+          "target_score": 0.0008,
+          "competing_score": 0.3519,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.4769
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.3519
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.1672
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0777
+            },
+            {
+              "label": "Accordion",
+              "score": 0.0486
+            },
+            {
+              "label": "Speech",
+              "score": 0.0282
+            }
+          ]
+        },
+        "trombone": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.007672,
+          "relative_peak_rms": 0.01424,
+          "target_score": 0.0008,
+          "competing_score": 0.0296,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5999
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1796
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0889
+            },
+            {
+              "label": "Guitar",
+              "score": 0.0496
+            },
+            {
+              "label": "Speech",
+              "score": 0.0296
+            },
+            {
+              "label": "Bowed string instrument",
+              "score": 0.0271
+            }
+          ]
+        },
+        "french_horn": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.008402,
+          "relative_peak_rms": 0.014015,
+          "target_score": 0.0011,
+          "competing_score": 0.1721,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5089
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.175
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.1721
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.1319
+            },
+            {
+              "label": "Accordion",
+              "score": 0.0624
+            },
+            {
+              "label": "Speech",
+              "score": 0.0345
+            }
+          ]
+        },
+        "harpsichord": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.005739,
+          "relative_peak_rms": 0.008074,
+          "target_score": 0.0007,
+          "competing_score": 0.331,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.5972
+            },
+            {
+              "label": "Harmonica",
+              "score": 0.331
+            },
+            {
+              "label": "Wind instrument, woodwind instrument",
+              "score": 0.2094
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0629
+            },
+            {
+              "label": "Speech",
+              "score": 0.0398
+            },
+            {
+              "label": "Synthetic singing",
+              "score": 0.0234
+            }
+          ]
+        },
+        "sitar": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.212085,
+          "relative_peak_rms": 0.259181,
+          "target_score": 0.0015,
+          "competing_score": 0.0534,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.7853
+            },
+            {
+              "label": "Guitar",
+              "score": 0.3375
+            },
+            {
+              "label": "Effects unit",
+              "score": 0.3238
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.2911
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.2156
+            },
+            {
+              "label": "Distortion",
+              "score": 0.2095
+            }
+          ]
+        },
+        "marimba": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.001953,
+          "relative_peak_rms": 0.002975,
+          "target_score": 0.0007,
+          "competing_score": 0.0973,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.6308
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.1506
+            },
+            {
+              "label": "Speech",
+              "score": 0.0973
+            },
+            {
+              "label": "Bowed string instrument",
+              "score": 0.0575
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0351
+            },
+            {
+              "label": "Violin, fiddle",
+              "score": 0.0243
+            }
+          ]
+        },
+        "tambourine": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 5e-05,
+          "relative_peak_rms": 7.2e-05,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "timpani": {
+          "accepted": false,
+          "reason": "unconfirmed_timbre",
+          "identity_state": "unconfirmed",
+          "relative_rms": 0.000814,
+          "relative_peak_rms": 0.001365,
+          "target_score": 0.0001,
+          "competing_score": 0.1105,
+          "confirmed_contexts": 0,
+          "normalized_for_identity": true,
+          "confirmed_times": [],
+          "top": [
+            {
+              "label": "Music",
+              "score": 0.3671
+            },
+            {
+              "label": "Speech",
+              "score": 0.1105
+            },
+            {
+              "label": "Musical instrument",
+              "score": 0.0305
+            },
+            {
+              "label": "Guitar",
+              "score": 0.0302
+            },
+            {
+              "label": "Animal",
+              "score": 0.0285
+            },
+            {
+              "label": "Plucked string instrument",
+              "score": 0.0248
+            }
+          ]
+        },
+        "wind_chimes": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.000126,
+          "relative_peak_rms": 0.000211,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        }
+      },
+      "resolution": [
+        {
+          "discarded": "bowed_strings",
+          "reason": "confirmed_children",
+          "kept": [
+            "cello"
+          ]
+        },
+        {
+          "discarded": "woodwind",
+          "reason": "confirmed_children",
+          "kept": [
+            "saxophone"
+          ]
+        }
+      ],
+      "chunk_seconds": 6.0,
+      "overlap": 0.25,
+      "mixture_consistent": true,
+      "remainder": "other",
+      "source_names": {
+        "vocals": "vocal",
+        "bass": "bass",
+        "guitar": "electric-guitar",
+        "acoustic_guitar": "acoustic-guitar",
+        "accordion": "accordion",
+        "harmonica": "harmonica",
+        "piano": "piano",
+        "organ": "organ",
+        "synth": "synth",
+        "bowed_strings": "bowed_strings",
+        "brass": "brass",
+        "woodwind": "woodwind",
+        "banjo": "banjo",
+        "mandolin": "mandolin",
+        "ukulele": "ukulele",
+        "harp": "harp",
+        "percussion": "percussion",
+        "bells": "bells",
+        "electric_piano": "digital-piano",
+        "saxophone": "saxophone",
+        "flute": "flute",
+        "violin": "violin",
+        "cello": "cello",
+        "trumpet": "trumpet",
+        "clarinet": "clarinet",
+        "trombone": "trombone",
+        "french_horn": "french-horn",
+        "harpsichord": "harpsichord",
+        "sitar": "sitar",
+        "marimba": "marimba",
+        "tambourine": "tambourine",
+        "timpani": "timpani",
+        "wind_chimes": "wind-chimes"
+      }
+    }
+  },
+  {
+    "case": "silence",
+    "source_segment_seconds": [
+      5.0,
+      10.0
+    ],
+    "retained": [],
+    "measurements": [],
+    "sum_max_absolute_error": 0.0,
+    "temporary_work_files": 0,
+    "seconds": 22.79,
+    "details": {
+      "model": "MVSep Mega53 v1 · comprehensive candidates + timbre verification",
+      "checkpoint_sha256": "c62820893bbf86d4e734f966bd142d9157cfc8bb8e79e9d8f9ea553f3ff3519f",
+      "device": "cpu",
+      "drums_preserved": true,
+      "drums_sha256": "f2ef7ae92b0f62247b8f3038e52ce1f14c5000af0d6592fd2eb1d9ba18017c6c",
+      "selected": [
+        "vocals",
+        "bass",
+        "guitar",
+        "acoustic_guitar",
+        "accordion",
+        "harmonica",
+        "piano",
+        "organ",
+        "synth",
+        "bowed_strings",
+        "brass",
+        "woodwind",
+        "banjo",
+        "mandolin",
+        "ukulele",
+        "harp",
+        "percussion",
+        "bells",
+        "electric_piano",
+        "saxophone",
+        "flute",
+        "violin",
+        "cello",
+        "trumpet",
+        "clarinet",
+        "trombone",
+        "french_horn",
+        "harpsichord",
+        "sitar",
+        "marimba",
+        "tambourine",
+        "timpani",
+        "wind_chimes"
+      ],
+      "retained": [],
+      "policy_version": "0.7.0",
+      "mode": "automatic",
+      "discovery": {
+        "policy": "separate_then_verify",
+        "candidate_count": 33,
+        "prefiltered_by_existing_stems": false
+      },
+      "validation": {
+        "vocals": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "bass": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "guitar": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "acoustic_guitar": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "accordion": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "harmonica": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "piano": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "organ": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "synth": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "bowed_strings": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "brass": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "woodwind": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "banjo": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "mandolin": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "ukulele": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "harp": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "percussion": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "bells": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "electric_piano": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "saxophone": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "flute": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "violin": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "cello": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "trumpet": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "clarinet": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "trombone": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "french_horn": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "harpsichord": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "sitar": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "marimba": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "tambourine": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "timpani": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        },
+        "wind_chimes": {
+          "accepted": false,
+          "reason": "very_weak",
+          "relative_rms": 0.0,
+          "relative_peak_rms": 0.0,
+          "target_score": 0.0,
+          "confirmed_contexts": 0
+        }
+      },
+      "resolution": [],
+      "chunk_seconds": 6.0,
+      "overlap": 0.25,
+      "mixture_consistent": true,
+      "remainder": "other",
+      "source_names": {
+        "vocals": "vocal",
+        "bass": "bass",
+        "guitar": "electric-guitar",
+        "acoustic_guitar": "acoustic-guitar",
+        "accordion": "accordion",
+        "harmonica": "harmonica",
+        "piano": "piano",
+        "organ": "organ",
+        "synth": "synth",
+        "bowed_strings": "bowed_strings",
+        "brass": "brass",
+        "woodwind": "woodwind",
+        "banjo": "banjo",
+        "mandolin": "mandolin",
+        "ukulele": "ukulele",
+        "harp": "harp",
+        "percussion": "percussion",
+        "bells": "bells",
+        "electric_piano": "digital-piano",
+        "saxophone": "saxophone",
+        "flute": "flute",
+        "violin": "violin",
+        "cello": "cello",
+        "trumpet": "trumpet",
+        "clarinet": "clarinet",
+        "trombone": "trombone",
+        "french_horn": "french-horn",
+        "harpsichord": "harpsichord",
+        "sitar": "sitar",
+        "marimba": "marimba",
+        "tambourine": "tambourine",
+        "timpani": "timpani",
+        "wind_chimes": "wind-chimes"
+      }
+    }
+  },
+  {
+    "case": "brief_flute",
+    "start": 2.0,
+    "duration": 120.0,
+    "old_whole_track_RMS_cutoff_would_reject": true,
+    "validation": {
+      "accepted": true,
+      "reason": "",
+      "identity_state": "confirmed",
+      "relative_rms": 0.002582,
+      "relative_peak_rms": 0.020243,
+      "target_score": 0.4885,
+      "competing_score": 0.0397,
+      "confirmed_contexts": 2,
+      "normalized_for_identity": true,
+      "confirmed_times": [
+        2.5,
+        5.0
+      ],
+      "top": [
+        {
+          "label": "Music",
+          "score": 0.5894
+        },
+        {
+          "label": "Flute",
+          "score": 0.4885
+        },
+        {
+          "label": "Wind instrument, woodwind instrument",
+          "score": 0.3765
+        },
+        {
+          "label": "Musical instrument",
+          "score": 0.2418
+        },
+        {
+          "label": "Whistle",
+          "score": 0.0537
+        },
+        {
+          "label": "Speech",
+          "score": 0.0397
+        }
+      ]
+    }
+  },
+  {
+    "case": "brief_flute",
+    "start": 91.0,
+    "duration": 120.0,
+    "old_whole_track_RMS_cutoff_would_reject": true,
+    "validation": {
+      "accepted": true,
+      "reason": "",
+      "identity_state": "confirmed",
+      "relative_rms": 0.002582,
+      "relative_peak_rms": 0.020243,
+      "target_score": 0.5308,
+      "competing_score": 0.0516,
+      "confirmed_contexts": 3,
+      "normalized_for_identity": true,
+      "confirmed_times": [
+        90.0,
+        92.5,
+        95.0
+      ],
+      "top": [
+        {
+          "label": "Music",
+          "score": 0.6167
+        },
+        {
+          "label": "Flute",
+          "score": 0.5308
+        },
+        {
+          "label": "Wind instrument, woodwind instrument",
+          "score": 0.3965
+        },
+        {
+          "label": "Musical instrument",
+          "score": 0.2959
+        },
+        {
+          "label": "Whistle",
+          "score": 0.0557
+        },
+        {
+          "label": "Speech",
+          "score": 0.0516
+        }
+      ]
+    }
+  }
+]

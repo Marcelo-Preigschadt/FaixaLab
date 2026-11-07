@@ -1,0 +1,59 @@
+{
+  "guitar_role_api": "passed",
+  "stems": [
+    "vocals",
+    "drums",
+    "bass",
+    "guitar_lead",
+    "guitar_rhythm",
+    "piano",
+    "other"
+  ],
+  "lyrics_preserved": true,
+  "range_streaming": true,
+  "zip_wavs": 7,
+  "guitar_reconstruction_max_error": 3.725290298461914e-09,
+  "model": {
+    "model": "HTDemucs Lead/Rhythm Dry Paint",
+    "sha256": "946ffd50d7f2fd87e447d880525283e88bd9061e1b428d4f1d380e764d54d618",
+    "stems": [
+      "guitar_lead",
+      "guitar_rhythm"
+    ],
+    "overlap": 0.5,
+    "experimental": true
+  },
+  "seconds": 26.05,
+  "chords": [
+    {
+      "start": 0.0,
+      "end": 2.972,
+      "label": "C",
+      "confidence": 0.779
+    },
+    {
+      "start": 2.972,
+      "end": 3.065,
+      "label": "Am",
+      "confidence": 0.676
+    },
+    {
+      "start": 3.065,
+      "end": 5.526,
+      "label": "Am7",
+      "edited": true
+    },
+    {
+      "start": 5.526,
+      "end": 8.29,
+      "label": "F",
+      "confidence": 0.726
+    },
+    {
+      "start": 8.29,
+      "end": 11.0,
+      "label": "G",
+      "confidence": 0.738
+    }
+  ]
+}

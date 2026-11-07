@@ -1,0 +1,28 @@
+{
+  "mode": "balanced",
+  "engine": {
+    "model": "htdemucs_6s",
+    "quality": "balanced",
+    "overlap": 0.5,
+    "shifts": 1,
+    "mixture_consistent": true
+  },
+  "duration_seconds": 11.0,
+  "stems": [
+    "bass",
+    "drums",
+    "guitar",
+    "other",
+    "piano",
+    "vocals"
+  ],
+  "maximum_reconstruction_error": 5.960464477539063e-08,
+  "completed_windows": 4,
+  "observed_progress_fractions": [
+    0,
+    0.25,
+    0.5,
+    0.75,
+    1
+  ]
+}

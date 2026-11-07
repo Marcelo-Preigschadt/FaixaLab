@@ -1,0 +1,207 @@
+{
+  "instruments": [
+    {
+      "name": "vocals",
+      "label": "Voz"
+    },
+    {
+      "name": "bass",
+      "label": "Baixo"
+    },
+    {
+      "name": "guitar",
+      "label": "Guitarra elétrica"
+    },
+    {
+      "name": "acoustic_guitar",
+      "label": "Violão"
+    },
+    {
+      "name": "accordion",
+      "label": "Gaita / acordeon"
+    },
+    {
+      "name": "harmonica",
+      "label": "Gaita de boca"
+    },
+    {
+      "name": "piano",
+      "label": "Piano"
+    },
+    {
+      "name": "organ",
+      "label": "Órgão"
+    },
+    {
+      "name": "synth",
+      "label": "Sintetizador"
+    },
+    {
+      "name": "bowed_strings",
+      "label": "Cordas de arco"
+    },
+    {
+      "name": "brass",
+      "label": "Metais"
+    },
+    {
+      "name": "woodwind",
+      "label": "Sopros"
+    },
+    {
+      "name": "banjo",
+      "label": "Banjo"
+    },
+    {
+      "name": "mandolin",
+      "label": "Bandolim"
+    },
+    {
+      "name": "ukulele",
+      "label": "Ukulele"
+    },
+    {
+      "name": "harp",
+      "label": "Harpa"
+    },
+    {
+      "name": "percussion",
+      "label": "Percussão adicional"
+    },
+    {
+      "name": "bells",
+      "label": "Sinos / campanas"
+    },
+    {
+      "name": "electric_piano",
+      "label": "Piano digital"
+    },
+    {
+      "name": "saxophone",
+      "label": "Saxofone"
+    },
+    {
+      "name": "flute",
+      "label": "Flauta"
+    },
+    {
+      "name": "violin",
+      "label": "Violino"
+    },
+    {
+      "name": "cello",
+      "label": "Violoncelo"
+    },
+    {
+      "name": "trumpet",
+      "label": "Trompete"
+    },
+    {
+      "name": "clarinet",
+      "label": "Clarinete"
+    },
+    {
+      "name": "trombone",
+      "label": "Trombone"
+    },
+    {
+      "name": "french_horn",
+      "label": "Trompa"
+    },
+    {
+      "name": "harpsichord",
+      "label": "Cravo"
+    },
+    {
+      "name": "sitar",
+      "label": "Sitar"
+    },
+    {
+      "name": "marimba",
+      "label": "Marimba / xilofone"
+    },
+    {
+      "name": "tambourine",
+      "label": "Pandeiro / pandeirola"
+    },
+    {
+      "name": "timpani",
+      "label": "Tímpanos"
+    },
+    {
+      "name": "wind_chimes",
+      "label": "Carrilhão de vento"
+    }
+  ],
+  "exclusive_groups": [
+    [
+      "piano",
+      "electric_piano"
+    ],
+    [
+      "bowed_strings",
+      "violin",
+      "cello"
+    ],
+    [
+      "woodwind",
+      "saxophone",
+      "flute",
+      "clarinet"
+    ],
+    [
+      "brass",
+      "trumpet",
+      "trombone",
+      "french_horn"
+    ],
+    [
+      "percussion",
+      "marimba",
+      "tambourine",
+      "timpani"
+    ],
+    [
+      "bells",
+      "wind_chimes"
+    ]
+  ],
+  "automatic_candidates": [
+    "vocals",
+    "bass",
+    "guitar",
+    "acoustic_guitar",
+    "accordion",
+    "harmonica",
+    "piano",
+    "organ",
+    "synth",
+    "bowed_strings",
+    "brass",
+    "woodwind",
+    "banjo",
+    "mandolin",
+    "ukulele",
+    "harp",
+    "percussion",
+    "bells",
+    "electric_piano",
+    "saxophone",
+    "flute",
+    "violin",
+    "cello",
+    "trumpet",
+    "clarinet",
+    "trombone",
+    "french_horn",
+    "harpsichord",
+    "sitar",
+    "marimba",
+    "tambourine",
+    "timpani",
+    "wind_chimes"
+  ],
+  "automatic_policy": "separate_then_verify",
+  "download_bytes": 1368919887,
+  "processing": "local"
+}

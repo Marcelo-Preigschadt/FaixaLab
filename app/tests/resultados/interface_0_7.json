@@ -1,0 +1,11 @@
+{
+  "default_automatic": true,
+  "categories": 33,
+  "mixer_tracks": 11,
+  "uncertainty_label": true,
+  "parent_child_constraints": true,
+  "automatic_action": true,
+  "accordion_does_not_request_guitar_tab": true,
+  "views": 5,
+  "DOM_errors": []
+}

@@ -1,0 +1,91 @@
+{
+  "MP3_import_real": true,
+  "downloaded_Demucs_and_real_neural_workers": true,
+  "default_instrument_detail": true,
+  "automatic_categories": 33,
+  "mode": "automatic",
+  "status": "ready",
+  "warnings": [],
+  "stems": [
+    "vocals",
+    "drums",
+    "acoustic_guitar",
+    "accordion",
+    "other"
+  ],
+  "sum_max_absolute_error": 5.960464477539063e-08,
+  "ZIP_stems_verified": true,
+  "stages": [
+    {
+      "stage": "Convertendo o áudio",
+      "progress": 11
+    },
+    {
+      "stage": "Separando os instrumentos • CPU",
+      "progress": 15.0
+    },
+    {
+      "stage": "Preparando o modelo de separação",
+      "progress": 15.0
+    },
+    {
+      "stage": "Separando instrumentos · trecho 1/1",
+      "progress": 15.3
+    },
+    {
+      "stage": "Separando instrumentos · 1/1 trechos concluídos",
+      "progress": 35.0
+    },
+    {
+      "stage": "Preparando refinamento dos instrumentos",
+      "progress": 35
+    },
+    {
+      "stage": "Conferindo o áudio para a separação por IA",
+      "progress": 35.2
+    },
+    {
+      "stage": "Avaliando automaticamente 33 categorias de instrumentos",
+      "progress": 36.6
+    },
+    {
+      "stage": "Carregando separador por IA · 33 categorias",
+      "progress": 42.8
+    },
+    {
+      "stage": "Separando 33 categorias · trecho 1/1",
+      "progress": 68.2
+    },
+    {
+      "stage": "Conferindo o timbre · Gaita de boca",
+      "progress": 68.9
+    },
+    {
+      "stage": "Conferindo o timbre · Piano digital",
+      "progress": 70.4
+    },
+    {
+      "stage": "Conferindo o timbre · Tímpanos",
+      "progress": 71.9
+    },
+    {
+      "stage": "Separação por IA concluída · 4 instrumentos identificados",
+      "progress": 74.0
+    },
+    {
+      "stage": "Reconhecendo acordes e andamento",
+      "progress": 78
+    },
+    {
+      "stage": "Reconhecendo os acordes no contexto da música",
+      "progress": 84.0
+    },
+    {
+      "stage": "Pronto para tocar",
+      "progress": 100
+    }
+  ],
+  "seconds": 53.29,
+  "youtube_network_download_tested": false,
+  "youtube_route_contract_tested_separately": true
+}

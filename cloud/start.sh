@@ -7,7 +7,7 @@ if curl -fsS http://127.0.0.1:7860/api/health >/dev/null 2>&1; then
   printf 'FaixaLab já está aberto na porta privada 7860.\n'
   exit 0
 fi
-nohup bash .app/FaixaLab/cloud/start.sh > "$FAIXALAB_DATA_DIR/server.log" 2>&1 < /dev/null &
+nohup bash app/cloud/start.sh > "$FAIXALAB_DATA_DIR/server.log" 2>&1 < /dev/null &
 printf '%s\n' "$!" > "$FAIXALAB_DATA_DIR/server.pid"
 for attempt in {1..30}; do
   if curl -fsS http://127.0.0.1:7860/api/health >/dev/null 2>&1; then

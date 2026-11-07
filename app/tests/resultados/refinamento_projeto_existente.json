@@ -1,0 +1,35 @@
+{
+  "refine_existing": "passed",
+  "lyrics_preserved": true,
+  "only_changed_chord_marked_manual": true,
+  "manual_chord_preserved": true,
+  "audio_revision_changed": true,
+  "project_id": "783fb58b3da347b39370fa43a70406b0",
+  "seconds": 64.1,
+  "chords": [
+    {
+      "start": 0.0,
+      "end": 3.065,
+      "label": "C",
+      "confidence": 0.675
+    },
+    {
+      "start": 3.065,
+      "end": 5.526,
+      "label": "Am7",
+      "edited": true
+    },
+    {
+      "start": 5.526,
+      "end": 8.29,
+      "label": "F",
+      "confidence": 0.731
+    },
+    {
+      "start": 8.29,
+      "end": 11.0,
+      "label": "G",
+      "confidence": 0.536
+    }
+  ]
+}

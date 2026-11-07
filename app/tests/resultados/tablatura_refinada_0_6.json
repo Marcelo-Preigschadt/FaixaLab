@@ -1,0 +1,34 @@
+{
+  "version": "0.6.0",
+  "notes": 193,
+  "sections": [
+    {
+      "start": 6.0,
+      "end": 19.8,
+      "evidence": 0.993,
+      "lead_share": 0.861,
+      "texture": {
+        "accepted": true,
+        "reason": "",
+        "chord_fraction": 0.0264,
+        "active_frames": 1099
+      }
+    },
+    {
+      "start": 82.2,
+      "end": 98.5,
+      "evidence": 0.999,
+      "lead_share": 0.897,
+      "texture": {
+        "accepted": true,
+        "reason": "",
+        "chord_fraction": 0.0392,
+        "active_frames": 1224
+      }
+    }
+  ],
+  "unmapped": 0,
+  "source": "Mega53 electric-guitar, then Dry Paint lead/rhythm",
+  "pitch_accuracy_measured": false,
+  "instrument_reference_available": false
+}

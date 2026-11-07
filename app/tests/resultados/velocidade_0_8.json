@@ -1,0 +1,71 @@
+{
+  "separation": [
+    {
+      "threads": 4,
+      "fused": true,
+      "seconds": 10.995547465999152,
+      "load_seconds": 3.211057688999972,
+      "max_error": 5.960464477539063e-08,
+      "rms_error": 7.377058408586379e-10
+    },
+    {
+      "threads": 2,
+      "fused": true,
+      "seconds": 16.027608657999735,
+      "load_seconds": 2.341192396000224,
+      "max_error": 2.868473529815674e-07,
+      "rms_error": 1.4702577821879004e-08
+    },
+    {
+      "threads": 1,
+      "fused": true,
+      "seconds": 30.153386451999722,
+      "load_seconds": 2.4054746220008383,
+      "max_error": 1.6097910702228546e-06,
+      "rms_error": 2.341537808092653e-08
+    },
+    {
+      "threads": 2,
+      "fused": false,
+      "seconds": 16.582182735999595,
+      "load_seconds": 2.159186901999419,
+      "max_error": 2.859160304069519e-07,
+      "rms_error": 1.4700697548164499e-08
+    }
+  ],
+  "context_gating": {
+    "baseline_seconds": 14.370334501999423,
+    "optimized_seconds": 5.377915564999967,
+    "contexts_total": 60,
+    "contexts_evaluated": 23,
+    "baseline_model_calls": 120,
+    "optimized_model_calls": 46,
+    "sections_equal": true,
+    "sections": [],
+    "source_seconds": 60.0
+  },
+  "real_pitch_cache": {
+    "presence": {
+      "baseline_seconds": 2.9010315159994207,
+      "optimized_seconds": 1.5670569759995487,
+      "total_contexts": 12,
+      "evaluated_contexts": 7,
+      "sections_equal": true,
+      "sections": []
+    },
+    "pitch_cache": {
+      "first_seconds": 6.361634905999381,
+      "second_seconds": 0.0010272859999531647,
+      "first_inference_sections": 1,
+      "second_inference_sections": 0,
+      "notes": 14,
+      "pitches_and_times_equal": true
+    }
+  },
+  "python_tests": {
+    "passed": 43
+  },
+  "chord_diagrams": 174,
+  "browser_visual_qa": "not_verified_missing_preview_runtime",
+  "codespaces_deployed": false
+}

@@ -1,0 +1,32 @@
+{
+  "project_id": "02a70d58738941dfb783d3eebfb9294e",
+  "test": "real ONNX and API",
+  "expected_pitches": [
+    64,
+    67,
+    69,
+    71,
+    76,
+    74,
+    69,
+    67
+  ],
+  "detected_pitches": [
+    64,
+    67,
+    69,
+    71,
+    76,
+    74,
+    69,
+    67
+  ],
+  "max_onset_error_seconds": 0.032,
+  "physical_positions_verified": true,
+  "MIDI_round_trip": true,
+  "TXT_export": true,
+  "ZIP_export": true,
+  "manual_position_preserved_outside_requested_region": true,
+  "deleted_note_preserved_after_reanalysis": true,
+  "seconds": 12.93
+}

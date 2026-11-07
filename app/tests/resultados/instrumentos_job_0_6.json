@@ -1,0 +1,19 @@
+{
+  "real_pretrained_worker": true,
+  "API_job": true,
+  "status": "ready",
+  "stems": [
+    "drums",
+    "acoustic_guitar",
+    "accordion",
+    "other"
+  ],
+  "drums_bytes_identical": true,
+  "drums_sha256": "04d43e0bfafa58de7013477f73f1d917de20af2db8e998a3abea0b98427ba81d",
+  "original_revision_changed": true,
+  "lyrics_preserved": true,
+  "manual_chord_preserved": true,
+  "sum_max_absolute_error": 1.1175870895385742e-08,
+  "ZIP_stems_verified": true,
+  "seconds": 48.8
+}

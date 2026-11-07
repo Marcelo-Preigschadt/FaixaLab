@@ -4,13 +4,13 @@ Separação de instrumentos, cifras, letra e tablatura com modelos públicos, ex
 
 ## Ativar o FaixaLab neste repositório
 
-1. A configuração de inicialização fica neste repositório. O código completo do aplicativo e seus modelos ficam no ZIP do release.
+1. A configuração de inicialização fica neste repositório. O código-fonte editável fica na pasta `app/`. Os modelos grandes são obtidos do ZIP do release.
 2. Crie um release com a tag **v0.8.0** e anexe **FaixaLab_0_8_Windows.zip**, o aplicativo completo recebido nesta atualização. O nome contém Windows por compatibilidade com o pacote existente; ele também contém o servidor Linux.
 3. Abra **Code → Codespaces → Create codespace**, escolhendo **2 núcleos / 8 GB**.
 4. Aguarde o `postCreateCommand`; ele baixa o release com a identidade do Codespace, confere tamanho, SHA-256 e CRC, extrai o app e instala Python/PyTorch CPU. Os modelos maiores ainda ausentes serão baixados no primeiro processamento.
 5. Na aba **Ports**, abra a porta **7860**, mantendo visibilidade **Private**. No celular, entre no mesmo GitHub e abra essa URL.
 
-O manifesto `release.json` fixa o pacote exato. Não troque o ZIP do release por outro arquivo sem atualizar tamanho e SHA-256. O código completo do app fica no ZIP do release, junto dos modelos ONNX; arquivos grandes não precisam entrar no histórico Git.
+O manifesto `release.json` fixa o pacote exato. Não troque o ZIP do release por outro arquivo sem atualizar tamanho e SHA-256. O código-fonte em `app/` é executado pelo servidor. O ZIP do release fornece os modelos binários verificados; os arquivos grandes não entram no histórico Git.
 
 O bootstrap usa o `GITHUB_TOKEN` temporário que o Codespaces fornece automaticamente para o próprio repositório. Não cole tokens no código nem no chat. Nenhuma chave de API de IA é necessária.
 

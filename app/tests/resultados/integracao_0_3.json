@@ -1,0 +1,322 @@
+{
+  "test": "real MP3 end-to-end",
+  "project_id": "945b1306798f4a86abd612b4fd57a85d",
+  "seconds": 67.43,
+  "timing_scope": "full_pipeline",
+  "stems": [
+    "vocals",
+    "drums",
+    "bass",
+    "guitar",
+    "piano",
+    "other"
+  ],
+  "chords": [
+    {
+      "start": 0.0,
+      "end": 2.786,
+      "label": "C",
+      "confidence": 0.774
+    },
+    {
+      "start": 2.786,
+      "end": 5.526,
+      "label": "Am",
+      "confidence": 0.711
+    },
+    {
+      "start": 5.526,
+      "end": 8.29,
+      "label": "F",
+      "confidence": 0.635
+    },
+    {
+      "start": 8.29,
+      "end": 11.0,
+      "label": "G",
+      "confidence": 0.753
+    }
+  ],
+  "lyrics": [
+    {
+      "start": 0.0,
+      "end": 10.36,
+      "text": "And so my fellow Americans, ask not what your country can do for you, ask what you can do for your country.",
+      "words": [
+        {
+          "start": 0.0,
+          "end": 0.52,
+          "text": "And",
+          "confidence": 0.732
+        },
+        {
+          "start": 0.52,
+          "end": 0.86,
+          "text": "so",
+          "confidence": 0.986
+        },
+        {
+          "start": 0.86,
+          "end": 1.2,
+          "text": "my",
+          "confidence": 0.423
+        },
+        {
+          "start": 1.2,
+          "end": 1.52,
+          "text": "fellow",
+          "confidence": 0.996
+        },
+        {
+          "start": 1.52,
+          "end": 2.12,
+          "text": "Americans,",
+          "confidence": 0.954
+        },
+        {
+          "start": 3.26,
+          "end": 3.7,
+          "text": "ask",
+          "confidence": 0.949
+        },
+        {
+          "start": 3.7,
+          "end": 4.24,
+          "text": "not",
+          "confidence": 0.883
+        },
+        {
+          "start": 4.24,
+          "end": 5.54,
+          "text": "what",
+          "confidence": 0.944
+        },
+        {
+          "start": 5.54,
+          "end": 5.78,
+          "text": "your",
+          "confidence": 0.991
+        },
+        {
+          "start": 5.78,
+          "end": 6.28,
+          "text": "country",
+          "confidence": 0.995
+        },
+        {
+          "start": 6.28,
+          "end": 6.62,
+          "text": "can",
+          "confidence": 0.998
+        },
+        {
+          "start": 6.62,
+          "end": 6.86,
+          "text": "do",
+          "confidence": 0.999
+        },
+        {
+          "start": 6.86,
+          "end": 7.08,
+          "text": "for",
+          "confidence": 0.995
+        },
+        {
+          "start": 7.08,
+          "end": 7.44,
+          "text": "you,",
+          "confidence": 0.998
+        },
+        {
+          "start": 7.6,
+          "end": 8.48,
+          "text": "ask",
+          "confidence": 0.914
+        },
+        {
+          "start": 8.48,
+          "end": 8.76,
+          "text": "what",
+          "confidence": 0.996
+        },
+        {
+          "start": 8.76,
+          "end": 9.08,
+          "text": "you",
+          "confidence": 0.979
+        },
+        {
+          "start": 9.08,
+          "end": 9.36,
+          "text": "can",
+          "confidence": 0.997
+        },
+        {
+          "start": 9.36,
+          "end": 9.58,
+          "text": "do",
+          "confidence": 0.998
+        },
+        {
+          "start": 9.58,
+          "end": 9.78,
+          "text": "for",
+          "confidence": 0.996
+        },
+        {
+          "start": 9.78,
+          "end": 9.94,
+          "text": "your",
+          "confidence": 0.997
+        },
+        {
+          "start": 9.94,
+          "end": 10.36,
+          "text": "country.",
+          "confidence": 0.999
+        }
+      ]
+    }
+  ],
+  "key": {
+    "tonic": "C",
+    "mode": "maior",
+    "label": "C maior",
+    "confidence": 0.876
+  },
+  "bpm": 117.5,
+  "range_streaming": true,
+  "zip_verified": true,
+  "warnings": [],
+  "engine": {
+    "engine": "Demucs",
+    "device": "cpu",
+    "model": "htdemucs_ft + htdemucs_6s",
+    "quality": "quality",
+    "overlap": 0.5,
+    "shifts": 1,
+    "mixture_consistent": true
+  },
+  "chord_analysis": {
+    "engine": "BTC + CQT + semi-Markov",
+    "version": "0.3.0",
+    "hop_seconds": 0.09288,
+    "classes": 169,
+    "context_overlap": 0.5,
+    "source": "instrumental_accompaniment",
+    "stability": "stable",
+    "minimum_chord_seconds": 1.021,
+    "harmonic_weights": [
+      1.0,
+      1.0,
+      0.45
+    ],
+    "automatic_inversions": false
+  },
+  "observed_progress": [
+    {
+      "stage": "Convertendo o áudio",
+      "progress": 11
+    },
+    {
+      "stage": "Preparando o modelo de separação",
+      "progress": 15
+    },
+    {
+      "stage": "htdemucs_ft — modelo 1/4 · trecho 1/4",
+      "progress": 16.0
+    },
+    {
+      "stage": "htdemucs_ft — modelo 1/4 · trecho 2/4",
+      "progress": 18.9
+    },
+    {
+      "stage": "htdemucs_ft — modelo 1/4 · trecho 3/4",
+      "progress": 21.9
+    },
+    {
+      "stage": "htdemucs_ft — modelo 1/4 · trecho 4/4",
+      "progress": 24.9
+    },
+    {
+      "stage": "htdemucs_ft — modelo 2/4 · trecho 1/4",
+      "progress": 27.8
+    },
+    {
+      "stage": "htdemucs_ft — modelo 2/4 · trecho 2/4",
+      "progress": 30.8
+    },
+    {
+      "stage": "htdemucs_ft — modelo 2/4 · trecho 3/4",
+      "progress": 33.7
+    },
+    {
+      "stage": "htdemucs_ft — modelo 2/4 · trecho 4/4",
+      "progress": 36.7
+    },
+    {
+      "stage": "htdemucs_ft — modelo 3/4 · trecho 1/4",
+      "progress": 39.6
+    },
+    {
+      "stage": "htdemucs_ft — modelo 3/4 · trecho 2/4",
+      "progress": 42.5
+    },
+    {
+      "stage": "htdemucs_ft — modelo 3/4 · trecho 3/4",
+      "progress": 45.5
+    },
+    {
+      "stage": "htdemucs_ft — modelo 3/4 · trecho 4/4",
+      "progress": 48.5
+    },
+    {
+      "stage": "htdemucs_ft — modelo 4/4 · trecho 1/4",
+      "progress": 51.4
+    },
+    {
+      "stage": "htdemucs_ft — modelo 4/4 · trecho 2/4",
+      "progress": 54.4
+    },
+    {
+      "stage": "htdemucs_ft — modelo 4/4 · trecho 3/4",
+      "progress": 57.3
+    },
+    {
+      "stage": "htdemucs_ft — modelo 4/4 · trecho 4/4",
+      "progress": 60.2
+    },
+    {
+      "stage": "htdemucs_6s — modelo 1/1 · trecho 1/4",
+      "progress": 63.2
+    },
+    {
+      "stage": "htdemucs_6s — modelo 1/1 · trecho 2/4",
+      "progress": 66.2
+    },
+    {
+      "stage": "htdemucs_6s — modelo 1/1 · trecho 3/4",
+      "progress": 69.1
+    },
+    {
+      "stage": "htdemucs_6s — modelo 1/1 · trecho 4/4",
+      "progress": 72.1
+    },
+    {
+      "stage": "htdemucs_6s — modelo 1/1 · 4/4 trechos concluídos",
+      "progress": 75.0
+    },
+    {
+      "stage": "Reconhecendo acordes e andamento",
+      "progress": 78
+    },
+    {
+      "stage": "Preparando o modelo de letra — primeiro uso pode exigir download",
+      "progress": 86
+    },
+    {
+      "stage": "Pronto para tocar",
+      "progress": 100
+    }
+  ]
+}

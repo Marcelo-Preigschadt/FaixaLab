@@ -1,0 +1,441 @@
+[
+  {
+    "case": "pop_C",
+    "expected": [
+      "C",
+      "Am",
+      "F",
+      "G"
+    ],
+    "baseline_accuracy": 0.9733,
+    "refined_accuracy": 0.9925,
+    "baseline": [
+      {
+        "start": 0.0,
+        "end": 2.972,
+        "label": "C",
+        "confidence": 0.948
+      },
+      {
+        "start": 2.972,
+        "end": 5.944,
+        "label": "Am",
+        "confidence": 0.94
+      },
+      {
+        "start": 5.944,
+        "end": 6.13,
+        "label": "Fmaj7",
+        "confidence": 0.887
+      },
+      {
+        "start": 6.13,
+        "end": 9.102,
+        "label": "F",
+        "confidence": 0.925
+      },
+      {
+        "start": 9.102,
+        "end": 12.0,
+        "label": "G",
+        "confidence": 0.912
+      }
+    ],
+    "refined": [
+      {
+        "start": 0.0,
+        "end": 3.019,
+        "label": "C",
+        "confidence": 0.829
+      },
+      {
+        "start": 3.019,
+        "end": 6.037,
+        "label": "Am",
+        "confidence": 0.794
+      },
+      {
+        "start": 6.037,
+        "end": 9.033,
+        "label": "F",
+        "confidence": 0.697
+      },
+      {
+        "start": 9.033,
+        "end": 12.0,
+        "label": "G",
+        "confidence": 0.84
+      }
+    ],
+    "seconds": 14.82
+  },
+  {
+    "case": "pop_G",
+    "expected": [
+      "G",
+      "Em",
+      "C",
+      "D"
+    ],
+    "baseline_accuracy": 0.9783,
+    "refined_accuracy": 0.995,
+    "baseline": [
+      {
+        "start": 0.0,
+        "end": 2.972,
+        "label": "G",
+        "confidence": 0.912
+      },
+      {
+        "start": 2.972,
+        "end": 6.13,
+        "label": "Em",
+        "confidence": 0.925
+      },
+      {
+        "start": 6.13,
+        "end": 9.102,
+        "label": "C",
+        "confidence": 0.945
+      },
+      {
+        "start": 9.102,
+        "end": 12.0,
+        "label": "D",
+        "confidence": 0.939
+      }
+    ],
+    "refined": [
+      {
+        "start": 0.0,
+        "end": 3.019,
+        "label": "G",
+        "confidence": 0.794
+      },
+      {
+        "start": 3.019,
+        "end": 6.014,
+        "label": "Em",
+        "confidence": 0.758
+      },
+      {
+        "start": 6.014,
+        "end": 9.033,
+        "label": "C",
+        "confidence": 0.796
+      },
+      {
+        "start": 9.033,
+        "end": 12.0,
+        "label": "D",
+        "confidence": 0.83
+      }
+    ],
+    "seconds": 0.26
+  },
+  {
+    "case": "minor_E",
+    "expected": [
+      "Em",
+      "C",
+      "G",
+      "D"
+    ],
+    "baseline_accuracy": 0.9783,
+    "refined_accuracy": 0.995,
+    "baseline": [
+      {
+        "start": 0.0,
+        "end": 2.972,
+        "label": "Em",
+        "confidence": 0.932
+      },
+      {
+        "start": 2.972,
+        "end": 6.13,
+        "label": "C",
+        "confidence": 0.934
+      },
+      {
+        "start": 6.13,
+        "end": 9.102,
+        "label": "G",
+        "confidence": 0.914
+      },
+      {
+        "start": 9.102,
+        "end": 12.0,
+        "label": "D",
+        "confidence": 0.938
+      }
+    ],
+    "refined": [
+      {
+        "start": 0.0,
+        "end": 3.019,
+        "label": "Em",
+        "confidence": 0.775
+      },
+      {
+        "start": 3.019,
+        "end": 6.014,
+        "label": "C",
+        "confidence": 0.781
+      },
+      {
+        "start": 6.014,
+        "end": 9.033,
+        "label": "G",
+        "confidence": 0.833
+      },
+      {
+        "start": 9.033,
+        "end": 12.0,
+        "label": "D",
+        "confidence": 0.853
+      }
+    ],
+    "seconds": 0.29
+  },
+  {
+    "case": "sevenths",
+    "expected": [
+      "Cmaj7",
+      "Am7",
+      "Dm7",
+      "G7"
+    ],
+    "baseline_accuracy": 0.9783,
+    "refined_accuracy": 0.995,
+    "baseline": [
+      {
+        "start": 0.0,
+        "end": 2.972,
+        "label": "Cmaj7",
+        "confidence": 0.92
+      },
+      {
+        "start": 2.972,
+        "end": 6.13,
+        "label": "Am7",
+        "confidence": 0.912
+      },
+      {
+        "start": 6.13,
+        "end": 9.102,
+        "label": "Dm7",
+        "confidence": 0.921
+      },
+      {
+        "start": 9.102,
+        "end": 12.0,
+        "label": "G7",
+        "confidence": 0.903
+      }
+    ],
+    "refined": [
+      {
+        "start": 0.0,
+        "end": 3.019,
+        "label": "Cmaj7",
+        "confidence": 0.57
+      },
+      {
+        "start": 3.019,
+        "end": 6.014,
+        "label": "Am7",
+        "confidence": 0.692
+      },
+      {
+        "start": 6.014,
+        "end": 9.033,
+        "label": "Dm7",
+        "confidence": 0.768
+      },
+      {
+        "start": 9.033,
+        "end": 12.0,
+        "label": "G7",
+        "confidence": 0.602
+      }
+    ],
+    "seconds": 0.25
+  },
+  {
+    "case": "suspensions",
+    "expected": [
+      "Dsus2",
+      "D",
+      "Dsus4",
+      "D"
+    ],
+    "baseline_accuracy": 0.4867,
+    "refined_accuracy": 0.7192,
+    "baseline": [
+      {
+        "start": 0.0,
+        "end": 3.158,
+        "label": "Dm",
+        "confidence": 0.752
+      },
+      {
+        "start": 3.158,
+        "end": 12.0,
+        "label": "D",
+        "confidence": 0.882
+      }
+    ],
+    "refined": [
+      {
+        "start": 0.0,
+        "end": 3.019,
+        "label": "Asus4",
+        "confidence": 0.52
+      },
+      {
+        "start": 3.019,
+        "end": 6.316,
+        "label": "D",
+        "confidence": 0.808
+      },
+      {
+        "start": 6.316,
+        "end": 9.033,
+        "label": "Dsus4",
+        "confidence": 0.531
+      },
+      {
+        "start": 9.033,
+        "end": 12.0,
+        "label": "D",
+        "confidence": 0.849
+      }
+    ],
+    "seconds": 0.27
+  },
+  {
+    "case": "silence",
+    "expected": [
+      "N",
+      "G",
+      "C",
+      "D",
+      "N"
+    ],
+    "baseline_accuracy": 0.5847,
+    "refined_accuracy": 0.954,
+    "baseline": [
+      {
+        "start": 0.0,
+        "end": 0.186,
+        "label": "Amaj7",
+        "confidence": 0.667
+      },
+      {
+        "start": 0.186,
+        "end": 0.929,
+        "label": "Fm7",
+        "confidence": 0.693
+      },
+      {
+        "start": 0.929,
+        "end": 1.858,
+        "label": "Bm7",
+        "confidence": 0.683
+      },
+      {
+        "start": 1.858,
+        "end": 2.043,
+        "label": "A#7",
+        "confidence": 0.652
+      },
+      {
+        "start": 2.043,
+        "end": 2.415,
+        "label": "Dm7",
+        "confidence": 0.693
+      },
+      {
+        "start": 2.415,
+        "end": 2.972,
+        "label": "C#maj7",
+        "confidence": 0.629
+      },
+      {
+        "start": 2.972,
+        "end": 6.13,
+        "label": "G",
+        "confidence": 0.903
+      },
+      {
+        "start": 6.13,
+        "end": 9.102,
+        "label": "C",
+        "confidence": 0.949
+      },
+      {
+        "start": 9.102,
+        "end": 12.817,
+        "label": "D",
+        "confidence": 0.939
+      },
+      {
+        "start": 12.817,
+        "end": 13.189,
+        "label": "C#maj7",
+        "confidence": 0.622
+      },
+      {
+        "start": 13.189,
+        "end": 14.303,
+        "label": "Bm7",
+        "confidence": 0.681
+      },
+      {
+        "start": 14.303,
+        "end": 14.861,
+        "label": "G#maj7",
+        "confidence": 0.753
+      },
+      {
+        "start": 14.861,
+        "end": 15.0,
+        "label": "D#maj7",
+        "confidence": 0.615
+      }
+    ],
+    "refined": [
+      {
+        "start": 0.0,
+        "end": 3.019,
+        "label": "N",
+        "confidence": 0.26
+      },
+      {
+        "start": 3.019,
+        "end": 6.014,
+        "label": "G",
+        "confidence": 0.826
+      },
+      {
+        "start": 6.014,
+        "end": 9.033,
+        "label": "C",
+        "confidence": 0.827
+      },
+      {
+        "start": 9.033,
+        "end": 12.632,
+        "label": "D",
+        "confidence": 0.838
+      },
+      {
+        "start": 12.632,
+        "end": 15.0,
+        "label": "N",
+        "confidence": 0.179
+      }
+    ],
+    "seconds": 0.28
+  }
+]
