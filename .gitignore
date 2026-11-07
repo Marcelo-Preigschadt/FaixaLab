@@ -1,0 +1,8 @@
+.app/
+.runtime/
+.venv/
+node_modules/
+__pycache__/
+*.zip
+*.pyc
+*.log
