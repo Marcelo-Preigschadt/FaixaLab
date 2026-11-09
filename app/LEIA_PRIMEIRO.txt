@@ -1,9 +1,11 @@
-FAIXALAB 0.7 - WINDOWS 64 BITS
+FAIXALAB 0.10.1 - WINDOWS 64 BITS
 
 ATUALIZAR
 1. Feche o FaixaLab anterior.
-2. Extraia este ZIP inteiro para uma pasta nova.
-3. Abra FaixaLab.exe.
+2. Para atualizar a versao 0.10: extraia este ZIP na pasta existente e substitua os arquivos.
+3. Execute ATUALIZAR_YOUTUBE.bat e aguarde a confirmacao de runtime validado.
+4. Abra FaixaLab.exe.
+Para uma instalacao nova, extraia em uma pasta nova e abra FaixaLab.exe diretamente.
 
 Seus projetos aparecem automaticamente: ficam em %LOCALAPPDATA%\FaixaLab.
 Mantenha o executavel e todos os arquivos do pacote juntos.

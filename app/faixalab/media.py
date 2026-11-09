@@ -102,8 +102,19 @@ def youtube_id(url):
 
 
 def download_youtube(url, folder, cancel, progress):
-    from yt_dlp import YoutubeDL
     identifier = youtube_id(url)
+    if cancel.is_set():
+        raise Cancelled()
+    from .youtube_support import (check_support, distribution_versions, DownloadLog,
+                                  download_error, save_diagnostic)
+    support = distribution_versions()
+    log = DownloadLog()
+    try:
+        support = check_support()
+    except RuntimeError as exc:
+        save_diagnostic(folder, identifier, support, log.messages, exc)
+        raise
+    from yt_dlp import YoutubeDL
 
     def hook(data):
         if cancel.is_set():
@@ -113,20 +124,17 @@ def download_youtube(url, folder, cancel, progress):
             if total:
                 progress('Baixando áudio do YouTube', min(10, 2 + 8 * data.get('downloaded_bytes', 0) / total))
 
-    opts = {'format': 'bestaudio[acodec=opus]/bestaudio[acodec^=mp4a]/best[acodec^=mp4a]',
+    opts = {'format': 'bestaudio[acodec=opus]/bestaudio[acodec^=mp4a]/best[acodec^=mp4a]/bestaudio/best',
             'ffmpeg_location': ffmpeg_executable(),
             'noplaylist': True, 'quiet': True,
-            'no_warnings': True, 'outtmpl': str(folder / 'youtube.%(ext)s'),
+            'logger': log, 'nocolor': True, 'noprogress': True,
+            'outtmpl': str(folder / 'youtube.%(ext)s'),
             'socket_timeout': 20, 'retries': 2, 'fragment_retries': 2,
             'progress_hooks': [hook], 'cachedir': False,
             'compat_opts': {'no-certifi'},
             'max_filesize': 1024 ** 3}
-    deno = shutil.which('deno') or (str(Path(os.environ['FAIXALAB_DENO'])) if os.environ.get('FAIXALAB_DENO') else None)
-    node = shutil.which('node')
-    if deno:
-        opts['js_runtimes'] = {'deno': {'path': deno}}
-    elif node:
-        opts['js_runtimes'] = {'node': {'path': node}}
+    runtime = support['runtime']
+    opts['js_runtimes'] = {runtime['name']: {'path': runtime['path']}}
     try:
         with YoutubeDL(opts) as ydl:
             info = ydl.extract_info('https://www.youtube.com/watch?v=' + identifier, download=True)
@@ -136,14 +144,20 @@ def download_youtube(url, folder, cancel, progress):
     except Exception as exc:
         if cancel.is_set():
             raise Cancelled() from exc
-        raise RuntimeError('Não foi possível obter o áudio deste vídeo. Verifique se o link é público e se o YouTube permite o acesso nesta conexão. Detalhe: ' + str(exc)[-1000:]) from exc
+        save_diagnostic(folder, identifier, support, log.messages, exc)
+        raise RuntimeError(download_error(exc)) from exc
     if not filename.is_file() or filename.stat().st_size == 0:
-        raise RuntimeError('O YouTube não retornou um arquivo de áudio utilizável.')
+        error = 'O YouTube não retornou um arquivo de áudio utilizável.'
+        save_diagnostic(folder, identifier, support, log.messages, error)
+        raise RuntimeError(error)
     with filename.open('rb') as downloaded:
         prefix = downloaded.read(512).lstrip().lower()
     if prefix.startswith((b'<html', b'<!doctype html')):
         filename.unlink(missing_ok=True)
-        raise RuntimeError('Esta conexão retornou uma página de bloqueio no lugar do áudio do YouTube. Tente importar o MP3 ou usar outra conexão disponível.')
+        error = 'Esta conexão retornou uma página de bloqueio no lugar do áudio do YouTube.'
+        save_diagnostic(folder, identifier, support, log.messages, error)
+        raise RuntimeError(error)
+    save_diagnostic(folder, identifier, support, log.messages)
     return filename, info.get('title') or 'Música do YouTube'
 
 

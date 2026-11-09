@@ -1,13 +1,15 @@
-# FaixaLab 0.10
+# FaixaLab 0.10.1
 
 Separação de instrumentos, cifras, letra e tablatura com modelos públicos, para Windows ou servidor Linux. A versão 0.10 otimiza o processamento local e aproveita uma GPU NVIDIA existente quando o runtime é compatível. Os 33 candidatos automáticos e os pesos são preservados. Não cria recursos pagos na nuvem.
+
+A correção 0.10.1 valida e prepara o runtime JavaScript usado pelo YouTube, prioriza o runtime privado sobre um Deno antigo do sistema e atualiza yt-dlp com o EJS correspondente. A falta desse runtime reproduziu o erro `This video is not available` no vídeo relatado. Isso não confirma, sem o diagnóstico do computador afetado, que seja a única causa do incidente. Verificações e limites: [app/VALIDACAO_0_10_1.md](app/VALIDACAO_0_10_1.md).
 
 As medições e os limites da otimização estão em [app/VALIDACAO.md](app/VALIDACAO.md); a validação anterior foi preservada em [app/VALIDACAO_0_9.md](app/VALIDACAO_0_9.md). Os testes foram realizados em CPU Linux; o caminho CUDA e a execução nativa Windows ainda exigem validação em hardware correspondente. Não há comparação direta que estabeleça desempenho ou qualidade superior ao Moises.
 
 ## Ativar o FaixaLab neste repositório
 
 1. A configuração de inicialização fica neste repositório. O código-fonte editável fica na pasta `app/`. Os modelos grandes são obtidos do ZIP do release.
-2. Crie um release com a tag **v0.10.0** e anexe **FaixaLab_0_10_Windows.zip**, o aplicativo completo recebido nesta atualização. O nome contém Windows por compatibilidade com o pacote existente; ele também contém o servidor Linux.
+2. Crie um release com a tag **v0.10.1** e anexe **FaixaLab_0_10_1_Windows.zip**, o aplicativo completo recebido nesta atualização. O nome contém Windows por compatibilidade com o pacote existente; ele também contém o servidor Linux.
 3. Abra **Code → Codespaces → Create codespace**, escolhendo **2 núcleos / 8 GB**.
 4. Aguarde o `postCreateCommand`; ele baixa o release com a identidade do Codespace, confere tamanho, SHA-256 e CRC, extrai o app e instala Python/PyTorch CPU. Os modelos maiores ainda ausentes serão baixados no primeiro processamento.
 5. Na aba **Ports**, abra a porta **7860**, mantendo visibilidade **Private**. No celular, entre no mesmo GitHub e abra essa URL.

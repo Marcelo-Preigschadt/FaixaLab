@@ -1,6 +1,14 @@
-# FaixaLab 0.10
+# FaixaLab 0.10.1
 
 Aplicativo independente para Windows ou servidor Linux: link YouTube ou arquivo MP3, separação de instrumentos, cifras, letra sincronizada e tablatura da guitarra solo. A importação padrão usa um fluxo geral para todas as músicas. Não há regras por título, artista, ID de vídeo ou posições fixas de solos.
+
+## Importação do YouTube — correção 0.10.1
+
+O download exige yt-dlp atualizado, EJS correspondente e Deno 2.3+ ou Node 22+. O instalador agora valida o executável e sua versão; se nenhum runtime compatível estiver disponível, prepara um Deno privado também no Linux. Um Deno antigo no PATH deixa de esconder o runtime privado ou impedir o uso de Node compatível. O download independe do diretório em que o aplicativo foi iniciado.
+
+Para atualizar uma instalação 0.10: feche o FaixaLab, extraia o novo ZIP na pasta existente substituindo os arquivos e execute `ATUALIZAR_YOUTUBE.bat`; depois abra `FaixaLab.exe`. Essa atualização reaproveita o perfil dos motores de áudio da 0.10. Projetos e cache ficam fora do pacote, em `%LOCALAPPDATA%\FaixaLab`. Em Linux, execute `bash cloud/atualizar_youtube.sh` e reinicie o servidor.
+
+Erros não exibem sequências ANSI de terminal. Cada tentativa salva as versões, o runtime e os avisos em `youtube-diagnostico.json`, na pasta do projeto. A mensagem genérica `This video is not available` não é tratada como comprovação de vídeo removido. Restrições explícitas de acesso continuam sendo apresentadas. Os testes e os limites da correção estão em **VALIDACAO_0_10_1.md**.
 
 ## Otimização do processamento — versão 0.10
 
@@ -64,7 +72,7 @@ As medições desta revisão e suas limitações estão em **VALIDACAO.md**.
 2. Abra **FaixaLab.exe**. Mantenha o executável e todos os arquivos do pacote juntos.
 3. Seus projetos continuam em `%LOCALAPPDATA%\FaixaLab` e aparecem automaticamente.
 
-O iniciador verifica o perfil 0.10.0 em `.runtime/ready` e prepara um Python privado. Os modelos de acordes, detector de solo MERT, Basic Pitch, reconhecedor de timbres EfficientAT e dicionário acompanham o pacote. O separador detalhado MVSep Mega53 (aproximadamente 1,37 GB) e outros modelos ausentes são baixados no primeiro uso e ficam no cache. No Windows, separação, identificação e refinamento executam no computador; no Codespaces, executam na máquina do GitHub. Os motores não exigem API paga. CPU funciona; o modo automático exige mais processamento que as opções tradicionais.
+O iniciador verifica o perfil 0.10.1 em `.runtime/ready` e prepara um Python privado. Os modelos de acordes, detector de solo MERT, Basic Pitch, reconhecedor de timbres EfficientAT e dicionário acompanham o pacote. O separador detalhado MVSep Mega53 (aproximadamente 1,37 GB) e outros modelos ausentes são baixados no primeiro uso e ficam no cache. No Windows, separação, identificação e refinamento executam no computador; no Codespaces, executam na máquina do GitHub. Os motores não exigem API paga. CPU funciona; o modo automático exige mais processamento que as opções tradicionais.
 
 Se a janela não abrir, execute **INICIAR_COM_DIAGNOSTICO.bat**. O log fica em `%LOCALAPPDATA%\FaixaLab\FaixaLab.log`.
 

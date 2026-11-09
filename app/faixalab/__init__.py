@@ -7,7 +7,7 @@ from pathlib import Path
 import platform
 import sys
 
-__version__ = '0.10.0'
+__version__ = '0.10.1'
 
 # Reuse compiled DSP only within this release, environment and dependency set.
 # Numba additionally checks the CPU model/features before loading native code.

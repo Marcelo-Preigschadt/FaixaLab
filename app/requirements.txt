@@ -10,7 +10,7 @@ numba==0.61.2
 beartype>=0.18,<1
 rotary-embedding-torch==0.6.5
 imageio-ffmpeg>=0.6,<1
-yt-dlp[default]>=2026.3.3
+yt-dlp[default]>=2026.10.26
 demucs==4.0.1
 faster-whisper==1.2.1
 av==15.1.0

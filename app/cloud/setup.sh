@@ -8,4 +8,6 @@ fi
 .runtime/venv/bin/python -m pip install --upgrade pip uv
 .runtime/venv/bin/python install_engine.py --python .runtime/venv/bin/python --report .runtime/engine.json
 .runtime/venv/bin/python -m uv pip install --python .runtime/venv/bin/python -r requirements.txt
-printf '0.10.0\n' > .runtime/cloud-ready
+.runtime/venv/bin/python -m uv pip install --python .runtime/venv/bin/python --upgrade 'yt-dlp[default]>=2026.10.26'
+.runtime/venv/bin/python prepare_youtube.py
+printf '0.10.1\n' > .runtime/cloud-ready

@@ -21,13 +21,13 @@ if errorlevel 1 goto erro
 if errorlevel 1 goto erro
 ".runtime\uv.exe" pip install --python ".venv\Scripts\python.exe" -r requirements.txt
 if errorlevel 1 goto erro
-if not exist ".runtime\deno.exe" (
-  powershell.exe -NoProfile -Command "$ErrorActionPreference='Stop'; $r=Invoke-RestMethod 'https://api.github.com/repos/denoland/deno/releases/latest'; $a=$r.assets|Where-Object name -eq 'deno-x86_64-pc-windows-msvc.zip'|Select-Object -First 1; if(!$a){throw 'Pacote Deno indisponivel'}; $z=Join-Path (Get-Location) '.runtime\deno.zip'; Invoke-WebRequest -UseBasicParsing $a.browser_download_url -OutFile $z; if($a.digest -and $a.digest.StartsWith('sha256:')){if((Get-FileHash $z -Algorithm SHA256).Hash.ToLower() -ne $a.digest.Substring(7)){throw 'Falha na verificacao do Deno'}}; Expand-Archive $z '.runtime' -Force; Remove-Item $z"
-  if errorlevel 1 goto erro
-)
+".runtime\uv.exe" pip install --python ".venv\Scripts\python.exe" --upgrade "yt-dlp[default]>=2026.10.26"
+if errorlevel 1 goto erro
+".venv\Scripts\python.exe" prepare_youtube.py
+if errorlevel 1 goto erro
 echo.
 echo  FaixaLab preparado. Os modelos de IA serao baixados ao processar a primeira musica.
-echo 0.10.0>".runtime\ready"
+>".runtime\ready" echo 0.10.1
 exit /b 0
 :erro
 echo.
