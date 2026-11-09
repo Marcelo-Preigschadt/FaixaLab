@@ -11,6 +11,51 @@ import time
 from . import storage
 from .media import Cancelled, decode_audio, download_youtube, run_process, waveform
 
+from .compute import worker_environment
+from . import __version__
+
+
+def run_neural_worker(args, cancel, on_line, environment, *, cwd, on_tick, on_fallback):
+    """Retry once on CPU when an existing GPU cannot run this workload."""
+    position = args.index('--device') + 1
+    device = args[position]
+    try:
+        run_process(args, cancel, on_line, environment, cwd=cwd, on_tick=on_tick)
+        return device, None
+    except RuntimeError as error:
+        message = str(error)
+        recoverable = ('cuda out of memory', 'cuda error: out of memory',
+                       'no kernel image is available', 'cuda driver version is insufficient')
+        if device != 'cuda' or not any(s in message.lower() for s in recoverable):
+            raise
+        if cancel.is_set():
+            raise Cancelled()
+        on_fallback()
+        retry_args = list(args)
+        retry_args[position] = 'cpu'
+        run_process(retry_args, cancel, on_line, environment, cwd=cwd, on_tick=on_tick)
+        return 'cpu', message[-1500:]
+
+
+def transcription_audio(project, folder):
+    """Prefer an isolated vocal, including the initial separation if needed.
+
+    Detailed timbre verification can omit a vocal candidate. Do not make ASR
+    decode the entire instrumental mix when a saved vocal already exists.
+    """
+    candidates = [(s.get('file'), 'current_vocals') for s in project.get('stems', [])
+                  if s.get('name') == 'vocals']
+    candidates += [(revision.get('vocals'), 'previous_vocals')
+                   for revision in reversed(list((project.get('audio_history') or {}).values()))]
+    root = folder.resolve()
+    for relative, kind in candidates:
+        if not relative:
+            continue
+        path = (folder/relative).resolve()
+        if path.is_relative_to(root) and path.is_file():
+            return path, kind
+    return folder/'original.wav', 'original'
+
 POOL = ThreadPoolExecutor(max_workers=1, thread_name_prefix='faixalab')
 CANCELLATIONS = {}
 PENDING_RETRIES = {}
@@ -42,9 +87,7 @@ def refine_instruments(p, folder, options, cancel, progress, base=16):
     import torch
     device='cuda' if options.get('device','auto')!='cpu' and torch.cuda.is_available() else 'cpu'
     settings=p.get('instrument_settings') or {}
-    environment=os.environ.copy()
-    environment.update(PYTHONUTF8='1',OMP_NUM_THREADS=str(min(4,os.cpu_count() or 1)),
-                       MKL_NUM_THREADS=str(min(4,os.cpu_count() or 1)),OPENBLAS_NUM_THREADS='1')
+    environment=worker_environment()
     stage,value='Preparando refinamento dos instrumentos',base
     def line(text):
         nonlocal stage,value
@@ -57,13 +100,15 @@ def refine_instruments(p, folder, options, cancel, progress, base=16):
           '--device',device]
     progress(stage,value)
     try:
-        run_process(args,cancel,line,environment,cwd=str(Path(__file__).resolve().parent.parent),
-                    on_tick=lambda runtime:progress(stage,value,worker_runtime=runtime))
+        device,fallback=run_neural_worker(args,cancel,line,environment,cwd=str(Path(__file__).resolve().parent.parent),
+                    on_tick=lambda runtime:progress(stage,value,worker_runtime=runtime),
+                    on_fallback=lambda:progress('GPU indisponível para este processamento; continuando na CPU',value))
     except Exception:
         import shutil
         shutil.rmtree(destination,ignore_errors=True)
         raise
     details=json.loads((destination/'engine.json').read_text('utf-8'))
+    if fallback:details['acceleration_fallback']=fallback
     stems=[dict(drum)]
     for name in details['retained']+['other']:
         path=destination/(name+'.wav')
@@ -95,11 +140,8 @@ def separate(audio, folder, options, cancel, progress):
             worker_python = str(console_python)
     args = [worker_python, '-m', 'faixalab.separator_runner', str(audio), str(destination),
             '--stems', str(options['stems']), '--quality', quality, '--device', device]
-    environment = os.environ.copy()
+    environment = worker_environment()
     environment['TORCH_HOME'] = str(storage.MODELS / 'torch')
-    environment['OMP_NUM_THREADS'] = str(min(4, os.cpu_count() or 2))
-    environment['MKL_NUM_THREADS'] = environment['OMP_NUM_THREADS']
-    environment['PYTHONUTF8'] = '1'
 
     highwater = 15
     current_stage = 'Preparando o modelo de separação'
@@ -116,8 +158,9 @@ def separate(audio, folder, options, cancel, progress):
             progress(current_stage, highwater)
 
     progress('Separando os instrumentos' + (' • GPU' if device == 'cuda' else ' • CPU'), 15)
-    run_process(args, cancel, line, environment, cwd=str(Path(__file__).resolve().parent.parent),
-                on_tick=lambda runtime: progress(current_stage, highwater, worker_runtime=runtime))
+    device,fallback=run_neural_worker(args, cancel, line, environment, cwd=str(Path(__file__).resolve().parent.parent),
+                on_tick=lambda runtime: progress(current_stage, highwater, worker_runtime=runtime),
+                on_fallback=lambda:progress('GPU indisponível para este processamento; continuando na CPU',highwater))
     stems = []
     for name in ['vocals', 'drums', 'bass', 'guitar', 'piano', 'other']:
         path = destination / (name + '.wav')
@@ -127,6 +170,7 @@ def separate(audio, folder, options, cancel, progress):
     if len(stems) != options['stems']:
         raise RuntimeError('O modelo não retornou todas as faixas esperadas.')
     details = json.loads((destination / 'engine.json').read_text('utf-8'))
+    if fallback:details['acceleration_fallback']=fallback
     return stems, {'engine': 'Demucs', 'device': device, **details}
 
 
@@ -139,8 +183,7 @@ def split_guitars(p, folder, options, cancel, progress):
     if os.name == 'nt' and Path(worker).with_name('python.exe').is_file():
         worker = str(Path(worker).with_name('python.exe'))
     device = (p.get('engine') or {}).get('device', 'cpu')
-    environment = os.environ.copy()
-    environment['PYTHONUTF8'] = '1'
+    environment = worker_environment()
     current_stage, current_value = 'Preparando separação de guitarra solo e base', 75
     def line(text):
         nonlocal current_stage, current_value
@@ -149,10 +192,11 @@ def split_guitars(p, folder, options, cancel, progress):
             current_stage, current_value = value['stage'], 75 + 3 * value['fraction']
             progress(current_stage, current_value)
     progress('Preparando separação de guitarra solo e base', 75)
-    run_process([worker, '-m', 'faixalab.lead_rhythm', str(folder / combined['file']),
+    device,fallback=run_neural_worker([worker, '-m', 'faixalab.lead_rhythm', str(folder / combined['file']),
                  str(destination), '--cache', str(storage.MODELS / 'guitars'), '--device', device],
                 cancel, line, environment, cwd=str(Path(__file__).resolve().parent.parent),
-                on_tick=lambda runtime: progress(current_stage, current_value, worker_runtime=runtime))
+                on_tick=lambda runtime: progress(current_stage, current_value, worker_runtime=runtime),
+                on_fallback=lambda:progress('GPU indisponível para este processamento; continuando na CPU',current_value))
     extras = []
     for name in ['guitar_lead', 'guitar_rhythm']:
         path = destination / (name + '.wav')
@@ -161,7 +205,8 @@ def split_guitars(p, folder, options, cancel, progress):
     stems = [s for s in p['stems'] if s['name'] not in {'guitar', 'guitar_lead', 'guitar_rhythm'}] + extras
     order = ['vocals', 'drums', 'bass', 'guitar_lead', 'guitar_rhythm', 'piano', 'other']
     stems.sort(key=lambda s: order.index(s['name']) if s['name'] in order else len(order)+(s['name']=='other'))
-    engine = {**p.get('engine', {}), 'guitar_split': json.loads((destination / 'engine.json').read_text('utf-8'))}
+    engine = {**p.get('engine', {}), 'device':device, 'guitar_split': json.loads((destination / 'engine.json').read_text('utf-8'))}
+    if fallback:engine['guitar_split']['acceleration_fallback']=fallback
     return stems, engine, combined
 
 
@@ -231,6 +276,19 @@ def process_project(identifier, cancel_event, retry=None):
     folder = storage.project_dir(identifier)
     warnings = []
     started = time.monotonic()
+    timings = {}
+
+    def timed(stage, function, *args, **kwargs):
+        began = time.monotonic()
+        try:
+            return function(*args, **kwargs)
+        finally:
+            timings[stage] = round(time.monotonic() - began, 6)
+            storage.update_project(identifier, performance={
+                'stages_seconds': dict(timings),
+                'elapsed_seconds': round(time.monotonic() - started, 6),
+                'operation': retry or 'import', 'version': __version__,
+                'completed': False})
 
     def progress(stage, value, **details):
         if cancel_event.is_set():
@@ -253,23 +311,23 @@ def process_project(identifier, cancel_event, retry=None):
         if not retry:
             progress('Preparando a música', 1)
             if p['source']['type'] == 'youtube':
-                source, title = download_youtube(p['source']['url'], folder, cancel_event, progress)
+                source, title = timed('youtube_download', download_youtube, p['source']['url'], folder, cancel_event, progress)
                 storage.update_project(identifier, title=title)
             else:
                 source = folder / p['source']['file']
             progress('Convertendo o áudio', 11)
-            duration = decode_audio(source, audio, cancel_event)
+            duration = timed('audio_decode', decode_audio, source, audio, cancel_event)
             storage.update_project(identifier, duration=round(duration, 3), waveform=waveform(audio))
-            stems, engine = separate(audio, folder, options, cancel_event, separation_progress)
+            stems, engine = timed('initial_separation', separate, audio, folder, options, cancel_event, separation_progress)
             storage.update_project(identifier, stems=stems, engine=engine, audio_revision=uuid.uuid4().hex)
         elif retry == 'separation':
-            stems, engine = separate(audio, folder, options, cancel_event, separation_progress)
+            stems, engine = timed('initial_separation', separate, audio, folder, options, cancel_event, separation_progress)
             storage.update_project(identifier, stems=stems, engine=engine, audio_revision=uuid.uuid4().hex)
         else:
             stems = p['stems']
         if retry=='instruments' or (options.get('instrument_detail',False) and (not retry or retry=='separation')):
             current=storage.read_project(identifier)
-            stems,engine=refine_instruments(current,folder,options,cancel_event,progress,
+            stems,engine=timed('instrument_refinement',refine_instruments,current,folder,options,cancel_event,progress,
                                            base=16 if retry=='instruments' else 35)
             storage.update_project(identifier,stems=stems,engine=engine,guitar_source=None,
                                    audio_revision=uuid.uuid4().hex,worker_runtime=None)
@@ -277,7 +335,7 @@ def process_project(identifier, cancel_event, retry=None):
             storage.update_project(identifier, worker_runtime=None)
             try:
                 current = storage.read_project(identifier)
-                stems, engine, combined = split_guitars(current, folder, options, cancel_event, progress)
+                stems, engine, combined = timed('guitar_roles', split_guitars, current, folder, options, cancel_event, progress)
                 storage.update_project(identifier, stems=stems, engine=engine, guitar_source=combined,
                                        audio_revision=uuid.uuid4().hex)
             except Cancelled:
@@ -294,7 +352,7 @@ def process_project(identifier, cancel_event, retry=None):
                 dedicated = any(s['name'] != 'other' for s in accompaniment)
                 weights = [.45 if s['name'] == 'other' and dedicated else 1. for s in accompaniment]
                 bass = next((folder / s['file'] for s in stems if s['name'] == 'bass'), None)
-                result = analyze(audio, harmonic, bass_path=bass, cancel=cancel_event,
+                result = timed('chords', analyze, audio, harmonic, bass_path=bass, cancel=cancel_event,
                                  progress=lambda stage, value: progress(stage, min(value, 85)),
                                  harmonic_weights=weights,
                                  stability=options.get('chord_stability', 'stable'))
@@ -307,8 +365,9 @@ def process_project(identifier, cancel_event, retry=None):
                 warnings.append({'stage': 'chords', 'message': 'Não foi possível calcular as cifras: ' + str(exc)[-500:]})
         if options.get('lyrics', True) and (not retry or retry == 'lyrics'):
             try:
-                vocals = next((folder / s['file'] for s in stems if s['name'] == 'vocals'), audio)
-                lyrics, meta = transcribe(vocals, options, cancel_event, progress)
+                vocals, vocal_kind = transcription_audio(storage.read_project(identifier), folder)
+                lyrics, meta = timed('lyrics', transcribe, vocals, options, cancel_event, progress)
+                meta['audio_source'] = vocal_kind
                 storage.update_project(identifier, lyrics=lyrics, transcription=meta)
             except Cancelled:
                 raise
@@ -316,7 +375,9 @@ def process_project(identifier, cancel_event, retry=None):
                 warnings.append({'stage': 'lyrics', 'message': 'As faixas estão prontas, mas a letra não foi transcrita: ' + str(exc)[-700:]})
         progress('Finalizando o projeto', 99)
         storage.update_project(identifier, status='partial' if warnings else 'ready', stage='Pronto para tocar',
-                               progress=100, warnings=warnings, error=None, worker_runtime=None)
+                               progress=100, warnings=warnings, error=None, worker_runtime=None,
+                               performance={'stages_seconds':dict(timings), 'elapsed_seconds':round(time.monotonic()-started,6),
+                                            'operation':retry or 'import', 'version':__version__, 'completed':True})
     except Cancelled:
         storage.update_project(identifier, status='cancelled', stage='Processamento cancelado', error=None)
     except Exception as exc:

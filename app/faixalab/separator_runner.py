@@ -8,6 +8,7 @@ import torch
 import soundfile as sf
 from demucs.pretrained import get_model
 from demucs.apply import apply_model, BagOfModels
+from .compute import configure_torch
 
 
 class ProgressPool:
@@ -104,7 +105,7 @@ def main():
     parser.add_argument('--quality', choices=['fast', 'balanced', 'quality'], default='quality')
     parser.add_argument('--device', choices=['cpu', 'cuda'], default='cpu')
     args = parser.parse_args()
-    torch.set_num_threads(min(4, torch.get_num_threads()))
+    configure_torch()
     data, sr = sf.read(args.audio, dtype='float32', always_2d=True)
     if sr != 44100 or data.shape[1] != 2:
         raise ValueError('O áudio precisa estar em estéreo, a 44.100 Hz.')

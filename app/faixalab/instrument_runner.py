@@ -14,6 +14,8 @@ import numpy as np
 
 from .instrument_catalog import CATALOG, EXCLUSIVE_GROUPS, automatic_candidates, checked_selection
 from .media import Cancelled
+from .compute import configure_torch
+from . import waveform_statistics
 
 SR = 44100
 MODEL_URL = ('https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/'
@@ -72,7 +74,7 @@ def load_model(path, selected, device='cpu', *, fast_masks=True):
     settings=config['model'].copy();settings['num_stems']=len(indices)
     for name in ('freqs_per_bands','multi_stft_resolutions_window_sizes'):
         if name in settings:settings[name]=tuple(settings[name])
-    torch.set_num_threads(max(1,min(4,int(os.environ.get('FAIXALAB_CPU_THREADS',os.cpu_count() or 1)))))
+    configure_torch()
     model=BSRoformer(**settings)
     model.load_state_dict(state,strict=True)
     del state,weights
@@ -170,7 +172,7 @@ def validate_identity(path, category, mixture_rms, cancel=None):
             'top':[{'label':labels[i],'score':round(float(scores[:,i].max()),4)} for i in top]}
 
 
-def resolve_candidates(output, selected, validations, manual=False, cancel=None):
+def resolve_candidates(output, selected, validations, manual=False, cancel=None, statistics=None):
     """Resolve parent/child estimates and near-identical cross-family leakage.
 
     The separator has overlapping trained heads; summing a family and its child
@@ -188,28 +190,18 @@ def resolve_candidates(output, selected, validations, manual=False, cancel=None)
             decisions.append({'discarded':parent,'reason':'confirmed_children','kept':present})
     # Cosine similarity of actual stereo waveforms, not notes or pitch classes.
     # Independent parts playing the same notes do not normally share a waveform.
-    energies={};pairs={}
-    for i,left in enumerate(retained):
-        with sf.SoundFile(Path(output)/(left+'.wav')) as a:
-            energy=0.
-            for x in a.blocks(blocksize=SR*10,dtype='float64',always_2d=True):
-                if cancel and cancel.is_set():raise Cancelled()
-                energy+=float(np.sum(x*x))
-            energies[left]=energy
-        for right in retained[i+1:]:
-            dot=0.
-            with sf.SoundFile(Path(output)/(left+'.wav')) as a,sf.SoundFile(Path(output)/(right+'.wav')) as b:
-                for x in a.blocks(blocksize=SR*10,dtype='float64',always_2d=True):
-                    if cancel and cancel.is_set():raise Cancelled()
-                    y=b.read(len(x),dtype='float64',always_2d=True)
-                    dot+=float(np.sum(x*y))
-            pairs[left,right]=dot
+    statistics = statistics or waveform_statistics.collect(output, retained, cancel=cancel)
+    energies = {name: statistics.energy(name) for name in retained}
+    pairs = {(left, right): statistics.dot(left, right)
+             for i, left in enumerate(retained) for right in retained[i+1:]}
     def strength(name):
         item=validations[name]
         return item.get('target_score',0.)-item.get('competing_score',0.),item.get('confirmed_contexts',0)
     for (left,right),dot in pairs.items():
         if left not in retained or right not in retained:continue
         cosine=dot/max(1e-12,math.sqrt(energies[left]*energies[right]))
+        if abs(cosine-.95)<1e-10:
+            cosine=waveform_statistics.exact_pair(output,left,right,cancel)
         if cosine>=.95:
             kept,discarded=sorted([left,right],key=strength,reverse=True)
             retained.remove(discarded)
@@ -218,7 +210,7 @@ def resolve_candidates(output, selected, validations, manual=False, cancel=None)
     return retained,decisions
 
 
-def verify_quiet_candidates(original, drums, output, retained, validations, cancel=None):
+def verify_quiet_candidates(original, drums, output, retained, validations, cancel=None, statistics=None):
     """Verify weak estimates and conserve useful sources when tagging abstains.
 
     Confirmed sources enter first. Uncertain candidates enter by decreasing
@@ -235,24 +227,31 @@ def verify_quiet_candidates(original, drums, output, retained, validations, canc
 
     def inspect(name, others, classify):
         if cancel and cancel.is_set():raise Cancelled()
-        with tempfile.TemporaryDirectory(prefix='identity-',dir=output) as temporary:
-            candidate=Path(temporary)/'residual.wav'
-            streams={n:sf.SoundFile(Path(output)/(n+'.wav')) for n in others}
+        if not classify and statistics is not None:
+            benefit, uncertainty=statistics.reconstruction_support(name,others)
+            if abs(benefit)>uncertainty:
+                validations[name]['reconstruction_support']=round(benefit,6)
+                return benefit,None
+        from contextlib import ExitStack
+        with ExitStack() as stack:
+            dest=None
+            if classify:
+                temporary=stack.enter_context(tempfile.TemporaryDirectory(prefix='identity-',dir=output))
+                candidate=Path(temporary)/'residual.wav'
+                dest=stack.enter_context(sf.SoundFile(candidate,'w',samplerate=SR,channels=2,subtype='FLOAT'))
+            streams={n:stack.enter_context(sf.SoundFile(Path(output)/(n+'.wav'))) for n in others}
+            estimate=stack.enter_context(sf.SoundFile(Path(output)/(name+'.wav')))
             dot=0.;energy=0.
-            try:
-                with sf.SoundFile(Path(output)/(name+'.wav')) as estimate, \
-                     sf.SoundFile(candidate,'w',samplerate=SR,channels=2,subtype='FLOAT') as dest:
-                    for offset in range(0,len(original),SR*10):
-                        if cancel and cancel.is_set():raise Cancelled()
-                        stop=min(len(original),offset+SR*10)
-                        block=original[offset:stop]-drums[offset:stop]
-                        for stream in streams.values():
-                            block-=stream.read(stop-offset,dtype='float32',always_2d=True)
-                        prediction=estimate.read(stop-offset,dtype='float64',always_2d=True)
-                        dot+=float(np.sum(block*prediction));energy+=float(np.sum(prediction*prediction))
-                        dest.write(block)
-            finally:
-                for stream in streams.values():stream.close()
+            for offset in range(0,len(original),SR*10):
+                if cancel and cancel.is_set():raise Cancelled()
+                stop=min(len(original),offset+SR*10)
+                block=original[offset:stop]-drums[offset:stop]
+                for stream in streams.values():
+                    block-=stream.read(stop-offset,dtype='float32',always_2d=True)
+                prediction=estimate.read(stop-offset,dtype='float64',always_2d=True)
+                dot+=float(np.sum(block*prediction));energy+=float(np.sum(prediction*prediction))
+                if dest is not None:dest.write(block)
+            if dest is not None:dest.close()
             evidence=validate_identity(candidate,name,mixture_rms,cancel) if classify else None
         benefit=(2*dot-energy)/max(energy,1e-12)
         validations[name]['reconstruction_support']=round(benefit,6)
@@ -295,6 +294,10 @@ def refine(audio_path, drums_path, output, cache, selection=None, scan_paths=Non
            device='cpu', report=None, cancel=None, chunk_seconds=6.):
     import soundfile as sf
     import torch
+    began=last=time.perf_counter();timings={}
+    def mark(name):
+        nonlocal last
+        now=time.perf_counter();timings[name]=round(now-last,6);last=now
     if report:report(.005,'Conferindo o áudio para a separação por IA')
     original=read_stereo(audio_path);drums=read_stereo(drums_path)
     if len(original)!=len(drums):raise ValueError('A bateria e o áudio original precisam ter a mesma duração.')
@@ -302,9 +305,12 @@ def refine(audio_path, drums_path, output, cache, selection=None, scan_paths=Non
     requested=checked_selection(selection or [])
     selected,detected=(requested,{}) if requested else discover(scan_paths or [audio_path],report,cancel)
     if not selected:raise ValueError('Nenhum instrumento foi selecionado.')
+    mark('read_and_select')
     weights=checkpoint(cache,report,cancel)
+    mark('model_verification')
     if report:report(.20,'Carregando separador por IA · %d categorias' % len(selected))
     model=load_model(weights,selected,device)
+    mark('model_load')
     length=len(original)
     chunk=round(chunk_seconds*SR);overlap=chunk//4;step=chunk-overlap
     starts=list(range(0,max(1,length-chunk+1),step))
@@ -331,6 +337,7 @@ def refine(audio_path, drums_path, output, cache, selection=None, scan_paths=Non
                 count[start:start+size]+=blend
                 if report:report(.21+.64*(index+1)/len(starts),
                     'Separando %d categorias · trecho %d/%d' % (len(selected),index+1,len(starts)))
+        mark('neural_inference')
         del model
         gc.collect()
         if device=='cuda':torch.cuda.empty_cache()
@@ -347,17 +354,27 @@ def refine(audio_path, drums_path, output, cache, selection=None, scan_paths=Non
             validation=validate_identity(path,name,mixture_rms,cancel)
             validations[name]=validation
             if report:report(.85+.10*(index+1)/len(selected),'Conferindo o timbre · '+CATALOG[name]['label'])
-        retained,decisions=resolve_candidates(output,selected,validations,bool(requested),cancel)
+        mark('encode_and_identify')
+        statistics=None
         if not requested:
-            retained,residual_decisions=verify_quiet_candidates(original,drums,output,retained,validations,cancel)
+            statistics=waveform_statistics.collect(output,[n for n in selected if validations[n]['accepted']],
+                reference=(original,drums),cancel=cancel)
+        retained,decisions=resolve_candidates(output,selected,validations,bool(requested),cancel,statistics)
+        mark('resolve_overlaps')
+        if not requested:
+            retained,residual_decisions=verify_quiet_candidates(original,drums,output,retained,validations,cancel,statistics)
             decisions.extend(residual_decisions)
+        mark('verify_residual')
         for name in selected:
             if name not in retained:(output/(name+'.wav')).unlink()
         if report:report(.96,'Conferindo sobreposições e o áudio restante')
         # Only Other absorbs the reconstruction remainder. Neither guitar nor
         # accordion is filled with unclassified residual audio.
         write_remainder(original,drums,output,retained,cancel)
-        details={'model':'MVSep Mega53 v1 · comprehensive candidates + timbre verification',
+        mark('write_remainder')
+        timings['total']=round(time.perf_counter()-began,6)
+        details={'timings_seconds':timings, 'cpu_threads':torch.get_num_threads(),
+                 'model':'MVSep Mega53 v1 · comprehensive candidates + timbre verification',
                  'checkpoint_sha256':MODEL_SHA256,'device':device,'drums_preserved':True,
                  'drums_sha256':digest(drums_path),'selected':selected,'retained':retained,
                  'policy_version':'0.7.0','inference_graph':'batched-masks-0.8.0','mode':'manual' if requested else 'automatic',

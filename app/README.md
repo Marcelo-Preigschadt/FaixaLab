@@ -1,6 +1,21 @@
-# FaixaLab 0.9
+# FaixaLab 0.10
 
 Aplicativo independente para Windows ou servidor Linux: link YouTube ou arquivo MP3, separação de instrumentos, cifras, letra sincronizada e tablatura da guitarra solo. A importação padrão usa um fluxo geral para todas as músicas. Não há regras por título, artista, ID de vídeo ou posições fixas de solos.
+
+## Otimização do processamento — versão 0.10
+
+- O processamento deixa de limitar todos os computadores a quatro threads. O modo automático usa até oito, respeitando afinidade e cotas de CPU do contêiner. `FAIXALAB_CPU_THREADS` permite fixar um orçamento menor; um Codespace de dois núcleos continua limitado a dois.
+- O instalador detecta a GPU NVIDIA e o driver existentes, escolhe um runtime PyTorch CUDA compatível e testa kernels reais. Sem suporte, prepara CPU. Falhas recuperáveis de memória CUDA durante a separação recebem uma única tentativa em CPU. A instalação não cria máquinas nem contrata recursos na nuvem.
+- A atenção dos dois Roformers usa a seleção de kernels do próprio PyTorch; foi removido um argumento incompatível com o runtime 2.5.1. A inferência permanece float32, com os mesmos pesos e as mesmas janelas.
+- A comparação de sobreposições lê cada faixa em blocos uma vez e reutiliza suas correlações. Os limiares e as regras de seleção permanecem iguais; casos em que o erro de arredondamento pode mudar uma decisão voltam ao cálculo original.
+- A verificação de timbres usa até quatro contextos independentes em máquinas com orçamento de oito threads, preservando entradas, ordem e todos os rótulos. Em duas threads continua sequencial.
+- O código nativo do DSP pode ser reaproveitado entre análises. O cache é separado por instalação, versão, ambiente e dependências; o Numba ainda confere a compatibilidade da CPU. Esse cache não acompanha o ZIP.
+- Quando o refinamento não mantém uma faixa de voz, a letra usa uma voz isolada ainda disponível no histórico do projeto antes de recorrer à mistura original. Não se desativa o reconhecedor nem se troca seu modelo para acelerar.
+- `project.json` registra os tempos de cada etapa em `performance`. O refinamento também informa tempos internos em `engine.instrument_refinement.timings_seconds`, para diagnosticar outras músicas sem regras específicas para elas.
+
+Os 33 candidatos automáticos, a seleção manual, os pesos dos modelos, os critérios da cifra e a detecção de solo continuam disponíveis. O ganho depende do hardware. Resultados medidos, comparação do áudio e limites estão em **VALIDACAO.md**. Não há benchmark direto que estabeleça equivalência ou superioridade ao Moises.
+
+Para medir um projeto já processado, use **Separar novamente as faixas** ou **Refinar instrumentos por IA**. Importar o mesmo arquivo/link com as mesmas opções pode reaproveitar o projeto pronto, como antes.
 
 ## Reprodução e entrega das faixas — versão 0.9
 
@@ -49,7 +64,7 @@ As medições desta revisão e suas limitações estão em **VALIDACAO.md**.
 2. Abra **FaixaLab.exe**. Mantenha o executável e todos os arquivos do pacote juntos.
 3. Seus projetos continuam em `%LOCALAPPDATA%\FaixaLab` e aparecem automaticamente.
 
-O iniciador verifica o perfil 0.9.0 em `.runtime/ready` e prepara um Python privado. Os modelos de acordes, detector de solo MERT, Basic Pitch, reconhecedor de timbres EfficientAT e dicionário acompanham o pacote. O separador detalhado MVSep Mega53 (aproximadamente 1,37 GB) e outros modelos ausentes são baixados no primeiro uso e ficam no cache. No Windows, separação, identificação e refinamento executam no computador; no Codespaces, executam na máquina do GitHub. Os motores não exigem API paga. CPU funciona; o modo automático exige mais processamento que as opções tradicionais.
+O iniciador verifica o perfil 0.10.0 em `.runtime/ready` e prepara um Python privado. Os modelos de acordes, detector de solo MERT, Basic Pitch, reconhecedor de timbres EfficientAT e dicionário acompanham o pacote. O separador detalhado MVSep Mega53 (aproximadamente 1,37 GB) e outros modelos ausentes são baixados no primeiro uso e ficam no cache. No Windows, separação, identificação e refinamento executam no computador; no Codespaces, executam na máquina do GitHub. Os motores não exigem API paga. CPU funciona; o modo automático exige mais processamento que as opções tradicionais.
 
 Se a janela não abrir, execute **INICIAR_COM_DIAGNOSTICO.bat**. O log fica em `%LOCALAPPDATA%\FaixaLab\FaixaLab.log`.
 
@@ -111,7 +126,7 @@ O dicionário valida a relação entre a cifra e sua digitação. A identificaç
 
 ## Usar os refinamentos
 
-- **Nova música → 7 faixas**: voz, bateria, baixo, guitarra solo, guitarra base, piano e outros. A etapa solo/base usa um modelo próprio e está identificada como experimental. A primeira utilização baixa aproximadamente 110 MB adicionais.
+- **Nova música → 7 faixas**: voz, bateria, baixo, guitarra solo, guitarra base, piano e outros. A etapa solo/base usa um modelo próprio e está identificada como experimental. A primeira utilização baixa aproximadamente 337 MB adicionais.
 - **Stems → Separação de stems → Separar guitarra solo e guitarra base**: divide a guitarra de um projeto existente, sem refazer todas as outras faixas.
 - **Nova música → Equilibrado**: opção padrão, com um modelo de separação. **Estúdio** mantém o ensemble de quatro modelos e, com seis faixas, mais uma passada para guitarra e piano; exige mais tempo de CPU.
 - **Stems → Separação de stems → Separar novamente as faixas**: escolha Equilibrado, Estúdio ou Mais rápido e reprocese uma música existente; também recalcula sua cifra. Preserva a letra e os intervalos de acordes corrigidos manualmente. Usa o áudio original já salvo, sem baixar o vídeo ou enviar o arquivo novamente.

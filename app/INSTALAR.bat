@@ -17,7 +17,7 @@ set "UV_PYTHON_INSTALL_DIR=%~dp0.runtime\python"
 if errorlevel 1 goto erro
 if not exist ".venv\Scripts\python.exe" ".runtime\uv.exe" venv --python 3.12 .venv
 if errorlevel 1 goto erro
-".runtime\uv.exe" pip install --python ".venv\Scripts\python.exe" torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+".venv\Scripts\python.exe" install_engine.py --python ".venv\Scripts\python.exe" --uv ".runtime\uv.exe" --report ".runtime\engine.json"
 if errorlevel 1 goto erro
 ".runtime\uv.exe" pip install --python ".venv\Scripts\python.exe" -r requirements.txt
 if errorlevel 1 goto erro
@@ -27,7 +27,7 @@ if not exist ".runtime\deno.exe" (
 )
 echo.
 echo  FaixaLab preparado. Os modelos de IA serao baixados ao processar a primeira musica.
-echo 0.9.0>".runtime\ready"
+echo 0.10.0>".runtime\ready"
 exit /b 0
 :erro
 echo.

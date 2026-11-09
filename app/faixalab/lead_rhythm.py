@@ -59,7 +59,8 @@ def split(mix, cache, device='cpu', report=None, method='drypaint'):
     weights = checkpoint(cache, report)
     config = json.loads((Path(__file__).parent / 'vendor/roformer/lead_rhythm.json').read_text('utf-8'))
     config['multi_stft_resolutions_window_sizes'] = tuple(config['multi_stft_resolutions_window_sizes'])
-    torch.set_num_threads(min(4, torch.get_num_threads()))
+    from .compute import configure_torch
+    configure_torch()
     torch.manual_seed(42)
     model = MelBandRoformer(**config)
     model.load_state_dict(torch.load(weights, map_location='cpu', weights_only=True), strict=True)
@@ -107,7 +108,8 @@ def split_drypaint(mix, cache, device='cpu', report=None):
     from demucs.htdemucs import HTDemucs
     weights = checkpoint(cache, report, 'drypaint')
     config = json.loads((Path(__file__).parent / 'models/guitar_roles_config.json').read_text('utf-8'))
-    torch.set_num_threads(min(4, torch.get_num_threads()))
+    from .compute import configure_torch
+    configure_torch()
     model = HTDemucs(sources=['lead', 'rhythm'], audio_channels=2,
                      samplerate=44100, segment=3, **config)
     model.load_state_dict(torch.load(weights, map_location='cpu', weights_only=True), strict=True)

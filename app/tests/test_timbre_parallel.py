@@ -34,4 +34,16 @@ class TimbreParallelChecks(unittest.TestCase):
    _,rows,_=identity.analyze_audio(np.zeros(identity.SR*12,dtype='float32'),workers=2)
    score.assert_not_called();self.assertFalse(rows.any())
 
+ def test_eight_core_budget_uses_four_contexts_and_preserves_scores(self):
+  def score(chunk):
+   time.sleep(.003)
+   return np.array([chunk[0],chunk[-1]],dtype='float32')
+  with patch.dict(os.environ,{'FAIXALAB_CPU_THREADS':'8'}),patch.object(identity,'thread_budget',return_value=8),patch.object(identity,'score',side_effect=score):
+   a,x,_=identity.analyze_audio(self.audio,normalize=True,workers=1)
+   original=identity.ThreadPoolExecutor
+   with patch.object(identity,'ThreadPoolExecutor',wraps=original) as pool:
+    b,y,_=identity.analyze_audio(self.audio,normalize=True)
+   self.assertEqual(pool.call_args.kwargs['max_workers'],4)
+   np.testing.assert_array_equal(a,b);np.testing.assert_array_equal(x,y)
+
 if __name__=='__main__':unittest.main()

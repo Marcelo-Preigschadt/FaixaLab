@@ -6,6 +6,6 @@ if [[ ! -x .runtime/venv/bin/python ]]; then
   python3.12 -m venv .runtime/venv
 fi
 .runtime/venv/bin/python -m pip install --upgrade pip uv
-.runtime/venv/bin/python -m uv pip install --python .runtime/venv/bin/python torch==2.5.1+cpu torchaudio==2.5.1+cpu --index-url https://download.pytorch.org/whl/cpu
+.runtime/venv/bin/python install_engine.py --python .runtime/venv/bin/python --report .runtime/engine.json
 .runtime/venv/bin/python -m uv pip install --python .runtime/venv/bin/python -r requirements.txt
-printf '0.9.0\n' > .runtime/cloud-ready
+printf '0.10.0\n' > .runtime/cloud-ready

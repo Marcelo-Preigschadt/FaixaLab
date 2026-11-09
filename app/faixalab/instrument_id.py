@@ -14,6 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 
 from .media import Cancelled
+from .compute import thread_budget
 
 ROOT = Path(__file__).parent / 'models'
 SR = 32000
@@ -29,7 +30,7 @@ def resources():
         if hashlib.sha256((ROOT/name).read_bytes()).hexdigest() != expected:
             raise RuntimeError('O reconhecedor de instrumentos está incompleto. Extraia novamente o aplicativo.')
     options=ort.SessionOptions()
-    options.intra_op_num_threads=2
+    options.intra_op_num_threads=thread_budget(2)
     options.inter_op_num_threads=1
     session=ort.InferenceSession(str(ROOT/'instrument_id.onnx'),options,providers=['CPUExecutionProvider'])
     with np.load(ROOT/'instrument_id_frontend.npz') as values:
@@ -76,8 +77,9 @@ def analyze_audio(audio, cancel=None, report=None, window=5., hop=2.5, normalize
     starts=list(range(0,max(1,len(audio)-count+1),round(hop*SR)))
     if len(audio)>count and starts[-1]!=len(audio)-count:
         starts.append(len(audio)-count)
-    budget=max(1,min(4,int(os.environ.get('FAIXALAB_CPU_THREADS',os.cpu_count() or 1))))
-    concurrency=(2 if budget>=4 else 1) if workers is None else max(1,min(2,int(workers)))
+    budget=thread_budget()
+    maximum=max(1,min(4,budget//2))
+    concurrency=maximum if workers is None else max(1,min(maximum,int(workers)))
 
     def classify(start):
         if cancel and cancel.is_set():raise Cancelled()
