@@ -6,6 +6,12 @@ A correção 0.10.1 valida e prepara o runtime JavaScript usado pelo YouTube, pr
 
 A atualização **playback1** corrige o ciclo de tocar, pausar para carregar e descartar o buffer. Há um pacote pequeno que atualiza somente a interface de uma instalação 0.10.1 e reaproveita os projetos e modelos. Testes e limites: [app/VALIDACAO_REPRODUCAO_0_10_1.md](app/VALIDACAO_REPRODUCAO_0_10_1.md).
 
+## Versão online — primeira etapa
+
+A [interface do FaixaLab Online](https://faixalab-marcelo.nainho5.chatgpt.site) foi publicada com acesso privado pela conta ChatGPT do proprietário. O dicionário real acompanha o site. **O servidor de IA ainda não foi provisionado ou conectado; o site informa esse estado e bloqueia novas importações.**
+
+O gateway, a imagem CPU do servidor, a validação de acesso e os testes estão em [online/README.md](online/README.md). O site e a IA são serviços separados: este código não transforma GitHub Pages em servidor de modelos nem provisiona máquinas ou planos pagos. O aplicativo Windows continua funcionando como antes.
+
 As medições e os limites da otimização estão em [app/VALIDACAO.md](app/VALIDACAO.md); a validação anterior foi preservada em [app/VALIDACAO_0_9.md](app/VALIDACAO_0_9.md). Os testes foram realizados em CPU Linux; o caminho CUDA e a execução nativa Windows ainda exigem validação em hardware correspondente. Não há comparação direta que estabeleça desempenho ou qualidade superior ao Moises.
 
 ## Ativar o FaixaLab neste repositório

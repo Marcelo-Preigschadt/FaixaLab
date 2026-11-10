@@ -9,8 +9,26 @@ import stat
 import subprocess
 import tempfile
 import zipfile
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 
 ROOT=Path(__file__).resolve().parents[1]
+
+
+def download_archive(url, destination, manifest):
+    parsed=urlparse(url)
+    if parsed.scheme!='https' or not parsed.hostname or parsed.username or parsed.password:
+        raise ValueError('O endereço do pacote precisa usar HTTPS sem credenciais na URL.')
+    request=Request(url,headers={'User-Agent':'FaixaLab-cloud-setup'})
+    total=0
+    with urlopen(request,timeout=30) as response,Path(destination).open('wb') as output:
+        while chunk:=response.read(1024*1024):
+            total+=len(chunk)
+            if total>manifest['bytes']:
+                raise ValueError('O download excedeu o tamanho do pacote verificado.')
+            output.write(chunk)
+    if total!=manifest['bytes']:
+        raise ValueError('O download do pacote ficou incompleto.')
 
 
 def install_archive(archive_path, target, manifest):
@@ -45,6 +63,7 @@ def install_archive(archive_path, target, manifest):
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--archive',type=Path,help='ZIP local, para validar sem acesso à rede')
+    parser.add_argument('--url',help='URL HTTPS do mesmo ZIP verificado pelo manifesto')
     parser.add_argument('--target',type=Path,default=ROOT/'.app/FaixaLab')
     args=parser.parse_args()
     manifest=json.loads((ROOT/'release.json').read_text())
@@ -52,6 +71,11 @@ def main():
     if marker.is_file() and marker.read_text().strip()==manifest['sha256']:
         print('FaixaLab '+manifest['tag']+' já está preparado.');return
     if args.archive:install_archive(args.archive,args.target,manifest)
+    elif args.url:
+        with tempfile.TemporaryDirectory(prefix='faixalab_download_') as temporary:
+            archive=Path(temporary)/manifest['asset']
+            download_archive(args.url,archive,manifest)
+            install_archive(archive,args.target,manifest)
     else:
         repository=os.environ.get('GITHUB_REPOSITORY') or manifest['repository']
         with tempfile.TemporaryDirectory(prefix='faixalab_download_') as temporary:

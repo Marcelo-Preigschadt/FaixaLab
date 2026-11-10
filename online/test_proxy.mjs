@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import {createGateway} from './proxy.mjs';
+const env={FAIXALAB_BACKEND_URL:'https://processing.example',FAIXALAB_BACKEND_KEY:'test-server-secret'};
+const request=(path,init={})=>new Request('https://site.example'+path,{...init,headers:{'oai-authenticated-user-id':'owner',...init.headers}});
+let calls=0;
+const gateway=createGateway({fetcher:async(url,options)=>{
+ calls++;assert.equal(url.origin,'https://processing.example');assert.equal(options.headers.get('x-faixalab-key'),'test-server-secret');assert.equal(options.headers.get('cookie'),null);
+ if(url.pathname==='/api/connection')return Response.json({status:'ok',version:'0.10.1',processing:'cloud'});
+ assert.equal(options.headers.get('range'),'bytes=2-5');
+ return new Response(new Uint8Array([2,3,4,5]),{status:206,headers:{'Content-Type':'audio/wav','Content-Range':'bytes 2-5/10','Accept-Ranges':'bytes'}});
+}});
+let result=await gateway.fetch(new Request('https://site.example/api/projects'),env);assert.equal(result.status,401);assert.equal(calls,0);
+result=await gateway.fetch(request('/api/cloud/status'),{});assert.equal(result.status,503);assert.equal(calls,0);
+result=await gateway.fetch(request('/api/cloud/status'),env);assert.equal(result.status,200);assert.equal((await result.json()).connected,true);
+result=await gateway.fetch(request('/api/projects/a/audio/guitar?format=wav&v=revision',{headers:{Range:'bytes=2-5',Cookie:'never-forward=1'}}),env);assert.equal(result.status,206);assert.equal(result.headers.get('content-range'),'bytes 2-5/10');assert.deepEqual([...new Uint8Array(await result.arrayBuffer())],[2,3,4,5]);
+result=await gateway.fetch(request('/api/import/youtube',{method:'POST',headers:{Origin:'https://evil.example'}}),env);assert.equal(result.status,403);
+result=await gateway.fetch(request('/api/import/file',{method:'POST',headers:{'Content-Length':String(96*1024*1024)}}),env);assert.equal(result.status,413);
+let received='';
+const uploads=createGateway({fetcher:async(url,options)=>{assert.equal(options.headers.get('origin'),'https://processing.example');received=await new Response(options.body).text();return Response.json({id:'queued'},{status:202});}});
+result=await uploads.fetch(request('/api/import/file',{method:'POST',headers:{Origin:'https://site.example','Content-Type':'application/octet-stream'},body:'music-stream'}),env);assert.equal(result.status,202);assert.equal(received,'music-stream');
+const down=createGateway({fetcher:async()=>{throw Error('connection refused');}});result=await down.fetch(request('/api/cloud/status'),env);assert.equal(result.status,503);
+assert(!(await result.text()).includes('test-server-secret'));
+const badKey=createGateway({fetcher:async()=>new Response('',{status:401})});result=await badKey.fetch(request('/api/cloud/status'),env);assert.equal((await result.json()).reason,'unauthorized');
+const metadata=createGateway({assets:new Map([['/api/chord-dictionary',{body:'{"version":"real-dictionary"}',type:'application/json'}]])});result=await metadata.fetch(request('/api/chord-dictionary'),{});assert.equal(result.status,200);assert.equal((await result.json()).version,'real-dictionary');
+console.log('10 gateway checks passed: access, configuration, authenticated health, Range, origin, upload limit, streaming upload, unavailable server, rejected key, static dictionary.');

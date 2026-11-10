@@ -9,6 +9,8 @@ def main():
     parser.add_argument('--host',default='0.0.0.0')
     parser.add_argument('--port',type=int,default=int(os.environ.get('PORT','7860')))
     args=parser.parse_args()
+    from faixalab.remote_access import validate_server_settings
+    validate_server_settings()
     if os.environ.get('CODESPACES')=='true':
         os.environ.setdefault('FAIXALAB_DATA_DIR','/workspaces/.faixalab-data')
     os.environ['PORT']=str(args.port)

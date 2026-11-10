@@ -13,7 +13,7 @@ import shutil
 from starlette.background import BackgroundTask
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, Response, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -45,6 +45,10 @@ app = FastAPI(title='FaixaLab', lifespan=lifespan)
 
 @app.middleware('http')
 async def local_origin(request: Request, call_next):
+    if request.url.path.startswith('/api/') and request.url.path != '/api/health':
+        from .remote_access import allowed_api
+        if not allowed_api(request.headers):
+            return JSONResponse({'detail': 'Acesso ao servidor de processamento não autorizado.'}, status_code=401)
     if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'}:
         origin = request.headers.get('origin')
         codespace=os.environ.get('CODESPACE_NAME')
@@ -100,8 +104,14 @@ class LinkInput(BaseModel):
 
 @app.get('/api/health')
 def health():
-    return {'status': 'ok', 'version': __version__, 'processing': 'cloud' if os.environ.get('CODESPACES')=='true' else 'local',
+    return {'status': 'ok', 'version': __version__, 'processing': 'cloud' if os.environ.get('CODESPACES')=='true' or os.environ.get('FAIXALAB_REMOTE')=='1' else 'local',
             'engines': {n: importlib.util.find_spec(n) is not None for n in ['demucs', 'faster_whisper', 'librosa', 'yt_dlp']}}
+
+
+@app.get('/api/connection')
+def check_connection():
+    # Unlike the liveness probe, this route verifies the gateway's secret first.
+    return health()
 
 
 @app.get('/service-worker.js')
