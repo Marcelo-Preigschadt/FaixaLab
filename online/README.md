@@ -53,3 +53,15 @@ O acesso ao YouTube continua sujeito à disponibilidade do vídeo e à conexão 
 - Nenhum desses limites foi ativado, alterado ou contornado. Não houve criação de assinatura, contratação de GPU ou configuração de pagamento.
 
 Fontes: [Hugging Face Spaces](https://huggingface.co/docs/hub/spaces-overview), [ZeroGPU](https://huggingface.co/docs/hub/spaces-zerogpu), [Lightning AI](https://studio.lightning.ai/pricing/).
+
+## Cadastro da Lightning bloqueado — observação de 10/11/2026
+
+O fluxo de cadastro do usuário retornou: “We aren't accepting new sign-ups right now. Existing accounts can still sign in.” Isso impede essa nova conta de usar a oferta. A orientação anterior sobre aguardar verificação de e-mail não se aplica a esse aviso. As páginas de preços e ajuda ainda descrevem o plano, mas não comprovam que o cadastro esteja aberto. Não tratar a Lightning como hospedagem disponível para essa implantação enquanto o bloqueio persistir.
+
+## Candidato a validar: execução por tarefas no Kaggle
+
+A documentação oficial do Kaggle oferece GPU gratuita com cota semanal descrita como 30 horas, variável conforme demanda e recursos. A API oficial permite enviar código/notebooks para execução e consultar resultados. Isso permite estudar um processamento por música: enviar a tarefa, acompanhar seu estado e buscar as faixas ao concluir. Não se trata de hospedar o container FastAPI permanentemente.
+
+Esse candidato ainda não está integrado ou testado no FaixaLab. Primeiro é necessário verificar cadastro, verificação da conta e GPU disponível na conta do usuário. O site publicado e o servidor Docker atual não foram alterados para fingir essa integração. Não usar as antigas referências a P100 como indicação de hardware atual: o Kaggle anunciou sua retirada em 15/09/2026; T4 ×2 é a alternativa documentada.
+
+Referências: [cota e uso de GPU](https://www.kaggle.com/docs/efficient-gpu-usage), [API oficial](https://www.kaggle.com/docs/api), [execução de notebooks pela CLI oficial](https://github.com/Kaggle/kaggle-cli/blob/main/docs/kernels.md), [retirada da P100](https://www.kaggle.com/product-announcements/735239).
