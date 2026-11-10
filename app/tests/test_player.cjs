@@ -62,4 +62,39 @@ test('suspended_audio_context_resumes_at_the_same_song_position',async()=>{
  const {player:p}=harness();p.load(project());await p.play();p.tracks.forEach(t=>t.audio._time=29);p.context.state='suspended';p.synchronize();await new Promise(r=>setImmediate(r));
  assert.equal(p.context.state,'running');assert.equal(p.playing,true);assert.equal(p.current(),29);p.dispose();
 });
+test('buffering_keeps_active_streams_fetching_while_paused',async()=>{
+ const {player:p}=harness();p.load(project());await p.play();p.tracks.forEach(t=>t.audio._time=38);
+ p.buffer(p.clock());
+ assert(p.audios().every(a=>a.preload==='auto'),'paused active streams need preload=auto to refill');
+ assert.equal(p.position,38);p.dispose();
+});
+test('buffering_waits_for_ahead_data_instead_of_immediately_restarting',async()=>{
+ const {player:p}=harness();p.load(project());await p.play();p.tracks.forEach(t=>{t.audio._time=38;t.audio.buffered.end=()=>38.2;});
+ p.buffer(p.clock());const before=p.tracks.map(t=>t.audio.playCalls);
+ p.synchronize();await new Promise(r=>setImmediate(r));
+ assert.equal(p.playing,false,'200 ms of data is not enough to resume all stems');
+ assert.deepEqual(p.tracks.map(t=>t.audio.playCalls),before);p.dispose();
+});
+test('buffering_does_not_discard_a_download_that_is_still_progressing',async()=>{
+ const {player:p,advance}=harness();p.load(project());await p.play();p.tracks.forEach(t=>{t.audio._time=38;t.audio.readyState=2;t.audio.buffered.end=()=>38.1;});
+ p.buffer(p.clock());advance(5000);p.tracks.forEach(t=>t.audio.buffered.end=()=>38.5);p.synchronize();
+ advance(2000);p.tracks.forEach(t=>t.audio.buffered.end=()=>39);p.synchronize();await new Promise(r=>setImmediate(r));
+ assert(p.tracks.every(t=>t.audio.loads===0),'a normal stall must not clear existing bytes with load()');
+ assert.equal(p.position,38);assert.equal(p.buffering,true);p.dispose();
+});
+test('buffered_streams_resume_together_at_the_preserved_position',async()=>{
+ const {player:p}=harness();p.load(project());await p.play();p.tracks.forEach(t=>{t.audio._time=38;t.audio.buffered.end=()=>42;});
+ p.buffer(p.clock());p.synchronize();await new Promise(r=>setImmediate(r));
+ assert.equal(p.playing,true);assert.equal(p.current(),38);assert(p.tracks.every(t=>t.audio.loads===0));p.dispose();
+});
+test('buffer_wait_has_a_bounded_timeout_without_reloading_the_files',async()=>{
+ const {player:p,advance}=harness();p.load(project());await p.play();p.tracks.forEach(t=>{t.audio._time=38;t.audio.readyState=2;t.audio.buffered.end=()=>38.1;});
+ p.buffer(p.clock());advance(21000);p.synchronize();
+ assert.equal(p.wantsPlay,false);assert.equal(p.current(),38);assert(p.message.includes('separação está salva'));assert(p.tracks.every(t=>t.audio.loads===0));p.dispose();
+});
+test('buffering_near_the_end_does_not_require_two_nonexistent_seconds',async()=>{
+ const {player:p}=harness();p.load(project());await p.play();p.tracks.forEach(t=>{t.audio._time=299.7;t.audio.buffered.end=()=>300;});
+ p.buffer(p.clock());p.synchronize();await new Promise(r=>setImmediate(r));
+ assert.equal(p.playing,true);assert.equal(p.current(),299.7);p.dispose();
+});
 (async()=>{const results=[];for(const t of tests){try{await t.run();results.push({name:t.name,passed:true})}catch(e){results.push({name:t.name,passed:false,error:e.message})}}console.log(JSON.stringify({passed:results.filter(r=>r.passed).length,total:results.length,results},null,2));if(results.some(r=>!r.passed))process.exitCode=1})().catch(e=>{console.error(e);process.exitCode=1});

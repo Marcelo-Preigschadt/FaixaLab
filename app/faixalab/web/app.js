@@ -127,7 +127,7 @@ class StemPlayer {
     const audio=new Audio(url),epoch=this.loadId;
     audio.preload='none';audio.preservesPitch=true;audio.playbackRate=this.speed;
     audio.addEventListener('loadedmetadata',()=>{if(epoch===this.loadId)this.place(audio,this.position);});
-    const ready=()=>{if(epoch===this.loadId&&this.wantsPlay&&this.buffering&&!this.starting&&this.audios().every(a=>a.readyState>=3&&!a.seeking))this.play(true);};
+    const ready=()=>{if(epoch===this.loadId&&this.wantsPlay&&this.buffering&&!this.starting&&this.canResume())this.play(true);};
     audio.addEventListener('canplay',ready);audio.addEventListener('seeked',ready);
     const wait=()=>{
       if(epoch!==this.loadId||!this.wantsPlay||!this.audios().includes(audio))return;
@@ -168,6 +168,18 @@ class StemPlayer {
     return active.length?active:this.tracks[0]?[this.tracks[0].audio]:[];
   }
   clock(){return this.reference||this.audios()[0];}
+  bufferedAhead(audio,position=this.position) {
+    const ranges=audio?.buffered;if(!ranges)return 0;
+    for(let i=0;i<ranges.length;i++)if(ranges.start(i)<=position+.025&&ranges.end(i)>position)return ranges.end(i)-position;
+    return 0;
+  }
+  canResume() {
+    const active=this.audios();
+    return active.length>0&&active.every(a=>{
+      const remaining=Math.max(.05,(Number.isFinite(a.duration)?a.duration:this.duration)-this.position-.05);
+      return a.readyState>=3&&!a.seeking&&this.bufferedAhead(a)>=Math.min(2,remaining);
+    });
+  }
   current() {
     const audio=this.clock();
     return this.wantsPlay&&!this.buffering&&audio?.paused!==true&&Number.isFinite(audio?.currentTime)?audio.currentTime:this.position;
@@ -189,7 +201,8 @@ class StemPlayer {
     const active=this.audios(),token=this.operation;
     if(!active.includes(this.reference)){this.position=position;this.reference=active[0];this.place(this.reference,position);}
     for(const t of this.tracks){
-      if(!active.includes(t.audio)){t.audio.pause();continue;}
+      if(!active.includes(t.audio)){t.audio.preload='none';t.audio.pause();continue;}
+      t.audio.preload='auto';
       if(t.audio.paused!==false){this.place(t.audio,position);t.audio.play().catch(()=>{if(token===this.operation&&this.wantsPlay)this.recover(t.audio,true);});}
     }
     this.lastClock=position;this.lastAdvance=performance.now();
@@ -209,9 +222,12 @@ class StemPlayer {
     clearInterval(this.syncTimer);this.syncTimer=setInterval(()=>this.synchronize(),350);
     let deadline;
     try{
+      // Pausing an active preload=none stream can suspend its download. Keep
+      // active streams fetching so a short underrun can refill without reload.
+      for(const a of active)a.preload='auto';
       if(!this.backingMode&&!this.comparing)await this.ensureContext();
       if(token!==this.operation||!this.wantsPlay)return;
-      for(const t of this.tracks)if(!active.includes(t.audio))t.audio.pause();
+      for(const t of this.tracks)if(!active.includes(t.audio)){t.audio.preload='none';t.audio.pause();}
       for(const a of active)this.place(a,this.position);
       await Promise.race([Promise.all(active.map(a=>a.play())),new Promise((_,reject)=>{deadline=setTimeout(()=>reject(new Error('O áudio não respondeu. Tente reproduzir novamente.')),20000);})]);
       if(token!==this.operation||!this.wantsPlay)return;
@@ -233,7 +249,8 @@ class StemPlayer {
     if(!this.wantsPlay||this.buffering)return;
     this.position=this.current();++this.operation;this.playing=false;this.starting=false;this.buffering=true;
     this.waitingAudio=audio;this.waitSince=performance.now();
-    for(const a of this.audios())a.pause();
+    this.bufferProgress=this.audios().reduce((sum,a)=>sum+this.bufferedAhead(a),0);this.bufferProgressAt=this.waitSince;
+    for(const a of this.audios()){a.preload='auto';a.pause();}
     this.message='Carregando áudio…';this.emit();
   }
   synchronize() {
@@ -252,8 +269,12 @@ class StemPlayer {
       return;
     }
     if(this.buffering&&!this.starting){
-      if(active.every(a=>a.readyState>=3&&!a.seeking)){this.play(true);return;}
-      if(now-this.waitSince>6000)this.recover(this.waitingAudio||this.clock(),false);
+      if(this.canResume()){this.play(true);return;}
+      const progress=active.reduce((sum,a)=>sum+this.bufferedAhead(a),0);
+      if(progress>this.bufferProgress+.05){this.bufferProgress=progress;this.bufferProgressAt=now;}
+      // load() discards the bytes already received and can create a repeating
+      // play/pause/download loop. Let a progressing download finish instead.
+      if(now-this.bufferProgressAt>20000||now-this.waitSince>60000)this.fail('O áudio não terminou de carregar. Toque em Reproduzir para tentar novamente; a separação está salva.');
       return;
     }
     if(!this.playing||this.starting)return;
@@ -281,7 +302,7 @@ class StemPlayer {
           const url=new URL(audio.src,location.href||'http://localhost');
           if(url.searchParams.has('format')){url.searchParams.set('format',url.searchParams.get('format')==='m4a'?'wav':'m4a');audio.formatFallback=true;audio.src=url.href;}
         }
-        audio.load();
+        if(formatError||audio.error||audio.readyState===0)audio.load();
       }
       await this.play(true);
     }finally{this.recovering=false;}

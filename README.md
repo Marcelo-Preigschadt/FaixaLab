@@ -4,6 +4,8 @@ Separação de instrumentos, cifras, letra e tablatura com modelos públicos, pa
 
 A correção 0.10.1 valida e prepara o runtime JavaScript usado pelo YouTube, prioriza o runtime privado sobre um Deno antigo do sistema e atualiza yt-dlp com o EJS correspondente. A falta desse runtime reproduziu o erro `This video is not available` no vídeo relatado. Isso não confirma, sem o diagnóstico do computador afetado, que seja a única causa do incidente. Verificações e limites: [app/VALIDACAO_0_10_1.md](app/VALIDACAO_0_10_1.md).
 
+A atualização **playback1** corrige o ciclo de tocar, pausar para carregar e descartar o buffer. Há um pacote pequeno que atualiza somente a interface de uma instalação 0.10.1 e reaproveita os projetos e modelos. Testes e limites: [app/VALIDACAO_REPRODUCAO_0_10_1.md](app/VALIDACAO_REPRODUCAO_0_10_1.md).
+
 As medições e os limites da otimização estão em [app/VALIDACAO.md](app/VALIDACAO.md); a validação anterior foi preservada em [app/VALIDACAO_0_9.md](app/VALIDACAO_0_9.md). Os testes foram realizados em CPU Linux; o caminho CUDA e a execução nativa Windows ainda exigem validação em hardware correspondente. Não há comparação direta que estabeleça desempenho ou qualidade superior ao Moises.
 
 ## Ativar o FaixaLab neste repositório

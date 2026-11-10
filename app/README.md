@@ -2,6 +2,12 @@
 
 Aplicativo independente para Windows ou servidor Linux: link YouTube ou arquivo MP3, separação de instrumentos, cifras, letra sincronizada e tablatura da guitarra solo. A importação padrão usa um fluxo geral para todas as músicas. Não há regras por título, artista, ID de vídeo ou posições fixas de solos.
 
+## Correção de reprodução — playback1
+
+O player mantém o carregamento das faixas ativas durante uma pausa por falta de dados, aguarda até dois segundos de áudio disponível antes de retomar e preserva os bytes já carregados. Uma interrupção transitória deixa de provocar recargas periódicas do arquivo. Os canais silenciados continuam sem decodificação e passam a reduzir também seu preload. Os limites e as verificações estão em **VALIDACAO_REPRODUCAO_0_10_1.md**.
+
+Quem já possui a 0.10.1 pode aplicar somente `FaixaLab_0_10_1_Correcao_Reproducao.zip`: feche o aplicativo, extraia diretamente na pasta que contém `FaixaLab.exe`, substitua os arquivos e reabra o projeto concluído. A correção contém apenas os arquivos da interface; não reinstala Python, não baixa pesos e não repete a separação.
+
 ## Importação do YouTube — correção 0.10.1
 
 O download exige yt-dlp atualizado, EJS correspondente e Deno 2.3+ ou Node 22+. O instalador agora valida o executável e sua versão; se nenhum runtime compatível estiver disponível, prepara um Deno privado também no Linux. Um Deno antigo no PATH deixa de esconder o runtime privado ou impedir o uso de Node compatível. O download independe do diretório em que o aplicativo foi iniciado.
