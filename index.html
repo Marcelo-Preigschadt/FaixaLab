@@ -4,13 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>FaixaLab — da música ao seu instrumento</title>
-    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./style.css?v=0320a8efca84" />
     <link rel="stylesheet" href="./studio.css" />
     <script src="./guitar.js" defer></script>
     <meta name="referrer" content="no-referrer" />
     <script src="./pages-config.js" defer></script>
     <script src="./pages-connection.js?v=cc0a363d3791" defer></script>
-    <script src="./app.js" defer></script>
+    <script src="./app.js?v=06d68285e324" defer></script>
     <link rel="stylesheet" href="./mobile.css" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <meta name="theme-color" content="#101213" />
@@ -393,12 +393,12 @@
         <div class="options-grid">
           <label
             >Separação<select id="stem-option">
-              <option value="expanded" selected>Automático por IA · todos os candidatos</option>
-              <option value="7">7 faixas · solo e base (experimental)</option>
-              <option value="6">
+              <option value="6" selected>
                 6 faixas · voz, bateria, baixo, guitarra, piano e outros
               </option>
               <option value="4">4 faixas · voz, bateria, baixo e outros</option>
+              <option value="7">7 faixas · solo e base (experimental)</option>
+              <option value="expanded">Completa por IA · 33 categorias, mais lenta</option>
             </select></label
           ><label
             >Processamento<select id="quality-option">
@@ -421,7 +421,7 @@
             </select></label
           >
         </div>
-        <p class="muted small">Estúdio faz uma análise adicional para isolar melhor os instrumentos. O primeiro uso baixa os modelos necessários.</p>
+        <p class="muted small">A separação completa também está disponível em Separação de stems → Refinar instrumentos por IA. O primeiro uso baixa os modelos necessários.</p>
         <label class="check-label"
           ><input id="lyrics-option" type="checkbox" checked /> Gerar letra
           sincronizada</label
