@@ -1,4 +1,5 @@
 from pathlib import Path
+from contextvars import ContextVar
 from datetime import datetime, timezone
 import json
 import os
@@ -14,6 +15,7 @@ MODELS = ROOT / 'models'
 for directory in [PROJECTS, MODELS]:
     directory.mkdir(parents=True, exist_ok=True)
 LOCK = threading.RLock()
+REQUEST_ACCOUNT = ContextVar('faixalab_request_account', default=None)
 
 
 def now():
@@ -60,13 +62,22 @@ def update_project(identifier, **changes):
 def new_project(title, source, options):
     identifier = uuid.uuid4().hex
     project_dir(identifier).mkdir()
-    return update_project(identifier, title=title[:200], source=source, options=options,
+    account = REQUEST_ACCOUNT.get()
+    ownership = {'account_id': account} if account else {}
+    return update_project(identifier, title=title[:200], source=source, options=options, **ownership,
                           status='queued', stage='Na fila', progress=0, warnings=[], stems=[],
                           chords=[], lyrics=[], error=None)
 
 
 def _import_key(source_key,options):
-    return hashlib.sha256(json.dumps(['imports-v1',source_key,options],sort_keys=True).encode()).hexdigest()
+    parts = ['imports-v1',source_key,options]
+    if (account := REQUEST_ACCOUNT.get()):
+        parts.append(account)
+    return hashlib.sha256(json.dumps(parts,sort_keys=True).encode()).hexdigest()
+
+
+def owns_project(project):
+    return project.get('account_id') == REQUEST_ACCOUNT.get()
 
 
 def cached_import(source_key,options):
@@ -77,7 +88,7 @@ def cached_import(source_key,options):
         identifier=index.get(_import_key(source_key,options))
         if not identifier:return None
         p=read_project(identifier)
-        if p.get('status') not in {'queued','processing','ready','partial'}:return None
+        if not owns_project(p) or p.get('status') not in {'queued','processing','ready','partial'}:return None
         if p.get('instrument_settings',{}).get('selection'):return None
         return p
     except (OSError,ValueError,TypeError):return None
@@ -97,10 +108,13 @@ def remember_import(source_key,options,identifier):
 def linked_youtube_audio(video_id):
     """Return the project that stores the original file for a linked video."""
     try:
-        identifier = (ROOT / 'youtube-audio' / video_id).read_text('utf-8').strip()
+        directory = ROOT / 'youtube-audio'
+        if (account := REQUEST_ACCOUNT.get()):
+            directory /= account
+        identifier = (directory / video_id).read_text('utf-8').strip()
         project = read_project(identifier)
         source = project['source']
-        if source.get('youtube_id') != video_id or not project.get('input_sha256'):
+        if not owns_project(project) or source.get('youtube_id') != video_id or not project.get('input_sha256'):
             return None
         if project['status'] == 'failed' and not project.get('duration'):
             return None
@@ -112,19 +126,23 @@ def linked_youtube_audio(video_id):
 def remember_youtube_audio(video_id, identifier):
     """Caller holds LOCK until both the project and its audio are saved."""
     directory = ROOT / 'youtube-audio'
-    directory.mkdir(exist_ok=True)
+    if (account := REQUEST_ACCOUNT.get()):
+        directory /= account
+    directory.mkdir(parents=True, exist_ok=True)
     path = directory / video_id
     temporary = path.with_suffix('.tmp')
     temporary.write_text(identifier + '\n', 'utf-8')
     temporary.replace(path)
 
 
-def list_projects():
+def list_projects(*, owned=False):
     with LOCK:
         projects = []
         for path in PROJECTS.glob('*/project.json'):
             try:
                 p = json.loads(path.read_text('utf-8'))
+                if owned and not owns_project(p):
+                    continue
                 projects.append({k: p.get(k) for k in ['id', 'title', 'status', 'stage', 'progress', 'duration', 'key', 'bpm', 'created_at', 'updated_at']})
             except (OSError, ValueError):
                 continue

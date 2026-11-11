@@ -27,7 +27,7 @@ from .chord_dictionary import load_dictionary, valid_label
 from .remote_access import allowed_api, allowed_origin
 from .youtube_support import COOKIE_SECRET
 from . import source_client
-from .pages_gateway import SESSION_SECONDS, issue_token, pages_origin
+from .pages_gateway import MEDIA_ROUTE, SESSION_HEADER, SESSION_SECONDS, issue_token, pages_origin, token_account
 
 WEB = Path(__file__).parent / 'web'
 
@@ -88,7 +88,19 @@ async def local_origin(request: Request, call_next):
     if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'}:
         if not allowed_origin(request.headers, str(request.base_url).rstrip('/')):
             return JSONResponse({'detail': 'Origem não autorizada.'}, status_code=403)
-    response = await call_next(request)
+    account = None
+    if (token := request.headers.get(SESSION_HEADER)) is not None:
+        key = os.environ.get('FAIXALAB_PAGES_KEY', '')
+        account = token_account(token, key, 'api')
+        if account is None and request.method in {'GET', 'HEAD'} and MEDIA_ROUTE.fullmatch(request.url.path):
+            account = token_account(token, key, 'media')
+        if not account:
+            return JSONResponse({'detail': 'Sessão do FaixaLab inválida.'}, status_code=401)
+    scope = storage.REQUEST_ACCOUNT.set(account)
+    try:
+        response = await call_next(request)
+    finally:
+        storage.REQUEST_ACCOUNT.reset(scope)
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['Referrer-Policy'] = 'same-origin'
     return response
@@ -96,9 +108,12 @@ async def local_origin(request: Request, call_next):
 
 def project(identifier):
     try:
-        return storage.read_project(identifier)
+        item = storage.read_project(identifier)
     except (ValueError, FileNotFoundError):
         raise HTTPException(404, 'Projeto não encontrado.')
+    if not storage.owns_project(item):
+        raise HTTPException(404, 'Projeto não encontrado.')
+    return item
 
 
 class Options(BaseModel):
@@ -157,7 +172,7 @@ def service_worker():
 
 @app.get('/api/projects')
 def projects():
-    return storage.list_projects()
+    return storage.list_projects(owned=True)
 
 
 @app.get('/api/chord-dictionary')
