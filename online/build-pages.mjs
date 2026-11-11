@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +16,9 @@ mkdirSync(output, { recursive: true });
 for (const asset of ['style.css', 'studio.css', 'mobile.css', 'app.js', 'guitar.js', 'icon.svg']) {
   copyFileSync(path.join(web, asset), path.join(output, asset));
 }
-copyFileSync(path.join(here, 'pages-connection.js'), path.join(output, 'pages-connection.js'));
+const connectionScript = readFileSync(path.join(here, 'pages-connection.js'));
+const connectionVersion = createHash('sha256').update(connectionScript).digest('hex').slice(0, 12);
+writeFileSync(path.join(output, 'pages-connection.js'), connectionScript);
 const config = { backend: `https://${codespace}-7861.app.github.dev`,
                  connect: `https://${codespace}-7860.app.github.dev/connect-pages` };
 writeFileSync(path.join(output, 'pages-config.js'), 'window.faixaLabPagesConfig = ' + JSON.stringify(config) + ';\n');
@@ -23,7 +26,7 @@ writeFileSync(path.join(output, 'pages-config.js'), 'window.faixaLabPagesConfig 
 const html = readFileSync(path.join(web, 'index.html'), 'utf8')
   .replace(/\b(href|src)="\//g, '$1="./')
   .replace('<script src="./app.js" defer></script>',
-    '<meta name="referrer" content="no-referrer" />\n    <script src="./pages-config.js" defer></script>\n    <script src="./pages-connection.js" defer></script>\n    <script src="./app.js" defer></script>')
+    '<meta name="referrer" content="no-referrer" />\n    <script src="./pages-config.js" defer></script>\n    <script src="./pages-connection.js?v=' + connectionVersion + '" defer></script>\n    <script src="./app.js" defer></script>')
   .replace('Processamento local', 'Processamento no Codespace')
   .replace('Suas músicas ficam salvas neste computador.', 'Suas músicas ficam salvas no Codespace.')
   .replace('no seu computador. O link', 'no Codespace. O link')
