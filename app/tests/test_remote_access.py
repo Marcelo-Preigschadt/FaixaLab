@@ -24,3 +24,28 @@ class RemoteAccessChecks(unittest.TestCase):
         with patch.dict(os.environ, {'FAIXALAB_REMOTE':'1','FAIXALAB_API_KEY':''}):
             with self.assertRaisesRegex(RuntimeError,'FAIXALAB_API_KEY'):
                 validate_server_settings()
+
+    def test_codespaces_accepts_the_proxy_rewrite_for_same_origin_imports(self):
+        public_origin = 'https://faixalab-test-7860.app.github.dev'
+        environment = {'CODESPACES': 'true', 'CODESPACE_NAME': 'faixalab-test', 'PORT': '7860',
+                       'GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN': 'app.github.dev',
+                       'FAIXALAB_REMOTE': '0', 'FAIXALAB_API_KEY': '', 'FAIXALAB_ORIGIN': ''}
+        cases = (
+            ({'Origin': public_origin}, 422),
+            ({'Origin': 'http://localhost:7860', 'Sec-Fetch-Site': 'same-origin'}, 422),
+            ({'Origin': 'http://127.0.0.1:7860', 'Referer': public_origin + '/'}, 422),
+            ({'Origin': 'http://localhost:7860'}, 403),
+            ({'Origin': 'http://localhost:7860', 'Sec-Fetch-Site': 'cross-site', 'Referer': public_origin + '/'}, 403),
+            ({'Origin': 'http://localhost:7861', 'Sec-Fetch-Site': 'same-origin'}, 403),
+            ({'Origin': 'https://other-7860.app.github.dev', 'Sec-Fetch-Site': 'same-site'}, 403),
+        )
+        with patch.dict(os.environ, environment), TestClient(app, base_url=public_origin) as client:
+            for headers, status in cases:
+                with self.subTest(headers=headers):
+                    response = client.post('/api/import/youtube', json={'url': 'inválido'}, headers=headers)
+                    self.assertEqual(response.status_code, status, response.text)
+                    if status == 403:
+                        self.assertEqual(response.json()['detail'], 'Origem não autorizada.')
+            with patch.dict(os.environ, {'FAIXALAB_ORIGIN': 'https://configured.example'}):
+                response = client.post('/api/import/youtube', json={'url': 'inválido'}, headers=cases[1][0])
+                self.assertEqual(response.status_code, 403)

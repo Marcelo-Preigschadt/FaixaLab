@@ -21,6 +21,7 @@ from . import storage, pipeline, __version__
 from .solo_tabs import current as current_tab
 from .media import youtube_id
 from .chord_dictionary import load_dictionary, valid_label
+from .remote_access import allowed_api, allowed_origin
 
 WEB = Path(__file__).parent / 'web'
 
@@ -46,17 +47,11 @@ app = FastAPI(title='FaixaLab', lifespan=lifespan)
 @app.middleware('http')
 async def local_origin(request: Request, call_next):
     if request.url.path.startswith('/api/') and request.url.path != '/api/health':
-        from .remote_access import allowed_api
         if not allowed_api(request.headers):
             return JSONResponse({'detail': 'Acesso ao servidor de processamento não autorizado.'}, status_code=401)
     if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'}:
-        origin = request.headers.get('origin')
-        codespace=os.environ.get('CODESPACE_NAME')
-        domain=os.environ.get('GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN','app.github.dev')
-        cloud_origin=('https://%s-%s.%s'%(codespace,os.environ.get('PORT','7860'),domain)) if codespace else None
-        expected = os.environ.get('FAIXALAB_ORIGIN') or cloud_origin or str(request.base_url).rstrip('/')
-        if origin and origin != expected:
-            return Response('Origem não autorizada.', status_code=403)
+        if not allowed_origin(request.headers, str(request.base_url).rstrip('/')):
+            return JSONResponse({'detail': 'Origem não autorizada.'}, status_code=403)
     response = await call_next(request)
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['Referrer-Policy'] = 'same-origin'
