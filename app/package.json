@@ -1,1 +1,0 @@
-{"name":"faixalab-cloud","version":"0.10.1","private":true,"scripts":{"dev":".runtime/venv/bin/python server.py"}}

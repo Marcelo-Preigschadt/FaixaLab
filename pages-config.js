@@ -1,0 +1,1 @@
+window.faixaLabPagesConfig = {"backend":"https://expert-space-funicular-gjxr569wq4939wg9-7861.app.github.dev","connect":"https://expert-space-funicular-gjxr569wq4939wg9-7860.app.github.dev/connect-pages"};
