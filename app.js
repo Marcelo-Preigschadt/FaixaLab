@@ -146,8 +146,9 @@ class StemPlayer {
     return ['localhost','127.0.0.1','::1','[::1]'].includes(location.hostname)?'wav':'m4a';
   }
   makeAudio(url) {
-    const audio=new Audio(mediaUrl(url)),epoch=this.loadId;
-    audio.preload='none';audio.preservesPitch=true;audio.playbackRate=this.speed;
+    const audio=new Audio(),epoch=this.loadId;
+    if(window.faixaLabPages)audio.crossOrigin='anonymous';
+    audio.preload='none';audio.src=mediaUrl(url);audio.preservesPitch=true;audio.playbackRate=this.speed;
     audio.addEventListener('loadedmetadata',()=>{if(epoch===this.loadId)this.place(audio,this.position);});
     const ready=()=>{if(epoch===this.loadId&&this.wantsPlay&&this.buffering&&!this.starting&&this.canResume())this.play(true);};
     audio.addEventListener('canplay',ready);audio.addEventListener('seeked',ready);
