@@ -73,18 +73,37 @@ function toast(message) {
 }
 async function api(path, options = {}) {
   const result = await fetch(path, options);
-  if (!result.ok) {
-    let text;
+  if (result.ok) {
     try {
-      text = (await result.json()).detail;
+      return await result.json();
     } catch {
-      text = await result.text();
+      throw new Error(
+        result.redirected
+          ? "O servidor redirecionou a solicitação. Confira se sua sessão está ativa."
+          : `O servidor enviou uma resposta inválida (HTTP ${result.status}).`,
+      );
     }
-    throw new Error(
-      typeof text === "string" ? text : "Não foi possível concluir a operação.",
-    );
   }
-  return result.json();
+
+  const body = (await result.text().catch(() => "")).trim();
+  let detail;
+  try {
+    detail = JSON.parse(body)?.detail;
+  } catch {
+    if (body && !body.startsWith("<")) detail = body.slice(0, 500);
+  }
+  if (Array.isArray(detail)) {
+    detail = detail.map((issue) => issue?.msg).filter((message) => typeof message === "string").join(" ");
+  }
+  if (typeof detail === "string" && detail.trim()) throw new Error(detail.trim());
+
+  if (result.status === 401) {
+    throw new Error("A sessão não autorizou a solicitação (HTTP 401). Entre novamente e tente outra vez.");
+  }
+  if ([502, 503, 504].includes(result.status)) {
+    throw new Error(`O servidor de processamento está indisponível (HTTP ${result.status}).`);
+  }
+  throw new Error(`Não foi possível concluir a operação (HTTP ${result.status}).`);
 }
 function options() {
   const detailed=$('#stem-option').value==='expanded';
