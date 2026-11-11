@@ -375,11 +375,16 @@
             type="url"
             placeholder="https://www.youtube.com/watch?v=..."
             autocomplete="off"
+            maxlength="2000"
+            disabled
           />
           <p class="small muted">
-            Uma música por projeto. O áudio é obtido diretamente pelo seu
-            computador.
+            Vincule o arquivo de áudio na primeira importação online. Depois, basta colar o mesmo link.
           </p>
+          <label class="settings-field" for="youtube-audio-file">
+            Arquivo de áudio do vídeo
+            <input id="youtube-audio-file" type="file" accept="audio/*,.mp4,.webm" />
+          </label>
         </div>
         <div class="options-grid">
           <label
@@ -426,8 +431,7 @@
           Separar e analisar música <span>→</span>
         </button>
         <p class="local-note">
-          <span class="status-dot"></span> Análise no seu computador · projetos
-          salvos localmente
+          <span class="status-dot"></span> Projetos salvos no FaixaLab
         </p>
       </form>
     </dialog>

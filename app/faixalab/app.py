@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Literal
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
+import asyncio
 import importlib.util
 import io
 import json
@@ -26,6 +27,15 @@ from .remote_access import allowed_api, allowed_origin
 WEB = Path(__file__).parent / 'web'
 
 
+async def codespace_status():
+    while True:
+        projects = await asyncio.to_thread(storage.list_projects)
+        queued = sum(project['status'] == 'queued' for project in projects)
+        processing = sum(project['status'] == 'processing' for project in projects)
+        print(f'FaixaLab ativo | {queued} na fila | {processing} em processamento', flush=True)
+        await asyncio.sleep(180)
+
+
 @asynccontextmanager
 async def lifespan(app):
     # A previous abrupt shutdown must not leave a project pretending to be active.
@@ -36,9 +46,16 @@ async def lifespan(app):
         tab = full.get('tablature') or {}
         if tab.get('status') in {'queued', 'processing'}:
             storage.update_project(p['id'], tablature={**tab, 'status':'interrupted', 'stage':'Transcrição interrompida; gere a tablatura novamente.'})
-    yield
-    from .solo_tabs import cancel as cancel_tabs
-    cancel_tabs()
+    status_task = asyncio.create_task(codespace_status()) if os.environ.get('CODESPACES') == 'true' else None
+    try:
+        yield
+    finally:
+        if status_task:
+            status_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await status_task
+        from .solo_tabs import cancel as cancel_tabs
+        cancel_tabs()
 
 
 app = FastAPI(title='FaixaLab', lifespan=lifespan)
@@ -97,9 +114,13 @@ class LinkInput(BaseModel):
     options: Options = Field(default_factory=Options)
 
 
+def cloud_processing():
+    return os.environ.get('CODESPACES') == 'true' or os.environ.get('FAIXALAB_REMOTE') == '1'
+
+
 @app.get('/api/health')
 def health():
-    return {'status': 'ok', 'version': __version__, 'processing': 'cloud' if os.environ.get('CODESPACES')=='true' or os.environ.get('FAIXALAB_REMOTE')=='1' else 'local',
+    return {'status': 'ok', 'version': __version__, 'processing': 'cloud' if cloud_processing() else 'local',
             'engines': {n: importlib.util.find_spec(n) is not None for n in ['demucs', 'faster_whisper', 'librosa', 'yt_dlp']}}
 
 
@@ -161,36 +182,75 @@ def get_project(identifier: str):
     return project(identifier)
 
 
+def checked_video_id(url):
+    try:
+        return youtube_id(url)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+def file_import_key(digest, video_id=None):
+    return f'youtube-audio:{video_id}:{digest}' if video_id else f'file:{digest}'
+
+
 @app.post('/api/import/youtube', status_code=202)
 def import_youtube(data: LinkInput):
-    try:
-        vid = youtube_id(data.url)
-    except ValueError as exc:
-        raise HTTPException(422, str(exc))
+    vid = checked_video_id(data.url)
     options=data.options.checked()
     with storage.LOCK:
-        cached=storage.cached_import('youtube:'+vid,options)
-        if cached:return {**cached,'reused':True}
-        p = storage.new_project('Música do YouTube', {'type': 'youtube', 'url': 'https://www.youtube.com/watch?v=' + vid}, options)
-        storage.remember_import('youtube:'+vid,options,p['id'])
+        linked = storage.linked_youtube_audio(vid)
+        if linked:
+            digest = linked['input_sha256']
+            source_key = file_import_key(digest, vid)
+            cached = storage.cached_import(source_key, options)
+            if cached:
+                return {**cached, 'reused': True}
+            source = linked['source']
+            p = storage.new_project(linked['title'], source, options)
+            folder = storage.project_dir(p['id'])
+            original = storage.project_dir(linked['id']) / source['file']
+            destination = folder / source['file']
+            try:
+                try:
+                    os.link(original, destination)
+                except OSError:
+                    shutil.copyfile(original, destination)
+                p = storage.update_project(p['id'], input_sha256=digest)
+                storage.remember_import(source_key, options, p['id'])
+            except OSError:
+                shutil.rmtree(folder, ignore_errors=True)
+                raise
+        else:
+            if cloud_processing():
+                raise HTTPException(409, 'Escolha o arquivo de áudio deste vídeo para vinculá-lo. Nos próximos acessos, basta colar o link.')
+            source_key = 'youtube:' + vid
+            cached = storage.cached_import(source_key, options)
+            if cached:
+                return {**cached, 'reused': True}
+            p = storage.new_project('Música do YouTube', {'type': 'youtube', 'url': 'https://www.youtube.com/watch?v=' + vid}, options)
+            storage.remember_import(source_key, options, p['id'])
     pipeline.submit(p['id'])
     return p
 
 
 @app.post('/api/import/file', status_code=202)
-async def import_file(file: UploadFile = File(...), options: str = Form('{}')):
+async def import_file(file: UploadFile = File(...), options: str = Form('{}'), youtube_url: str = Form('', max_length=2000)):
     try:
         parsed = Options.model_validate_json(options).checked()
     except HTTPException:
         raise
     except Exception:
         raise HTTPException(422, 'Opções inválidas.')
+    video_id = checked_video_id(youtube_url) if youtube_url else None
     name = Path(file.filename or 'musica.mp3').name
     suffix = Path(name).suffix.lower()
     if suffix not in {'.mp3', '.wav', '.flac', '.m4a', '.aac', '.ogg', '.opus', '.webm', '.mp4'}:
         raise HTTPException(422, 'Escolha um arquivo de áudio MP3, WAV, FLAC, M4A, AAC ou OGG.')
-    p = storage.new_project(Path(name).stem, {'type': 'file', 'name': name, 'file': 'input' + suffix}, parsed)
-    target = storage.project_dir(p['id']) / ('input' + suffix)
+    source = {'type': 'file', 'name': name, 'file': 'input' + suffix}
+    if video_id:
+        source.update(youtube_id=video_id, url='https://www.youtube.com/watch?v=' + video_id)
+    p = storage.new_project(Path(name).stem, source, parsed)
+    target = storage.project_dir(p['id']) / source['file']
     total = 0
     digest=hashlib.sha256()
     try:
@@ -209,14 +269,19 @@ async def import_file(file: UploadFile = File(...), options: str = Form('{}')):
         raise
     finally:
         await file.close()
-    source_key='file:'+digest.hexdigest()
+    audio_digest = digest.hexdigest()
+    source_key = file_import_key(audio_digest, video_id)
     with storage.LOCK:
         cached=storage.cached_import(source_key,parsed)
         if cached:
             shutil.rmtree(storage.project_dir(p['id']))
+            if video_id:
+                storage.remember_youtube_audio(video_id, cached['id'])
             return {**cached,'reused':True}
-        storage.update_project(p['id'],input_sha256=digest.hexdigest())
+        p = storage.update_project(p['id'], input_sha256=audio_digest)
         storage.remember_import(source_key,parsed,p['id'])
+        if video_id:
+            storage.remember_youtube_audio(video_id, p['id'])
     pipeline.submit(p['id'])
     return p
 

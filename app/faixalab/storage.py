@@ -94,6 +94,31 @@ def remember_import(source_key,options,identifier):
     temporary.replace(path)
 
 
+def linked_youtube_audio(video_id):
+    """Return the project that stores the original file for a linked video."""
+    try:
+        identifier = (ROOT / 'youtube-audio' / video_id).read_text('utf-8').strip()
+        project = read_project(identifier)
+        source = project['source']
+        if source.get('youtube_id') != video_id or not project.get('input_sha256'):
+            return None
+        if project['status'] == 'failed' and not project.get('duration'):
+            return None
+        return project if (project_dir(identifier) / source['file']).is_file() else None
+    except (OSError, ValueError, KeyError):
+        return None
+
+
+def remember_youtube_audio(video_id, identifier):
+    """Caller holds LOCK until both the project and its audio are saved."""
+    directory = ROOT / 'youtube-audio'
+    directory.mkdir(exist_ok=True)
+    path = directory / video_id
+    temporary = path.with_suffix('.tmp')
+    temporary.write_text(identifier + '\n', 'utf-8')
+    temporary.replace(path)
+
+
 def list_projects():
     with LOCK:
         projects = []
