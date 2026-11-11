@@ -28,6 +28,7 @@
   let checkedLibrary = false;
   let statusText = '';
   let googleSetup;
+  const ownerControl = () => document.querySelector('#pages-owner-connect, #pages-connection a');
   function status(message) {
     statusText = message;
     const banner = document.getElementById('pages-connection');
@@ -58,7 +59,7 @@
     if (!config.client_id) return false;
 
     const button = document.getElementById('pages-google');
-    document.querySelector('#pages-connection a').hidden = true;
+    ownerControl().hidden = true;
     status('Entre com sua conta Google para acessar sua biblioteca e separar músicas.');
 
     async function signIn({ credential }) {
@@ -101,12 +102,11 @@
     if (!await googleSetup) await reconnect();
   }
 
-  async function reconnect() {
-    try {
-      if (localStorage.getItem(rememberedKey) !== '1' || sessionStorage.getItem(attemptKey)) return false;
-      sessionStorage.setItem(attemptKey, '1');
-    } catch { return false; }
-    status('Reconectando ao Codespace pelo GitHub…');
+  async function connectOwner() {
+    const button = ownerControl();
+    if (button.disabled) return false;
+    button.disabled = true;
+    status('Verificando a conexão com o servidor…');
     try {
       const response = await fetch(backend + '/health', { credentials: 'omit', redirect: 'error', cache: 'no-store',
                                                          signal: AbortSignal.timeout(5000) });
@@ -115,8 +115,17 @@
         return true;
       }
     } catch {}
+    button.disabled = false;
     status(unavailableMessage);
     return false;
+  }
+
+  async function reconnect() {
+    try {
+      if (localStorage.getItem(rememberedKey) !== '1' || sessionStorage.getItem(attemptKey)) return false;
+      sessionStorage.setItem(attemptKey, '1');
+    } catch { return false; }
+    return connectOwner();
   }
 
   window.faixaLabPages = {
@@ -165,8 +174,10 @@
   };
 
   document.addEventListener('DOMContentLoaded', () => {
-    const banner = document.getElementById('pages-connection');
-    banner.querySelector('a').href = connect;
+    ownerControl().addEventListener('click', event => {
+      event.preventDefault();
+      void connectOwner();
+    });
     document.getElementById('pages-signout').addEventListener('click', () => {
       try {
         sessionStorage.removeItem(storageKey);

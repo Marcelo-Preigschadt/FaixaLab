@@ -30,9 +30,9 @@ const html = readFileSync(path.join(web, 'index.html'), 'utf8')
   .replace('Processamento local', 'Processamento no Codespace')
   .replace('Suas músicas ficam salvas neste computador.', 'Suas músicas ficam salvas no Codespace.')
   .replace('no seu computador. O link', 'no Codespace. O link')
-  .replace('<main>', '<main>\n      <aside id="pages-connection" role="status" hidden><span></span><div id="pages-google" hidden></div><a class="button primary" href="./">Conectar ao FaixaLab</a></aside>')
+  .replace('<main>', '<main>\n      <aside id="pages-connection" role="status" hidden><span></span><div id="pages-google" hidden></div><button class="button primary" id="pages-owner-connect" type="button">Conectar ao FaixaLab</button></aside>')
   .replace('<div class="top-actions">', '<div class="top-actions"><button id="pages-signout" class="button secondary" hidden>Sair</button>')
-  .replace('</head>', '<style>#pages-connection:not([hidden]){display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 16px;background:#1d272a;color:#dde7ea;border-bottom:1px solid #3b4950;flex-wrap:wrap}#pages-connection a{text-decoration:none}#pages-connection [hidden],#pages-signout[hidden]{display:none}</style>\n  </head>');
+  .replace('</head>', '<style>#pages-connection:not([hidden]){display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 16px;background:#1d272a;color:#dde7ea;border-bottom:1px solid #3b4950;flex-wrap:wrap}#pages-connection [hidden],#pages-signout[hidden]{display:none}</style>\n  </head>');
 writeFileSync(path.join(output, 'index.html'), html);
 const manifest = JSON.parse(readFileSync(path.join(web, 'manifest.webmanifest'), 'utf8'));
 manifest.start_url = './';
