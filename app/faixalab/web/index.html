@@ -367,6 +367,11 @@
               accept="audio/*,.mp4,.webm"
               hidden
           /></label>
+          <details>
+            <summary>Vincular arquivo a um vídeo do YouTube</summary>
+            <label class="field-label" for="file-youtube-url">Link do vídeo (opcional)</label>
+            <input id="file-youtube-url" type="url" placeholder="https://www.youtube.com/watch?v=..." maxlength="2000" />
+          </details>
         </div>
         <div id="youtube-source" hidden>
           <label class="field-label" for="youtube-url">LINK DO VÍDEO</label
@@ -378,13 +383,7 @@
             maxlength="2000"
             disabled
           />
-          <p class="small muted">
-            Vincule o arquivo de áudio na primeira importação online. Depois, basta colar o mesmo link.
-          </p>
-          <label class="settings-field" for="youtube-audio-file">
-            Arquivo de áudio do vídeo
-            <input id="youtube-audio-file" type="file" accept="audio/*,.mp4,.webm" />
-          </label>
+          <p class="small muted">Cole o link e escolha as opções de separação.</p>
         </div>
         <div class="options-grid">
           <label

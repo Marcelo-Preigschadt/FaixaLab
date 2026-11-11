@@ -366,6 +366,7 @@ $$("[data-source]").forEach(
       $("#file-source").hidden = state.source !== "file";
       $("#youtube-source").hidden = state.source !== "youtube";
       $("#youtube-url").disabled = state.source !== "youtube";
+      $("#file-youtube-url").disabled = state.source !== "file";
     }),
 );
 function setFile(file) {
@@ -392,21 +393,16 @@ $("#import-form").onsubmit = async (e) => {
   $("#import-error").hidden = true;
   try {
     let p;
-    const linkedFile = state.source === "youtube" ? $("#youtube-audio-file").files[0] : null;
-    if (state.source === "file" || linkedFile) {
-      const file = linkedFile || state.file;
-      if (!file)
+    if (state.source === "file") {
+      if (!state.file)
         throw new Error("Escolha ou arraste um arquivo de áudio.");
       const data = new FormData();
-      data.append("file", file);
+      data.append("file", state.file);
       data.append("options", JSON.stringify(options()));
-      if (linkedFile) {
-        const url = $("#youtube-url").value.trim();
-        if (!url) throw new Error("Cole o link do vídeo para vincular este áudio.");
-        data.append("youtube_url", url);
-      }
+      const video = $("#file-youtube-url").value.trim();
+      if (video) data.append("youtube_url", video);
       p = await api("/api/import/file", { method: "POST", body: data });
-      if (linkedFile) $("#youtube-audio-file").value = "";
+      $("#file-youtube-url").value = "";
     } else {
       p = await api("/api/import/youtube", {
         method: "POST",

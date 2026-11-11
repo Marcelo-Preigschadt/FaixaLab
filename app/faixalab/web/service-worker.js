@@ -1,5 +1,5 @@
 'use strict';
-const SHELL='faixalab-shell-0.10.1-linked-audio';
+const SHELL='faixalab-shell-0.10.1-online-youtube';
 const ASSETS=['/','/style.css','/studio.css','/mobile.css','/app.js','/guitar.js','/icon.svg','/manifest.webmanifest'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(SHELL).then(cache=>cache.addAll(ASSETS))));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('faixalab-shell-')&&key!==SHELL).map(key=>caches.delete(key))))));
