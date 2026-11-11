@@ -9,12 +9,12 @@
     <script src="./guitar.js" defer></script>
     <meta name="referrer" content="no-referrer" />
     <script src="./pages-config.js" defer></script>
-    <script src="./pages-connection.js?v=f9870fa81ef3" defer></script>
+    <script src="./pages-connection.js?v=cc0a363d3791" defer></script>
     <script src="./app.js" defer></script>
     <link rel="stylesheet" href="./mobile.css" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <meta name="theme-color" content="#101213" />
-  <style>#pages-connection:not([hidden]){display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 16px;background:#1d272a;color:#dde7ea;border-bottom:1px solid #3b4950;flex-wrap:wrap}#pages-connection a{text-decoration:none}#pages-connection [hidden],#pages-signout[hidden]{display:none}</style>
+  <style>#pages-connection:not([hidden]){display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 16px;background:#1d272a;color:#dde7ea;border-bottom:1px solid #3b4950;flex-wrap:wrap}#pages-connection [hidden],#pages-signout[hidden]{display:none}</style>
   </head>
   <body class="studio-app" data-studio-view="mixer">
     <aside class="sidebar">
@@ -47,7 +47,7 @@
       </div>
     </aside>
     <main>
-      <aside id="pages-connection" role="status" hidden><span></span><div id="pages-google" hidden></div><a class="button primary" href="./">Conectar ao FaixaLab</a></aside>
+      <aside id="pages-connection" role="status" hidden><span></span><div id="pages-google" hidden></div><button class="button primary" id="pages-owner-connect" type="button">Conectar ao FaixaLab</button></aside>
       <header class="topbar">
         <div class="breadcrumb">
           Biblioteca <span>/</span>
