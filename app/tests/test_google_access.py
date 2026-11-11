@@ -77,7 +77,22 @@ class GoogleAccessTest(unittest.TestCase):
                                          json={'url': 'https://www.youtube.com/watch?v=lmnopqrstuv'})
                     self.assertEqual(direct.status_code, 202)
                     self.assertEqual(direct.json()['source']['type'], 'youtube')
-                    submit.assert_called_with(direct.json()['id'])
+                    direct_id = direct.json()['id']
+                    submit.assert_called_with(direct_id)
+                    attempt = f'/api/projects/{direct_id}'
+                    self.assertEqual(client.delete(attempt, headers=bob).status_code, 409)
+                    storage.update_project(direct_id, status='failed')
+                    self.assertEqual(client.delete(attempt, headers=alice).status_code, 404)
+                    listed = client.get('/api/projects', headers=bob).json()
+                    self.assertTrue(next(p for p in listed if p['id'] == direct_id)['can_delete_import'])
+                    self.assertEqual(client.delete(attempt, headers=bob).json(), {'deleted': True})
+                    self.assertFalse((projects / direct_id).exists())
+                    self.assertEqual(client.get(attempt, headers=bob).status_code, 404)
+                    self.assertEqual([p['id'] for p in client.get('/api/projects', headers=bob).json()], [bob_id])
+                    recreated = client.post('/api/import/youtube', headers=bob,
+                                            json={'url': 'https://www.youtube.com/watch?v=lmnopqrstuv'})
+                    self.assertEqual(recreated.status_code, 202)
+                    self.assertNotEqual(recreated.json()['id'], direct_id)
 
                     owner_token = pages_gateway.issue_token(key, 'api', int(pages_gateway.time.time()) + 60)
                     legacy = client.get('/api/projects', headers={'Authorization': 'Bearer ' + owner_token})

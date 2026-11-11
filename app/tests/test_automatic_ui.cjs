@@ -36,7 +36,11 @@ w.eval(fs.readFileSync(path.join(root,'faixalab/web/app.js'),'utf8')+'\nwindow._
 const settle=()=>new Promise(resolve=>setTimeout(resolve,30));
 (async()=>{
   await settle();const doc=w.document;
-  assert.equal(doc.querySelector('#stem-option').value,'expanded');
+  assert.equal(doc.querySelector('#stem-option').value,'6');
+  assert.equal(w.__checks.options().instrument_detail,false);
+  assert.equal(w.__checks.options().split_guitars,false);
+  assert.equal(w.__checks.options().quality,'balanced');
+  doc.querySelector('#stem-option').value='expanded';
   assert.equal(w.__checks.options().instrument_detail,true);
   assert.equal(w.__checks.options().split_guitars,true);
   assert.equal(doc.querySelectorAll('#track-list .track').length,11);
@@ -75,6 +79,6 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(w.__checks.state.project.id,c.id,'A late response must not replace the music most recently selected');
   w.__checks.player.dispose();
   assert.deepEqual(errors,[]);
-  console.log(JSON.stringify({default_automatic:true,categories:33,mixer_tracks:11,uncertainty_label:true,parent_child_constraints:true,automatic_action:true,accordion_does_not_request_guitar_tab:true,views:5,DOM_errors:errors}));
+  console.log(JSON.stringify({default_stems:6,optional_automatic:true,categories:33,mixer_tracks:11,uncertainty_label:true,parent_child_constraints:true,automatic_action:true,accordion_does_not_request_guitar_tab:true,views:5,DOM_errors:errors}));
   dom.window.close();
 })().catch(error=>{console.error(error);dom.window.close();process.exitCode=1});

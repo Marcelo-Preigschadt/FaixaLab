@@ -216,6 +216,20 @@ def get_project(identifier: str):
     return project(identifier)
 
 
+@app.delete('/api/projects/{identifier}')
+def delete_incomplete_import(identifier: str):
+    with pipeline.JOB_LOCK, storage.LOCK:
+        item = project(identifier)
+        if identifier in pipeline.CANCELLATIONS or not storage.is_incomplete_youtube_import(item):
+            raise HTTPException(409, 'Apenas tentativas de importação do YouTube encerradas sem áudio podem ser excluídas aqui.')
+        # Move the whole directory out of the library before cleaning up files.
+        # Import lookups already treat a missing project as a cache miss.
+        with tempfile.TemporaryDirectory(dir=storage.ROOT, prefix='.deleted-import-',
+                                         ignore_cleanup_errors=True) as temporary:
+            storage.project_dir(identifier).rename(Path(temporary) / identifier)
+    return {'deleted': True}
+
+
 def checked_video_id(url):
     try:
         return youtube_id(url)

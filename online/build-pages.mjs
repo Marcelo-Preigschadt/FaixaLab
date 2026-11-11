@@ -13,11 +13,12 @@ if (!destination || !/^[a-z0-9-]+$/.test(codespace ?? '')) {
 const web = path.join(repo, 'app/faixalab/web');
 const output = path.resolve(destination);
 mkdirSync(output, { recursive: true });
+const version = content => createHash('sha256').update(content).digest('hex').slice(0, 12);
 for (const asset of ['style.css', 'studio.css', 'mobile.css', 'app.js', 'guitar.js', 'icon.svg']) {
   copyFileSync(path.join(web, asset), path.join(output, asset));
 }
 const connectionScript = readFileSync(path.join(here, 'pages-connection.js'));
-const connectionVersion = createHash('sha256').update(connectionScript).digest('hex').slice(0, 12);
+const connectionVersion = version(connectionScript);
 writeFileSync(path.join(output, 'pages-connection.js'), connectionScript);
 const config = { backend: `https://${codespace}-7861.app.github.dev`,
                  connect: `https://${codespace}-7860.app.github.dev/connect-pages` };
@@ -25,8 +26,9 @@ writeFileSync(path.join(output, 'pages-config.js'), 'window.faixaLabPagesConfig 
 
 const html = readFileSync(path.join(web, 'index.html'), 'utf8')
   .replace(/\b(href|src)="\//g, '$1="./')
+  .replace('href="./style.css"', 'href="./style.css?v=' + version(readFileSync(path.join(web, 'style.css'))) + '"')
   .replace('<script src="./app.js" defer></script>',
-    '<meta name="referrer" content="no-referrer" />\n    <script src="./pages-config.js" defer></script>\n    <script src="./pages-connection.js?v=' + connectionVersion + '" defer></script>\n    <script src="./app.js" defer></script>')
+    '<meta name="referrer" content="no-referrer" />\n    <script src="./pages-config.js" defer></script>\n    <script src="./pages-connection.js?v=' + connectionVersion + '" defer></script>\n    <script src="./app.js?v=' + version(readFileSync(path.join(web, 'app.js'))) + '" defer></script>')
   .replace('Processamento local', 'Processamento no Codespace')
   .replace('Suas músicas ficam salvas neste computador.', 'Suas músicas ficam salvas no Codespace.')
   .replace('no seu computador. O link', 'no Codespace. O link')

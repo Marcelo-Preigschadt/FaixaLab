@@ -80,6 +80,12 @@ def owns_project(project):
     return project.get('account_id') == REQUEST_ACCOUNT.get()
 
 
+def is_incomplete_youtube_import(project):
+    return (project.get('status') in {'failed', 'cancelled', 'interrupted'}
+            and (project.get('source') or {}).get('type') == 'youtube'
+            and not project.get('duration') and not project.get('stems'))
+
+
 def cached_import(source_key,options):
     """Caller holds LOCK through lookup/create/register to deduplicate requests."""
     try:
@@ -143,7 +149,9 @@ def list_projects(*, owned=False):
                 p = json.loads(path.read_text('utf-8'))
                 if owned and not owns_project(p):
                     continue
-                projects.append({k: p.get(k) for k in ['id', 'title', 'status', 'stage', 'progress', 'duration', 'key', 'bpm', 'created_at', 'updated_at']})
+                summary = {k: p.get(k) for k in ['id', 'title', 'status', 'stage', 'progress', 'duration', 'key', 'bpm', 'created_at', 'updated_at']}
+                summary['can_delete_import'] = is_incomplete_youtube_import(p)
+                projects.append(summary)
             except (OSError, ValueError):
                 continue
         return sorted(projects, key=lambda p: p.get('created_at', ''), reverse=True)

@@ -433,17 +433,52 @@ async function refreshLibrary() {
   $("#project-count").textContent = list.length;
   $("#project-list").innerHTML = list.length
     ? list
-        .map(
-          (p) =>
-            `<button class="project-item ${p.id === state.project?.id ? "current" : ""}" data-id="${p.id}"><span class="project-icon">♫</span><span><b>${escapeHTML(p.title)}</b><small>${p.status === "processing" ? "Processando…" : p.status === "queued" ? "Na fila" : p.duration ? time(p.duration) : "Importação"}</small></span></button>`,
-        )
+        .map((p) => {
+          const label = {
+            processing: "Processando…",
+            queued: "Na fila",
+            failed: "Falha na importação",
+            cancelled: "Importação cancelada",
+            interrupted: "Importação interrompida",
+          };
+          const subtitle = p.duration && !["processing", "queued"].includes(p.status)
+            ? time(p.duration) : label[p.status] || "Importação";
+          const remove = p.can_delete_import
+            ? `<button type="button" class="project-delete" data-delete-import="${p.id}" aria-label="Excluir tentativa: ${escapeHTML(p.title)}">Excluir</button>` : "";
+          return `<div class="project-row"><button type="button" class="project-item ${p.id === state.project?.id ? "current" : ""}" data-id="${p.id}"><span class="project-icon">♫</span><span><b>${escapeHTML(p.title)}</b><small>${subtitle}</small></span></button>${remove}</div>`;
+        })
         .join("")
     : '<p class="muted small">Suas músicas ficam salvas neste computador.</p>';
   $$(".project-item").forEach(
     (b) => (b.onclick = () => selectProject(b.dataset.id)),
   );
+  $$("[data-delete-import]").forEach((button) => {
+    button.onclick = () => deleteImport(button);
+  });
 }
 let projectSelection=0;
+async function deleteImport(button) {
+  if (!window.confirm("Excluir esta tentativa de importação da biblioteca?")) return;
+  const id = button.dataset.deleteImport;
+  const selection = projectSelection;
+  button.disabled = true;
+  try {
+    await api("/api/projects/" + id, { method: "DELETE" });
+    if (state.project?.id === id && projectSelection === selection) {
+      ++projectSelection;
+      state.project = null;
+      player.dispose();
+      $("#workspace").hidden = true;
+      $("#welcome").hidden = false;
+    }
+    await refreshLibrary();
+    toast("Tentativa de importação excluída.");
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    button.disabled = false;
+  }
+}
 async function selectProject(id) {
   const selection=++projectSelection;
   player.pause();
@@ -972,7 +1007,7 @@ async function poll() {
       renderProject(p);
       if(statusChanged)await refreshLibrary();
     }
-  }catch(error){if(error.name!=='AbortError')toast(error.message);}
+  }catch(error){if(error.name!=='AbortError'&&state.project?.id===id&&selection===projectSelection)toast(error.message);}
   finally{clearTimeout(timeout);pollInFlight=false;}
 }
 setInterval(()=>{
