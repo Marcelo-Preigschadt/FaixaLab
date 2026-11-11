@@ -72,7 +72,7 @@ function toast(message) {
   toastTimer = setTimeout(() => ($("#toast").hidden = true), 4500);
 }
 async function api(path, options = {}) {
-  const result = await fetch(path, options);
+  const result = await (window.faixaLabPages?.request(path, options) ?? fetch(path, options));
   if (result.ok) {
     try {
       return await result.json();
@@ -104,6 +104,9 @@ async function api(path, options = {}) {
     throw new Error(`O servidor de processamento está indisponível (HTTP ${result.status}).`);
   }
   throw new Error(`Não foi possível concluir a operação (HTTP ${result.status}).`);
+}
+function mediaUrl(path) {
+  return window.faixaLabPages?.mediaUrl(path) ?? path;
 }
 function options() {
   const detailed=$('#stem-option').value==='expanded';
@@ -143,7 +146,7 @@ class StemPlayer {
     return ['localhost','127.0.0.1','::1','[::1]'].includes(location.hostname)?'wav':'m4a';
   }
   makeAudio(url) {
-    const audio=new Audio(url),epoch=this.loadId;
+    const audio=new Audio(mediaUrl(url)),epoch=this.loadId;
     audio.preload='none';audio.preservesPitch=true;audio.playbackRate=this.speed;
     audio.addEventListener('loadedmetadata',()=>{if(epoch===this.loadId)this.place(audio,this.position);});
     const ready=()=>{if(epoch===this.loadId&&this.wantsPlay&&this.buffering&&!this.starting&&this.canResume())this.play(true);};
@@ -552,7 +555,7 @@ function renderTracks() {
   $("#track-list").innerHTML = player.tracks
     .map(
       (t, i) =>
-        `<div class="track ${t.name === (state.selectedTrack || (player.tracks.some(s=>s.name==='guitar_rhythm')?'guitar_rhythm':player.tracks.some(s=>s.name==='guitar')?'guitar':'other')) ? 'selected' : ''}" data-track="${i}"><div class="track-controls"><div class="track-name-line"><button class="track-select" data-track-name="${t.name}" title="${t.name==='guitar_lead'?'Abrir tablatura da guitarra solo':'Selecionar faixa'}">${escapeHTML(t.label)}${t.name==='guitar_lead'?'<small>TAB</small>':''}</button><a href="/api/projects/${state.project.id}/audio/${t.name}?download=true&v=${encodeURIComponent(player.revision)}" title="Baixar faixa" aria-label="Baixar ${escapeHTML(t.label)}">↓</a></div><div class="track-controls-bottom"><input class="volume" type="range" min="0" max="150" value="100" aria-label="Volume de ${escapeHTML(t.label)}"><button class="square mute" aria-label="Silenciar ${escapeHTML(t.label)}" aria-pressed="false">M</button><button class="square solo" aria-label="Ouvir somente ${escapeHTML(t.label)}" aria-pressed="false">S</button><span class="track-db">0 dB</span></div></div><button class="track-audio" aria-label="Posição na faixa ${escapeHTML(t.label)}">${trackWave(t)}</button></div>`,
+        `<div class="track ${t.name === (state.selectedTrack || (player.tracks.some(s=>s.name==='guitar_rhythm')?'guitar_rhythm':player.tracks.some(s=>s.name==='guitar')?'guitar':'other')) ? 'selected' : ''}" data-track="${i}"><div class="track-controls"><div class="track-name-line"><button class="track-select" data-track-name="${t.name}" title="${t.name==='guitar_lead'?'Abrir tablatura da guitarra solo':'Selecionar faixa'}">${escapeHTML(t.label)}${t.name==='guitar_lead'?'<small>TAB</small>':''}</button><a href="${escapeHTML(mediaUrl(`/api/projects/${state.project.id}/audio/${t.name}?download=true&v=${encodeURIComponent(player.revision)}`))}" title="Baixar faixa" aria-label="Baixar ${escapeHTML(t.label)}">↓</a></div><div class="track-controls-bottom"><input class="volume" type="range" min="0" max="150" value="100" aria-label="Volume de ${escapeHTML(t.label)}"><button class="square mute" aria-label="Silenciar ${escapeHTML(t.label)}" aria-pressed="false">M</button><button class="square solo" aria-label="Ouvir somente ${escapeHTML(t.label)}" aria-pressed="false">S</button><span class="track-db">0 dB</span></div></div><button class="track-audio" aria-label="Posição na faixa ${escapeHTML(t.label)}">${trackWave(t)}</button></div>`,
     )
     .join("");
   $$(".track").forEach((row) => {
@@ -882,7 +885,7 @@ function renderDetails() {
 function download(kind) {
   if (!state.project) return;
   const a = document.createElement("a");
-  a.href = `/api/projects/${state.project.id}/export/${kind}?transpose=${state.transpose - state.capo}`;
+  a.href = mediaUrl(`/api/projects/${state.project.id}/export/${kind}?transpose=${state.transpose - state.capo}`);
   a.click();
 }
 $("#download-lrc").onclick = () => download("lrc");
@@ -1402,7 +1405,7 @@ function initializeBacking(){
       const result=await api(`/api/projects/${p.id}/backing`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({preset,gains:preset==='mixer'?gains:null})});
       if(state.project?.id!==p.id)return;
       await player.useBacking(result.url);
-      $('#download-backing').href=result.url+'?download=true';$('#download-backing').hidden=false;
+      $('#download-backing').href=mediaUrl(result.url+'?download=true');$('#download-backing').hidden=false;
       $('#backing-stage').textContent='Pronta. Toque em Ouvir ou baixe para usar sem conexão.';
       playButton.hidden=false;
     }catch(error){$('#backing-stage').textContent=error.message;}
@@ -1412,7 +1415,7 @@ function initializeBacking(){
     const handlers={play:()=>player.play(),pause:()=>player.pause(),seekbackward:e=>player.seek(player.current()-(e.seekOffset||10)),seekforward:e=>player.seek(player.current()+(e.seekOffset||10)),seekto:e=>player.seek(e.seekTime||0),stop:()=>{player.pause();player.seek(0);}};
     for(const [name,handler] of Object.entries(handlers))try{navigator.mediaSession.setActionHandler(name,handler);}catch{}
   }
-  if('serviceWorker' in navigator&&window.isSecureContext)navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
+  if(!window.faixaLabPages&&'serviceWorker' in navigator&&window.isSecureContext)navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
 }
 initializeBacking();
 

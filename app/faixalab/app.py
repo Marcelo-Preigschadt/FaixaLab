@@ -11,10 +11,12 @@ import zipfile
 import tempfile
 import hashlib
 import shutil
+import time
+from urllib.parse import urlencode
 from starlette.background import BackgroundTask
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, Response, JSONResponse
+from fastapi.responses import FileResponse, Response, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -25,6 +27,7 @@ from .chord_dictionary import load_dictionary, valid_label
 from .remote_access import allowed_api, allowed_origin
 from .youtube_support import COOKIE_SECRET
 from . import source_client
+from .pages_gateway import SESSION_SECONDS, issue_token, pages_origin
 
 WEB = Path(__file__).parent / 'web'
 
@@ -61,6 +64,20 @@ async def lifespan(app):
 
 
 app = FastAPI(title='FaixaLab', lifespan=lifespan)
+
+
+@app.get('/connect-pages', include_in_schema=False)
+def connect_pages():
+    url = os.environ.get('FAIXALAB_PAGES_URL', '')
+    key = os.environ.get('FAIXALAB_PAGES_KEY', '')
+    if not url or not key or os.environ.get('CODESPACES') != 'true':
+        raise HTTPException(404)
+    pages_origin(url)
+    expires = int(time.time()) + SESSION_SECONDS
+    fragment = urlencode({'faixalab_api': issue_token(key, 'api', expires),
+                          'faixalab_media': issue_token(key, 'media', expires)})
+    return RedirectResponse(url + '#' + fragment, status_code=303,
+                            headers={'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer'})
 
 
 @app.middleware('http')
