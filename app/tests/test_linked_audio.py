@@ -3,16 +3,19 @@ from contextlib import redirect_stdout
 import io
 import json
 from pathlib import Path
+import socket
 import tempfile
 import threading
+import time
 import unittest
 from unittest.mock import patch
 import wave
 
 from fastapi.testclient import TestClient
 import httpx
+import uvicorn
 
-from faixalab import pipeline, stemsplit, storage
+from faixalab import pipeline, source_api, source_client, storage
 from faixalab.app import app, codespace_status
 
 
@@ -27,7 +30,8 @@ class LinkedAudioChecks(unittest.TestCase):
         self.enterContext(patch.multiple(storage, ROOT=directory, PROJECTS=projects))
         self.enterContext(patch.dict('os.environ', {'CODESPACES': 'false', 'CODESPACE_NAME': '',
                                                    'FAIXALAB_REMOTE': '1', 'FAIXALAB_API_KEY': 'test-key',
-                                                   'STEMSPLIT_API_KEY': ''}))
+                                                   'FAIXALAB_AUDIO_SOURCE_URL': '',
+                                                   'FAIXALAB_AUDIO_SOURCE_KEY': ''}))
         self.submit = self.enterContext(patch.object(pipeline, 'submit'))
         self.client = self.enterContext(TestClient(app, headers={'X-FaixaLab-Key': 'test-key'}))
         output = io.BytesIO()
@@ -36,11 +40,7 @@ class LinkedAudioChecks(unittest.TestCase):
             wav.writeframes(b'\x01\x00' * 4000)
         self.audio = output.getvalue()
 
-    def test_cloud_requires_a_file_once_then_reuses_it_for_the_video(self):
-        response = self.client.post('/api/import/youtube', json={'url': VIDEO_URL})
-        self.assertEqual(response.status_code, 503)
-        self.submit.assert_not_called()
-
+    def test_cloud_reuses_the_file_linked_to_a_video(self):
         response = self.client.post('/api/import/file', data={'youtube_url': VIDEO_URL},
                                     files={'file': ('faixa.wav', self.audio, 'audio/wav')})
         self.assertEqual(response.status_code, 202, response.text)
@@ -75,37 +75,53 @@ class LinkedAudioChecks(unittest.TestCase):
         self.assertEqual(response.json()['source']['type'], 'youtube')
 
     def test_cloud_accepts_only_the_link_when_the_provider_is_configured(self):
-        with patch.dict('os.environ', {'STEMSPLIT_API_KEY': 'provider-test-key'}):
+        with patch.dict('os.environ', {'FAIXALAB_AUDIO_SOURCE_URL': 'http://127.0.0.1:7870',
+                                      'FAIXALAB_AUDIO_SOURCE_KEY': 'provider-test-key'}):
             response = self.client.post('/api/import/youtube', json={'url': VIDEO_URL})
         self.assertEqual(response.status_code, 202, response.text)
         project = response.json()
-        self.assertEqual(project['source']['provider'], 'stemsplit')
+        self.assertEqual(project['source']['provider'], 'faixalab-source')
         self.assertEqual(project['source']['url'], VIDEO_URL)
         self.submit.assert_called_once_with(project['id'])
 
-    def test_provider_downloads_complete_audio_and_reuses_it_without_another_job(self):
-        requests = []
+    def test_api_and_client_stream_the_original_audio_over_http(self):
+        def extract(url, directory, cancel, progress):
+            self.assertEqual(url, VIDEO_URL)
+            output = directory / 'youtube.wav'
+            output.write_bytes(self.audio)
+            return output, 'Faixa de teste'
 
-        def handle(request):
-            requests.append(request)
-            if request.method == 'POST':
-                self.assertEqual(json.loads(request.content), {'youtubeUrl': VIDEO_URL})
-                return httpx.Response(201, json={'id': 'job-123', 'videoTitle': 'Faixa de teste'})
-            if request.url.host == 'stemsplit.io':
-                return httpx.Response(200, json={'status': 'COMPLETED', 'outputs': {
-                    'fullAudio': {'url': 'https://media.example/full.mp3?sig=test'}}})
-            return httpx.Response(200, content=self.audio, headers={'Content-Type': 'audio/mpeg'})
+        fake_download = self.enterContext(patch.object(source_api, 'download_youtube', side_effect=extract))
+        source_root = storage.ROOT / 'api-source'
+        key = 'provider-test-key'
+        source = source_api.create_app(source_root, key)
+        sock = self.enterContext(socket.create_server(('127.0.0.1', 0)))
+        address = f'http://127.0.0.1:{sock.getsockname()[1]}'
+        server = uvicorn.Server(uvicorn.Config(source, log_level='error'))
+        worker = threading.Thread(target=server.run, kwargs={'sockets': [sock]}, daemon=True)
 
-        client = httpx.Client(transport=httpx.MockTransport(handle))
-        with patch.dict('os.environ', {'STEMSPLIT_API_KEY': 'provider-test-key'}):
-            with patch.object(stemsplit.httpx, 'Client', return_value=client):
-                path, title = stemsplit.download_audio(VIDEO_URL, threading.Event(), lambda *args: None)
-                self.assertEqual(stemsplit.download_audio(VIDEO_URL, threading.Event(), lambda *args: None), (path, title))
+        def close_server():
+            server.should_exit = True
+            worker.join(timeout=5)
+
+        worker.start()
+        self.addCleanup(close_server)
+        deadline = time.monotonic() + 5
+        while not server.started and time.monotonic() < deadline:
+            time.sleep(.01)
+        self.assertTrue(server.started)
+        self.assertEqual(httpx.get(address + '/v1/health', trust_env=False).status_code, 401)
+        with patch.dict('os.environ', {'FAIXALAB_AUDIO_SOURCE_URL': address, 'FAIXALAB_AUDIO_SOURCE_KEY': key}):
+            path, title = source_client.download_audio(VIDEO_URL, storage.ROOT, threading.Event(), lambda *args: None)
+            self.assertEqual(source_client.download_audio(VIDEO_URL, storage.ROOT, threading.Event(), lambda *args: None), (path, title))
         self.assertEqual(path.read_bytes(), self.audio)
         self.assertEqual(title, 'Faixa de teste')
-        self.assertEqual(len(requests), 3)
-        self.assertEqual(requests[0].headers['authorization'], 'Bearer provider-test-key')
-        self.assertNotIn('authorization', requests[2].headers)
+        fake_download.assert_called_once()
+        with TestClient(source_api.create_app(source_root, key), headers={'Authorization': f'Bearer {key}'}) as restarted:
+            response = restarted.post('/v1/youtube-jobs', json={'url': VIDEO_URL})
+            self.assertEqual(response.json()['status'], 'ready')
+            self.assertEqual(restarted.get('/v1/youtube-jobs/u_ix058WpVo/audio').content, self.audio)
+        fake_download.assert_called_once()
 
 
 class CodespaceStatusChecks(unittest.IsolatedAsyncioTestCase):

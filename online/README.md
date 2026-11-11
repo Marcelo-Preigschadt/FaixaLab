@@ -1,5 +1,28 @@
 # FaixaLab Online — site e processamento separados
 
+## API de áudio do FaixaLab
+
+O mesmo servidor de processamento pode importar um link diretamente ou delegar a obtenção do áudio a uma instância própria. A API de áudio executa apenas `yt-dlp`. A separação, a cifra e a letra continuam no servidor principal.
+
+No host da API, instale as dependências em um ambiente Python 3.12, configure `FAIXALAB_AUDIO_SOURCE_KEY` com uma chave aleatória e execute a partir de `app/`.
+
+```bash
+python -m pip install -r requirements-source.txt
+python prepare_youtube.py
+python -m faixalab.source_api --port 7870
+```
+
+Configure no servidor principal `FAIXALAB_AUDIO_SOURCE_URL` com a origem da API e `FAIXALAB_AUDIO_SOURCE_KEY` com a mesma chave. Use HTTPS para uma máquina remota e HTTP apenas no loopback. A API escuta no loopback por padrão. Para uma implantação remota, conecte o proxy HTTPS à porta 7870. `FAIXALAB_AUDIO_SOURCE_DATA` define a pasta persistente do cache de áudio por ID do vídeo.
+
+| Rota | Resultado |
+| --- | --- |
+| `GET /v1/health` | Estado da API |
+| `POST /v1/youtube-jobs` | Recebe `{"url":"https://www.youtube.com/watch?v=..."}` e retorna o ID e o estado |
+| `GET /v1/youtube-jobs/{id}` | Consulta o processamento ou o resultado em cache |
+| `GET /v1/youtube-jobs/{id}/audio` | Envia o arquivo quando estiver pronto |
+
+Todas as rotas exigem `Authorization: Bearer <chave>`. A API reutiliza o áudio salvo do mesmo vídeo. A obtenção do áudio depende da resposta do YouTube ao host que executa a API.
+
 O site usa a mesma interface e o mesmo player do aplicativo. As chamadas `/api/` passam por um gateway que conecta a interface ao servidor Python. O site não executa PyTorch. O navegador não recebe a chave do servidor de IA. Áudio e uploads são encaminhados como streams; HTTP Range 206 e a revisão da faixa são preservados.
 
 ## Estado desta etapa

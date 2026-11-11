@@ -311,9 +311,9 @@ def process_project(identifier, cancel_event, retry=None):
         if not retry:
             progress('Preparando a música', 1)
             if p['source']['type'] == 'youtube':
-                if p['source'].get('provider') == 'stemsplit':
-                    from .stemsplit import download_audio
-                    source, title = timed('youtube_download', download_audio, p['source']['url'], cancel_event, progress)
+                if p['source'].get('provider') == 'faixalab-source':
+                    from .source_client import download_audio
+                    source, title = timed('youtube_download', download_audio, p['source']['url'], folder, cancel_event, progress)
                 else:
                     source, title = timed('youtube_download', download_youtube, p['source']['url'], folder, cancel_event, progress)
                 storage.update_project(identifier, title=title)

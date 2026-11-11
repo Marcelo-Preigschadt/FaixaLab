@@ -23,7 +23,7 @@ from .solo_tabs import current as current_tab
 from .media import youtube_id
 from .chord_dictionary import load_dictionary, valid_label
 from .remote_access import allowed_api, allowed_origin
-from . import stemsplit
+from . import source_client
 
 WEB = Path(__file__).parent / 'web'
 
@@ -222,16 +222,17 @@ def import_youtube(data: LinkInput):
                 shutil.rmtree(folder, ignore_errors=True)
                 raise
         else:
-            online = cloud_processing()
-            if online and not stemsplit.configured():
-                raise HTTPException(503, 'A importação automática de links aguarda a configuração da chave StemSplit no servidor.')
-            source_key = ('youtube-stemsplit:' if online else 'youtube:') + vid
+            try:
+                remote_source = source_client.settings() is not None
+            except ValueError as exc:
+                raise HTTPException(503, str(exc)) from exc
+            source_key = ('youtube-faixalab:' if remote_source else 'youtube:') + vid
             cached = storage.cached_import(source_key, options)
             if cached:
                 return {**cached, 'reused': True}
             source = {'type': 'youtube', 'url': 'https://www.youtube.com/watch?v=' + vid}
-            if online:
-                source['provider'] = 'stemsplit'
+            if remote_source:
+                source['provider'] = 'faixalab-source'
             p = storage.new_project('Música do YouTube', source, options)
             storage.remember_import(source_key, options, p['id'])
     pipeline.submit(p['id'])
