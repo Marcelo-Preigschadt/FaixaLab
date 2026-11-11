@@ -1,6 +1,5 @@
 """Client for a FaixaLab audio source hosted separately from the separator."""
 import os
-from pathlib import Path
 import re
 import time
 from urllib.parse import urlsplit
@@ -13,17 +12,6 @@ LOOPBACK = {'localhost', '127.0.0.1', '::1'}
 
 
 def settings():
-    bridge = os.environ.get('FAIXALAB_AUDIO_BRIDGE_FILE')
-    if bridge:
-        state = Path(bridge)
-        try:
-            key = state.read_text('utf-8').strip()
-            if time.time() - state.stat().st_mtime < 75 and re.fullmatch(r'[A-Za-z0-9_-]{32,128}', key):
-                return 'http://127.0.0.1:7871', key
-        except (OSError, ValueError):
-            pass
-        raise ValueError('Conecte o servidor de áudio do FaixaLab no Windows para importar o link.')
-
     address = os.environ.get('FAIXALAB_AUDIO_SOURCE_URL', '').strip().rstrip('/')
     if not address:
         return None

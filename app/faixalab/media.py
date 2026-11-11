@@ -106,7 +106,7 @@ def download_youtube(url, folder, cancel, progress):
     if cancel.is_set():
         raise Cancelled()
     from .youtube_support import (check_support, distribution_versions, DownloadLog,
-                                  download_error, save_diagnostic)
+                                  download_error, save_diagnostic, youtube_cookiefile, YouTubeSupportError)
     support = distribution_versions()
     log = DownloadLog()
     try:
@@ -135,29 +135,38 @@ def download_youtube(url, folder, cancel, progress):
             'max_filesize': 1024 ** 3}
     runtime = support['runtime']
     opts['js_runtimes'] = {runtime['name']: {'path': runtime['path']}}
+    cookie_path = None
     try:
-        with YoutubeDL(opts) as ydl:
-            info = ydl.extract_info('https://www.youtube.com/watch?v=' + identifier, download=True)
-            filename = Path(ydl.prepare_filename(info))
-    except Cancelled:
+        with youtube_cookiefile() as cookie_path:
+            if cookie_path:
+                opts['cookiefile'] = cookie_path
+            with YoutubeDL(opts) as ydl:
+                info = ydl.extract_info('https://www.youtube.com/watch?v=' + identifier, download=True)
+                filename = Path(ydl.prepare_filename(info))
+    except (Cancelled, YouTubeSupportError):
         raise
     except Exception as exc:
         if cancel.is_set():
             raise Cancelled() from exc
+        if cookie_path:
+            error = download_error(exc, authenticated=True)
+            save_diagnostic(folder, identifier, support, [], error)
+            raise RuntimeError(error) from None
         save_diagnostic(folder, identifier, support, log.messages, exc)
         raise RuntimeError(download_error(exc)) from exc
+    messages = [] if cookie_path else log.messages
     if not filename.is_file() or filename.stat().st_size == 0:
         error = 'O YouTube não retornou um arquivo de áudio utilizável.'
-        save_diagnostic(folder, identifier, support, log.messages, error)
+        save_diagnostic(folder, identifier, support, messages, error)
         raise RuntimeError(error)
     with filename.open('rb') as downloaded:
         prefix = downloaded.read(512).lstrip().lower()
     if prefix.startswith((b'<html', b'<!doctype html')):
         filename.unlink(missing_ok=True)
         error = 'Esta conexão retornou uma página de bloqueio no lugar do áudio do YouTube.'
-        save_diagnostic(folder, identifier, support, log.messages, error)
+        save_diagnostic(folder, identifier, support, messages, error)
         raise RuntimeError(error)
-    save_diagnostic(folder, identifier, support, log.messages)
+    save_diagnostic(folder, identifier, support, messages)
     return filename, info.get('title') or 'Música do YouTube'
 
 

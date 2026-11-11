@@ -2,7 +2,6 @@ import asyncio
 from contextlib import redirect_stdout
 import io
 import json
-import os
 from pathlib import Path
 import socket
 import tempfile
@@ -18,6 +17,7 @@ import uvicorn
 
 from faixalab import pipeline, source_api, source_client, storage
 from faixalab.app import app, codespace_status
+from faixalab.youtube_support import COOKIE_SECRET
 
 
 VIDEO_URL = 'https://www.youtube.com/watch?v=u_ix058WpVo'
@@ -31,7 +31,7 @@ class LinkedAudioChecks(unittest.TestCase):
         self.enterContext(patch.multiple(storage, ROOT=directory, PROJECTS=projects))
         self.enterContext(patch.dict('os.environ', {'CODESPACES': 'false', 'CODESPACE_NAME': '',
                                                    'FAIXALAB_REMOTE': '1', 'FAIXALAB_API_KEY': 'test-key',
-                                                   'FAIXALAB_AUDIO_BRIDGE_FILE': '',
+                                                   COOKIE_SECRET: '',
                                                    'FAIXALAB_AUDIO_SOURCE_URL': '',
                                                    'FAIXALAB_AUDIO_SOURCE_KEY': ''}))
         self.submit = self.enterContext(patch.object(pipeline, 'submit'))
@@ -86,21 +86,16 @@ class LinkedAudioChecks(unittest.TestCase):
         self.assertEqual(project['source']['url'], VIDEO_URL)
         self.submit.assert_called_once_with(project['id'])
 
-    def test_codespace_queues_a_link_only_with_an_active_bridge(self):
-        marker = storage.ROOT / 'audio-bridge.key'
-        with patch.dict('os.environ', {'FAIXALAB_AUDIO_BRIDGE_FILE': str(marker)}):
-            self.assertEqual(self.client.post('/api/import/youtube', json={'url': VIDEO_URL}).status_code, 503)
-            marker.write_text('key_' * 10, 'utf-8')
-            expired = time.time() - 100
-            os.utime(marker, (expired, expired))
+    def test_codespace_queues_a_link_for_its_configured_session(self):
+        with patch.dict('os.environ', {'CODESPACES': 'true'}):
             response = self.client.post('/api/import/youtube', json={'url': VIDEO_URL})
             self.assertEqual(response.status_code, 503, response.text)
+            self.assertIn(COOKIE_SECRET, response.json()['detail'])
             self.submit.assert_not_called()
-            marker.touch()
-            self.assertEqual(source_client.settings(), ('http://127.0.0.1:7871', 'key_' * 10))
-            response = self.client.post('/api/import/youtube', json={'url': VIDEO_URL})
+            with patch.dict('os.environ', {COOKIE_SECRET: 'fixture-session'}):
+                response = self.client.post('/api/import/youtube', json={'url': VIDEO_URL})
         self.assertEqual(response.status_code, 202, response.text)
-        self.assertEqual(response.json()['source']['provider'], 'faixalab-source')
+        self.assertEqual(response.json()['source'], {'type': 'youtube', 'url': VIDEO_URL})
         self.submit.assert_called_once_with(response.json()['id'])
 
     def test_api_and_client_stream_the_original_audio_over_http(self):

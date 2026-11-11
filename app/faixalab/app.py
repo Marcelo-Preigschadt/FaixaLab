@@ -23,6 +23,7 @@ from .solo_tabs import current as current_tab
 from .media import youtube_id
 from .chord_dictionary import load_dictionary, valid_label
 from .remote_access import allowed_api, allowed_origin
+from .youtube_support import COOKIE_SECRET
 from . import source_client
 
 WEB = Path(__file__).parent / 'web'
@@ -230,6 +231,9 @@ def import_youtube(data: LinkInput):
             cached = storage.cached_import(source_key, options)
             if cached:
                 return {**cached, 'reused': True}
+            if (not remote_source and os.environ.get('CODESPACES') == 'true'
+                    and not os.environ.get(COOKIE_SECRET, '').strip()):
+                raise HTTPException(503, f'Configure o segredo {COOKIE_SECRET} no Codespaces para importar links do YouTube.')
             source = {'type': 'youtube', 'url': 'https://www.youtube.com/watch?v=' + vid}
             if remote_source:
                 source['provider'] = 'faixalab-source'

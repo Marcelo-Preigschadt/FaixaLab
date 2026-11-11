@@ -1,4 +1,5 @@
 """YouTube prerequisites, independent of the launcher and current directory."""
+from contextlib import contextmanager
 import importlib.metadata
 import json
 import os
@@ -6,17 +7,57 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+from tempfile import TemporaryDirectory
 
 
 APP_ROOT = Path(__file__).resolve().parents[1]
 MIN_YTDLP = (2026, 10, 26)
 MIN_RUNTIMES = {'deno': (2, 3, 0), 'node': (22, 0, 0)}
+COOKIE_SECRET = 'FAIXALAB_YOUTUBE_COOKIES'
 REPAIR = ('Feche o FaixaLab e execute ATUALIZAR_YOUTUBE.bat na pasta do aplicativo '
           '(Linux: bash cloud/atualizar_youtube.sh).')
 
 
 class YouTubeSupportError(RuntimeError):
     pass
+
+
+@contextmanager
+def youtube_cookiefile():
+    secret = os.environ.get(COOKIE_SECRET, '').removeprefix('\ufeff')
+    if not secret.strip():
+        yield None
+        return
+
+    lines = secret.splitlines()
+    if lines[0] not in {'# Netscape HTTP Cookie File', '# HTTP Cookie File'}:
+        raise YouTubeSupportError(f'O segredo {COOKIE_SECRET} deve conter um arquivo cookies.txt no formato Netscape.')
+    cookies = []
+    for line in lines[1:]:
+        if not line or line.startswith('#') and not line.startswith('#HttpOnly_'):
+            continue
+        fields = line.split('\t')
+        if len(fields) != 7:
+            raise YouTubeSupportError(f'O segredo {COOKIE_SECRET} contém uma linha fora do formato Netscape.')
+        raw_domain, subdomains, _, secure, expires, _, _ = fields
+        raw_domain = raw_domain.removeprefix('#HttpOnly_')
+        domain = raw_domain.removeprefix('.').lower()
+        if domain != 'youtube.com' and not domain.endswith('.youtube.com'):
+            raise YouTubeSupportError(f'O segredo {COOKIE_SECRET} deve conter somente cookies do domínio youtube.com.')
+        expected_subdomains = 'TRUE' if raw_domain.startswith('.') else 'FALSE'
+        if (subdomains != expected_subdomains or secure not in {'TRUE', 'FALSE'}
+                or expires and not re.fullmatch(r'[0-9]{1,16}(?:\.[0-9]{1,9})?', expires)):
+            raise YouTubeSupportError(f'O segredo {COOKIE_SECRET} contém uma linha fora do formato Netscape.')
+        cookies.append(line)
+    if not cookies:
+        raise YouTubeSupportError(f'O segredo {COOKIE_SECRET} não contém cookies do YouTube.')
+
+    with TemporaryDirectory(prefix='faixalab-youtube-') as directory:
+        path = Path(directory) / 'cookies.txt'
+        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        with os.fdopen(fd, 'w', encoding='utf-8', newline='\n') as handle:
+            handle.write('\n'.join([lines[0], *cookies, '']))
+        yield str(path)
 
 
 def clean_message(value):
@@ -119,8 +160,13 @@ def save_diagnostic(folder, identifier, support, messages, error=None):
         pass  # A diagnostic must never mask the original download failure.
 
 
-def download_error(error):
+def download_error(error, authenticated=False):
     detail = clean_message(error)
+    if authenticated:
+        if 'not a bot' in detail.lower() or 'sign in' in detail.lower():
+            return ('O YouTube pediu verificação para a sessão usada no Codespace. '
+                    f'Confira o segredo {COOKIE_SECRET} e o acesso da conta ao vídeo.')
+        return 'A sessão do Codespace não conseguiu obter o áudio deste vídeo. Confira o acesso da conta ao vídeo.'
     if any(reason in detail.lower() for reason in ('private video', 'video has been removed',
                                                   'sign in', 'age-restricted', 'not available in your country')):
         return 'O YouTube restringiu o acesso a este vídeo. Detalhe: ' + detail

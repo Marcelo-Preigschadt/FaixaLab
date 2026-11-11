@@ -2,7 +2,9 @@
 from contextlib import ExitStack
 import io
 import json
+import os
 from pathlib import Path
+import stat
 import subprocess
 import tempfile
 import threading
@@ -18,6 +20,7 @@ import prepare_youtube
 VIDEO = 'https://www.youtube.com/watch?v=u_ix058WpVo'
 VERSIONS = {'yt-dlp': '2026.10.26', 'yt-dlp-ejs': '0.8.0'}
 SUPPORTED = {**VERSIONS, 'runtime': {'name': 'deno', 'path': '/private/deno', 'version': '2.6.0'}}
+TEST_COOKIES = '# Netscape HTTP Cookie File\n#HttpOnly_.youtube.com\tTRUE\t/\tTRUE\t0\tTEST\tfixture-value\n'
 
 
 class RuntimeChecks(unittest.TestCase):
@@ -90,6 +93,7 @@ class ImportChecks(unittest.TestCase):
         self.addCleanup(self.stack.close)
         self.stack.enter_context(patch.object(support, 'check_support', return_value=SUPPORTED))
         self.stack.enter_context(patch('faixalab.media.ffmpeg_executable', return_value='ffmpeg'))
+        self.stack.enter_context(patch.dict(os.environ, {support.COOKIE_SECRET: ''}))
 
     def downloader(self, payload=b'RIFF\x00\x00\x00\x00WAVE', error=None, hook=None):
         folder = self.folder
@@ -121,10 +125,39 @@ class ImportChecks(unittest.TestCase):
         self.assertEqual(title, 'Teste')
         self.assertEqual(self.requested_url, VIDEO)
         self.assertEqual(self.options['js_runtimes'], {'deno': {'path': '/private/deno'}})
+        self.assertNotIn('cookiefile', self.options)
         self.assertTrue(self.options['nocolor'])
         diagnostic = json.loads((self.folder / 'youtube-diagnostico.json').read_text('utf-8'))
         self.assertIsNone(diagnostic['error'])
         self.assertEqual(diagnostic['yt-dlp'], '2026.10.26')
+
+    def test_codespace_cookie_is_private_and_removed_even_if_extraction_fails(self):
+        def inspect_cookie(options):
+            file = Path(options['cookiefile'])
+            self.assertNotIn(self.folder, file.parents)
+            self.assertEqual(file.read_bytes(), TEST_COOKIES.encode())
+            if os.name != 'nt':
+                self.assertEqual(stat.S_IMODE(file.stat().st_mode), 0o600)
+            options['logger'].warning('unexpected upstream fixture-value')
+
+        secret = '\ufeff' + TEST_COOKIES.replace('\n', '\r\n')
+        with patch.dict(os.environ, {support.COOKIE_SECRET: secret}):
+            with self.downloader(hook=inspect_cookie):
+                download_youtube(VIDEO, self.folder, self.cancel, lambda *_: None)
+            self.assertFalse(Path(self.options['cookiefile']).exists())
+            with self.downloader(hook=inspect_cookie, error=RuntimeError('Sign in to confirm you are not a bot: fixture-value')):
+                with self.assertRaisesRegex(RuntimeError, 'verificação para a sessão') as raised:
+                    download_youtube(VIDEO, self.folder, self.cancel, lambda *_: None)
+            self.assertFalse(Path(self.options['cookiefile']).exists())
+            self.assertNotIn('fixture-value', str(raised.exception))
+            self.assertNotIn('fixture-value', (self.folder / 'youtube-diagnostico.json').read_text('utf-8'))
+
+    def test_invalid_cookie_secret_never_opens_the_extractor(self):
+        invalid = TEST_COOKIES.replace('.youtube.com', '.example.invalid')
+        with patch.dict(os.environ, {support.COOKIE_SECRET: invalid}), patch('yt_dlp.YoutubeDL') as downloader:
+            with self.assertRaisesRegex(support.YouTubeSupportError, 'somente cookies do domínio youtube.com'):
+                download_youtube(VIDEO, self.folder, self.cancel, lambda *_: None)
+        downloader.assert_not_called()
 
     def test_missing_runtime_stops_before_any_network_request(self):
         with patch.object(support, 'check_support', side_effect=support.YouTubeSupportError('Falta runtime')), \
