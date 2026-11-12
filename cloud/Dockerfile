@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM python:3.12-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -13,14 +14,18 @@ COPY --chown=faixalab:faixalab cloud ./cloud
 COPY --chown=faixalab:faixalab release.json ./release.json
 
 RUN pip install --no-cache-dir torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu \
-    && pip install --no-cache-dir -r app/requirements.txt
+    && pip install --no-cache-dir -r app/requirements.txt -r app/requirements-auth.txt
 
 USER faixalab
 ARG FAIXALAB_BUNDLE_URL
 # The URL supplies the existing signed-off package, never arbitrary weights.
 # It must match release.json byte-for-byte. A missing release fails the build.
-RUN test -n "$FAIXALAB_BUNDLE_URL" \
-    && python cloud/bootstrap.py --url "$FAIXALAB_BUNDLE_URL" \
+RUN --mount=type=secret,id=faixalab_bundle,uid=1000 \
+    if [ -f /run/secrets/faixalab_bundle ]; then \
+        python cloud/bootstrap.py --archive /run/secrets/faixalab_bundle; \
+    else \
+        test -n "$FAIXALAB_BUNDLE_URL" && python cloud/bootstrap.py --url "$FAIXALAB_BUNDLE_URL"; \
+    fi \
     && python cloud/link_models.py \
     && python app/prepare_youtube.py
 
@@ -33,5 +38,5 @@ ENV FAIXALAB_REMOTE=1 \
     PORT=7860
 
 WORKDIR /home/faixalab/project/app
-EXPOSE 7860
+EXPOSE 7860 7861
 CMD ["python", "server.py", "--host", "0.0.0.0", "--port", "7860"]

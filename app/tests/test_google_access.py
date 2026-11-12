@@ -13,6 +13,45 @@ from faixalab.youtube_support import COOKIE_SECRET
 
 
 class GoogleAccessTest(unittest.TestCase):
+    def test_hosted_login_maps_only_the_verified_owner_and_checks_worker_readiness(self):
+        origin = 'https://studio.github.io'
+        key = 'session-key-for-tests'
+        settings = {'FAIXALAB_PAGES_KEY': key, 'FAIXALAB_API_KEY': 'relay-only',
+                    'FAIXALAB_REMOTE': '1', 'CODESPACES': 'false'}
+        with TemporaryDirectory() as folder:
+            root = Path(folder)
+            projects = root / 'projects'
+            projects.mkdir()
+            with patch.multiple(storage, ROOT=root, PROJECTS=projects), patch.dict(os.environ, settings):
+                owner = storage.new_project('Projeto antigo', {}, {})
+                gateway = pages_gateway.create_app('http://faixalab', origin + '/FaixaLab/', key,
+                                                   'relay-only', 'web-client.apps.googleusercontent.com',
+                                                   owner_google_sub='verified-owner', check_upstream_health=True)
+                with TestClient(gateway, headers={'Origin': origin}) as client:
+                    gateway.state.backend = httpx.AsyncClient(
+                        transport=httpx.MockTransport(lambda request: httpx.Response(503)),
+                        base_url='http://faixalab')
+                    self.assertEqual(client.get('/health').status_code, 503)
+                    gateway.state.backend = httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
+                                                              base_url='http://faixalab')
+                    self.assertEqual(client.get('/health').status_code, 200)
+                    self.assertEqual(client.get('/api/projects').status_code, 401)
+
+                    def sign_in(subject):
+                        nonce = client.get('/auth/google/config').json()['nonce']
+                        with patch.object(pages_gateway, 'verify_google_identity',
+                                          return_value={'sub': subject, 'nonce': nonce}):
+                            session = client.post('/auth/google/session',
+                                                  json={'credential': 'test-id-token', 'nonce': nonce})
+                        self.assertEqual(session.status_code, 200)
+                        return {'Authorization': 'Bearer ' + session.json()['api']}
+
+                    visitor = sign_in('different-verified-user')
+                    self.assertEqual(client.get('/api/projects', headers=visitor).json(), [])
+                    self.assertEqual(client.get('/api/projects/' + owner['id'], headers=visitor).status_code, 404)
+                    legacy = client.get('/api/projects', headers=sign_in('verified-owner')).json()
+                    self.assertEqual([project['id'] for project in legacy], [owner['id']])
+
     def test_google_accounts_share_processing_but_not_projects_or_import_cache(self):
         origin = 'https://studio.github.io'
         key = 'session-key-for-tests'

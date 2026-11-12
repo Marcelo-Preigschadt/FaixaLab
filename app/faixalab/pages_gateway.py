@@ -77,7 +77,8 @@ def verify_google_identity(credential, audience):
             raise ValueError('Identidade do Google inválida.') from exc
 
 
-def create_app(upstream, url, key, backend_key='', google_client_id=''):
+def create_app(upstream, url, key, backend_key='', google_client_id='', *,
+               owner_google_sub='', check_upstream_health=False):
     if not key:
         raise ValueError('FAIXALAB_PAGES_KEY precisa estar configurada.')
     origin = pages_origin(url)
@@ -99,6 +100,12 @@ def create_app(upstream, url, key, backend_key='', google_client_id=''):
 
     @app.get('/health')
     async def health():
+        if check_upstream_health:
+            try:
+                response = await app.state.backend.get('/api/health', timeout=3)
+                response.raise_for_status()
+            except httpx.HTTPError:
+                return JSONResponse({'service': 'faixalab-pages', 'status': 'unavailable'}, status_code=503)
         return {'service': 'faixalab-pages'}
 
     @app.get('/auth/google/config')
@@ -136,7 +143,7 @@ def create_app(upstream, url, key, backend_key='', google_client_id=''):
         subject = identity.get('sub')
         if identity.get('nonce') != data.nonce or not isinstance(subject, str) or not subject:
             raise HTTPException(401, 'O Google não confirmou esta solicitação de login.')
-        account = hashlib.sha256(f'google:{subject}'.encode()).hexdigest()
+        account = '' if subject == owner_google_sub else hashlib.sha256(f'google:{subject}'.encode()).hexdigest()
         expires = int(time.time()) + SESSION_SECONDS
         return JSONResponse({'api': issue_token(key, 'api', expires, account),
                              'media': issue_token(key, 'media', expires, account)},
@@ -168,7 +175,7 @@ def create_app(upstream, url, key, backend_key='', google_client_id=''):
         try:
             response = await backend.send(upstream_request, stream=True)
         except httpx.RequestError:
-            return JSONResponse({'detail': 'O processamento do Codespace está indisponível.'}, status_code=503)
+            return JSONResponse({'detail': 'O servidor de processamento está indisponível.'}, status_code=503)
         forwarded = {name: value for name, value in response.headers.items() if name in RESPONSE_HEADERS}
         forwarded.update({'cache-control': 'private, no-store', 'referrer-policy': 'no-referrer',
                           'x-content-type-options': 'nosniff'})
@@ -183,5 +190,7 @@ if __name__ == '__main__':
 
     uvicorn.run(create_app(f'http://127.0.0.1:{os.environ.get("PORT", "7860")}',
                            os.environ['FAIXALAB_PAGES_URL'], os.environ['FAIXALAB_PAGES_KEY'],
-                           os.environ.get('FAIXALAB_API_KEY', ''), os.environ.get('FAIXALAB_GOOGLE_CLIENT_ID', '').strip()),
+                           os.environ.get('FAIXALAB_API_KEY', ''), os.environ.get('FAIXALAB_GOOGLE_CLIENT_ID', '').strip(),
+                           owner_google_sub=os.environ.get('FAIXALAB_OWNER_GOOGLE_SUB', '').strip(),
+                           check_upstream_health=os.environ.get('FAIXALAB_REMOTE') == '1'),
                 host='0.0.0.0', port=7861, access_log=False)

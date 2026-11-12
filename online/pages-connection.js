@@ -59,7 +59,8 @@
     if (!config.client_id) return false;
 
     const button = document.getElementById('pages-google');
-    ownerControl().hidden = true;
+    const ownerButton = ownerControl();
+    if (ownerButton) ownerButton.hidden = true;
     status('Entre com sua conta Google para acessar sua biblioteca e separar músicas.');
 
     async function signIn({ credential }) {
@@ -84,13 +85,14 @@
     script.src = 'https://accounts.google.com/gsi/client?hl=pt-BR';
     script.async = true;
     script.onload = () => {
-      if (!window.google?.accounts?.id) {
+      const googleAuth = window.google?.accounts?.id;
+      if (!googleAuth) {
         status('O login com Google está indisponível. Recarregue a página e tente novamente.');
         return;
       }
-      google.accounts.id.initialize({ client_id: config.client_id, nonce: config.nonce, callback: signIn });
+      googleAuth.initialize({ client_id: config.client_id, nonce: config.nonce, callback: signIn });
       button.hidden = false;
-      google.accounts.id.renderButton(button, { theme: 'outline', size: 'large', locale: 'pt-BR' });
+      googleAuth.renderButton(button, { theme: 'outline', size: 'large', locale: 'pt-BR' });
     };
     script.onerror = () => status('O login com Google está indisponível. Recarregue a página e tente novamente.');
     document.head.append(script);
@@ -99,7 +101,12 @@
 
   async function beginSignIn() {
     googleSetup ??= googleLogin();
-    if (!await googleSetup) await reconnect();
+    if (await googleSetup) return;
+    if (connect) await reconnect();
+    else {
+      googleSetup = undefined;
+      status('A entrada com Google está indisponível. Recarregue o FaixaLab para tentar novamente.');
+    }
   }
 
   async function gatewayReady() {
@@ -156,7 +163,7 @@
       const initialCheck = library && !checkedLibrary;
       if (library) checkedLibrary = true;
       if (!connected()) {
-        if (initialCheck) await beginSignIn();
+        if (initialCheck || !connect) await beginSignIn();
         if (!statusText) status(signInMessage);
         if (library) return new Response('[]');
         return error(statusText, 401);
@@ -169,11 +176,12 @@
         const response = await fetch(endpoint, { ...options, headers, credentials: 'omit', redirect: 'error' });
         if (response.status === 401) {
           status('A sessão expirou. Entre novamente no FaixaLab.');
-          if (initialCheck) {
+          if (initialCheck || !connect) {
             await beginSignIn();
-            return new Response('[]');
+            if (library) return new Response('[]');
+          } else {
+            googleSetup ??= googleLogin();
           }
-          googleSetup ??= googleLogin();
         } else if (response.ok) {
           if (library) rememberConnection();
           status('');
@@ -195,7 +203,7 @@
   };
 
   document.addEventListener('DOMContentLoaded', () => {
-    ownerControl().addEventListener('click', event => {
+    ownerControl()?.addEventListener('click', event => {
       event.preventDefault();
       const button = ownerControl();
       if (button.disabled) return;

@@ -1,0 +1,38 @@
+services:
+  faixalab:
+    image: faixalab-server
+    command: ["bash", "../cloud/start-pages.sh"]
+    restart: unless-stopped
+    environment:
+      FAIXALAB_API_KEY: ${FAIXALAB_API_KEY:?Configure a chave interna do servidor}
+      FAIXALAB_PAGES_KEY: ${FAIXALAB_PAGES_KEY:?Configure a chave de assinatura das sessões}
+      FAIXALAB_PAGES_URL: ${FAIXALAB_PAGES_URL:?Configure a URL do GitHub Pages}
+      FAIXALAB_GOOGLE_CLIENT_ID: ${FAIXALAB_GOOGLE_CLIENT_ID:?Configure o cliente Web do Google}
+      FAIXALAB_OWNER_GOOGLE_SUB: ${FAIXALAB_OWNER_GOOGLE_SUB:-}
+      FAIXALAB_YOUTUBE_COOKIES: ${FAIXALAB_YOUTUBE_COOKIES:-}
+      FAIXALAB_AUDIO_SOURCE_URL: ${FAIXALAB_AUDIO_SOURCE_URL:-}
+      FAIXALAB_AUDIO_SOURCE_KEY: ${FAIXALAB_AUDIO_SOURCE_KEY:-}
+    volumes:
+      - faixalab-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:7861/health', timeout=5).close()"]
+      interval: 30s
+      timeout: 6s
+      retries: 3
+      start_period: 60s
+  https:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      FAIXALAB_API_HOST: ${FAIXALAB_API_HOST:?Configure o nome DNS da API pública}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile.pages:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+volumes:
+  faixalab-data:
+  caddy-data:
+  caddy-config:

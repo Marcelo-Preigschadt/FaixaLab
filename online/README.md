@@ -1,5 +1,39 @@
 # FaixaLab Online — site e processamento separados
 
+## GitHub Pages com servidor permanente
+
+Nesta configuração, o visitante entra no FaixaLab com Google pelo próprio site. O GitHub Pages entrega a interface e chama um gateway HTTPS. O processador Python escuta em loopback, dentro do mesmo container que o gateway. O volume `faixalab-data` guarda os projetos entre reinícios.
+
+Na máquina de produção, construa a imagem com o ZIP 0.10.1 identificado em `release.json`. O build confere tamanho e SHA-256 antes de usar os modelos.
+
+```bash
+docker build -f cloud/Dockerfile \
+  --secret id=faixalab_bundle,src=/caminho/FaixaLab_0_10_1_Windows.zip \
+  -t faixalab-server .
+```
+
+Configure um nome DNS apontando para a máquina e disponibilize as portas 80 e 443 para o Caddy. Em um arquivo de ambiente protegido fora do repositório, informe:
+
+| Variável | Valor |
+| --- | --- |
+| `FAIXALAB_API_HOST` | Nome DNS da API, por exemplo `api.exemplo.com` |
+| `FAIXALAB_PAGES_URL` | URL completa do GitHub Pages, com barra final |
+| `FAIXALAB_API_KEY` | Chave aleatória para a comunicação interna com o processador |
+| `FAIXALAB_PAGES_KEY` | Outra chave aleatória, usada para assinar as sessões |
+| `FAIXALAB_GOOGLE_CLIENT_ID` | ID do cliente Web do Google, com a origem do GitHub Pages autorizada e o público de login configurado |
+| `FAIXALAB_OWNER_GOOGLE_SUB` | Opcional. Identificador `sub` verificado da conta Google do proprietário, para acessar os projetos legados sem `account_id` |
+| `FAIXALAB_YOUTUBE_COOKIES` | Sessão autorizada do YouTube, quando necessária. Também é possível configurar a API de áudio descrita abaixo |
+
+Para migrar uma biblioteca do Codespace, copie os dados de `/workspaces/.faixalab-data` para `/data/faixalab` no volume de produção antes da publicação. Preserve o conteúdo dos projetos e dê ao usuário do container, UID 1000, acesso de leitura e escrita. Configure o `sub` verificado do proprietário para os projetos legados. As bibliotecas de usuários que já entraram com Google são identificadas pelo mesmo `sub` da conta.
+
+```bash
+docker compose --env-file /caminho/seguro/faixalab.env -f cloud/compose.pages.yml up -d
+curl -fsS https://api.exemplo.com/health
+node online/build-pages.mjs /tmp/faixalab-pages https://api.exemplo.com
+```
+
+Antes de publicar os arquivos gerados na branch do GitHub Pages, valide o login e a separação de um áudio na API hospedada. Teste também a importação de um link do YouTube na rede do novo servidor. A disponibilidade desse vídeo depende da resposta do YouTube ao host e à sessão utilizada.
+
 ## API de áudio do FaixaLab
 
 O mesmo servidor de processamento pode importar um link diretamente ou delegar a obtenção do áudio a uma instância própria. A API de áudio executa apenas `yt-dlp`. A separação, a cifra e a letra continuam no servidor principal.

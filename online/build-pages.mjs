@@ -6,10 +6,17 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.dirname(here);
-const [destination, codespace] = process.argv.slice(2);
-if (!destination || !/^[a-z0-9-]+$/.test(codespace ?? '')) {
-  throw new Error('Uso: node online/build-pages.mjs DIRETORIO NOME_DO_CODESPACE');
+const [destination, server] = process.argv.slice(2);
+if (!destination || !server) {
+  throw new Error('Uso: node online/build-pages.mjs DIRETORIO NOME_DO_CODESPACE|ORIGEM_HTTPS_DA_API');
 }
+const codespace = /^[a-z0-9-]+$/.test(server) ? server : null;
+const backendUrl = codespace ? null : new URL(server);
+if (backendUrl && (backendUrl.protocol !== 'https:' || backendUrl.pathname !== '/' ||
+                    backendUrl.username || backendUrl.password || backendUrl.search || backendUrl.hash)) {
+  throw new Error('Configure a origem HTTPS da API, sem caminho, credenciais, parâmetros ou fragmento.');
+}
+const processingHost = codespace ? 'Codespace' : 'servidor do FaixaLab';
 const web = path.join(repo, 'app/faixalab/web');
 const output = path.resolve(destination);
 mkdirSync(output, { recursive: true });
@@ -20,23 +27,25 @@ for (const asset of ['style.css', 'studio.css', 'mobile.css', 'app.js', 'guitar.
 const connectionScript = readFileSync(path.join(here, 'pages-connection.js'));
 const connectionVersion = version(connectionScript);
 writeFileSync(path.join(output, 'pages-connection.js'), connectionScript);
-const config = { backend: `https://${codespace}-7861.app.github.dev`,
-                 connect: `https://${codespace}-7860.app.github.dev/connect-pages` };
-writeFileSync(path.join(output, 'pages-config.js'), 'window.faixaLabPagesConfig = ' + JSON.stringify(config) + ';\n');
+const config = codespace
+  ? { backend: `https://${codespace}-7861.app.github.dev`, connect: `https://${codespace}-7860.app.github.dev/connect-pages` }
+  : { backend: backendUrl.origin };
+const configScript = 'window.faixaLabPagesConfig = ' + JSON.stringify(config) + ';\n';
+writeFileSync(path.join(output, 'pages-config.js'), configScript);
 
 const html = readFileSync(path.join(web, 'index.html'), 'utf8')
   .replace(/\b(href|src)="\//g, '$1="./')
   .replace('href="./style.css"', 'href="./style.css?v=' + version(readFileSync(path.join(web, 'style.css'))) + '"')
   .replace('<script src="./app.js" defer></script>',
-    '<meta name="referrer" content="no-referrer" />\n    <script src="./pages-config.js" defer></script>\n    <script src="./pages-connection.js?v=' + connectionVersion + '" defer></script>\n    <script src="./app.js?v=' + version(readFileSync(path.join(web, 'app.js'))) + '" defer></script>')
-  .replace('Processamento local', 'Processamento no Codespace')
-  .replace('Suas músicas ficam salvas neste computador.', 'Suas músicas ficam salvas no Codespace.')
-  .replace('no seu computador. O link', 'no Codespace. O link')
+    '<meta name="referrer" content="no-referrer" />\n    <script src="./pages-config.js?v=' + version(configScript) + '" defer></script>\n    <script src="./pages-connection.js?v=' + connectionVersion + '" defer></script>\n    <script src="./app.js?v=' + version(readFileSync(path.join(web, 'app.js'))) + '" defer></script>')
+  .replace('Processamento local', `Processamento no ${processingHost}`)
+  .replace('Suas músicas ficam salvas neste computador.', `Suas músicas ficam salvas no ${processingHost}.`)
+  .replace('no seu computador. O link', `no ${processingHost}. O link`)
   .replace('<main>', `<main>
       <aside id="pages-connection" role="status" hidden>
         <span></span>
         <div id="pages-google" hidden></div>
-        <button class="button primary" id="pages-owner-connect" type="button" data-resume-url="https://${codespace}.github.dev">Conectar ao FaixaLab</button>
+        ${codespace ? `<button class="button primary" id="pages-owner-connect" type="button" data-resume-url="https://${codespace}.github.dev">Conectar ao FaixaLab</button>` : ''}
       </aside>`)
   .replace('<div class="top-actions">', '<div class="top-actions"><button id="pages-signout" class="button secondary" hidden>Sair</button>')
   .replace('</head>', '<style>#pages-connection:not([hidden]){display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 16px;background:#1d272a;color:#dde7ea;border-bottom:1px solid #3b4950;flex-wrap:wrap}#pages-connection [hidden],#pages-signout[hidden]{display:none}</style>\n  </head>');

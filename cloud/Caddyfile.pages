@@ -1,0 +1,3 @@
+{$FAIXALAB_API_HOST} {
+	reverse_proxy faixalab:7861
+}
