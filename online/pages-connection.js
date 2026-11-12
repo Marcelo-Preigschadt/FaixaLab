@@ -102,21 +102,42 @@
     if (!await googleSetup) await reconnect();
   }
 
-  async function connectOwner() {
+  async function gatewayReady() {
+    try {
+      const response = await fetch(backend + '/health', { credentials: 'omit', redirect: 'error', cache: 'no-store',
+                                                         signal: AbortSignal.timeout(5000) });
+      return response.ok && (await response.json()).service === 'faixalab-pages';
+    } catch { return false; }
+  }
+
+  async function connectOwner(resumeTab = null, fromButton = false) {
     const button = ownerControl();
     if (button.disabled) return false;
     button.disabled = true;
     status('Verificando a conexão com o servidor…');
-    try {
-      const response = await fetch(backend + '/health', { credentials: 'omit', redirect: 'error', cache: 'no-store',
-                                                         signal: AbortSignal.timeout(5000) });
-      if (response.ok && (await response.json()).service === 'faixalab-pages') {
-        location.replace(connect);
-        return true;
+    if (await gatewayReady()) {
+      resumeTab?.close();
+      location.replace(connect);
+      return true;
+    }
+
+    if (resumeTab && !resumeTab.closed) {
+      resumeTab.location.replace(button.dataset.resumeUrl);
+      status('Aguardando o Codespace iniciar na outra aba…');
+      const deadline = Date.now() + 180_000;
+      while (Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve, 4000));
+        if (await gatewayReady()) {
+          location.replace(connect);
+          return true;
+        }
       }
-    } catch {}
+    }
+
     button.disabled = false;
-    status(unavailableMessage);
+    if (!fromButton) status(unavailableMessage);
+    else if (!resumeTab) status('Permita a abertura de uma nova aba e clique em Conectar ao FaixaLab.');
+    else status('O Codespace ainda não respondeu. Aguarde o editor carregar e clique em Conectar ao FaixaLab.');
     return false;
   }
 
@@ -176,7 +197,16 @@
   document.addEventListener('DOMContentLoaded', () => {
     ownerControl().addEventListener('click', event => {
       event.preventDefault();
-      void connectOwner();
+      const button = ownerControl();
+      if (button.disabled) return;
+      // Reserve the tab during the click. Opening it after fetch can be blocked.
+      const resumeTab = button.dataset.resumeUrl ? window.open('about:blank', '_blank') : null;
+      if (resumeTab) {
+        resumeTab.opener = null;
+        resumeTab.document.title = 'Conectar ao FaixaLab';
+        resumeTab.document.body.textContent = 'Verificando o servidor do FaixaLab…';
+      }
+      void connectOwner(resumeTab, Boolean(button.dataset.resumeUrl));
     });
     document.getElementById('pages-signout').addEventListener('click', () => {
       try {
