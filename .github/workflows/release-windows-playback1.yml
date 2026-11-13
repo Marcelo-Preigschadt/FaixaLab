@@ -1,0 +1,46 @@
+name: Publicar FaixaLab para Windows
+
+on:
+  push:
+    branches: [release/windows-playback1]
+    paths: [.github/workflows/release-windows-playback1.yml]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-windows-playback1
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      FAIXALAB_REPO: Marcelo-Preigschadt/FaixaLab
+      FAIXALAB_TAG: v0.10.1
+      FAIXALAB_PACKAGE: FaixaLab_0_10_1_Windows_playback1.zip
+      FAIXALAB_DIGEST: 1ea10e446b2d4e9cd5d04d3832ca7133e02fde5ae5beb94945b3024bb1940470
+    steps:
+      - name: Conferir o pacote Windows
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 2 --max-time 120 \
+            "https://github.com/faixalablab-dot/Faixalab/releases/download/${FAIXALAB_TAG}/${FAIXALAB_PACKAGE}" \
+            --output "$FAIXALAB_PACKAGE"
+          printf '%s  %s\n' "$FAIXALAB_DIGEST" "$FAIXALAB_PACKAGE" | sha256sum --check
+      - name: Publicar no repositório do Marcelo
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$FAIXALAB_TAG" --repo "$FAIXALAB_REPO" >/dev/null 2>&1; then
+            gh release upload "$FAIXALAB_TAG" "$FAIXALAB_PACKAGE" --repo "$FAIXALAB_REPO"
+          else
+            gh release create "$FAIXALAB_TAG" "$FAIXALAB_PACKAGE" --repo "$FAIXALAB_REPO" \
+              --target 6876d9d71f56bbcbb4e7a9500286765a40567ebe \
+              --title 'FaixaLab 0.10.1 para Windows' \
+              --notes 'Pacote completo para Windows 64 bits com a correção de reprodução playback1. Extraia o ZIP, abra FaixaLab.exe e cole um link em Nova música. A importação e a separação em 4 ou 6 faixas rodam no PC. A primeira execução prepara os componentes locais.'
+          fi
+          gh release view "$FAIXALAB_TAG" --repo "$FAIXALAB_REPO" --json url,assets
