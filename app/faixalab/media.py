@@ -6,7 +6,6 @@ import shutil
 import subprocess
 import threading
 import time
-import numpy as np
 
 
 class Cancelled(Exception):
@@ -101,7 +100,7 @@ def youtube_id(url):
     return identifier
 
 
-def download_youtube(url, folder, cancel, progress):
+def download_youtube(url, folder, cancel, progress, *, max_bytes=1024 ** 3, max_duration=None):
     identifier = youtube_id(url)
     if cancel.is_set():
         raise Cancelled()
@@ -132,7 +131,15 @@ def download_youtube(url, folder, cancel, progress):
             'socket_timeout': 20, 'retries': 2, 'fragment_retries': 2,
             'progress_hooks': [hook], 'cachedir': False,
             'compat_opts': {'no-certifi'},
-            'max_filesize': 1024 ** 3}
+            'max_filesize': max_bytes}
+    if max_duration is not None:
+        def limit_duration(info, *, incomplete=False):
+            if info.get('is_live'):
+                return 'Importe um vídeo gravado. Transmissões ao vivo não são aceitas.'
+            if (info.get('duration') or 0) > max_duration:
+                return f'O importador aceita vídeos de até {max_duration // 60} minutos.'
+            return None
+        opts['match_filter'] = limit_duration
     runtime = support['runtime']
     opts['js_runtimes'] = {runtime['name']: {'path': runtime['path']}}
     cookie_path = None
@@ -182,6 +189,7 @@ def decode_audio(source, target, cancel):
 
 
 def waveform(path, count=900):
+    import numpy as np
     import soundfile as sf
     data, _ = sf.read(path, dtype='float32', always_2d=True)
     mono = np.sqrt(np.mean(data * data, axis=1))

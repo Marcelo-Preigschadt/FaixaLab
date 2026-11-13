@@ -51,4 +51,5 @@ const catalog = JSON.parse(execFileSync('python3', ['-c',
   { encoding: 'utf8', cwd: repo, env: { ...process.env, PYTHONPATH: path.join(repo, 'app') } }));
 writeFileSync(path.join(output, 'chord-dictionary.json'), JSON.stringify(catalog[0]) + '\n');
 writeFileSync(path.join(output, 'instruments.json'), JSON.stringify(catalog[1]) + '\n');
+execFileSync('python3', [path.join(here, 'package-local-import.py'), path.join(output, 'FaixaLab_Importador.zip')]);
 writeFileSync(path.join(output, '.nojekyll'), '');

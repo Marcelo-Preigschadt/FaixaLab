@@ -1,0 +1,23 @@
+Importador FaixaLab
+
+1. Extraia o ZIP inteiro.
+2. Abra o importador para seu aparelho.
+   Windows: abra INICIAR.bat. A primeira execução prepara as dependências.
+   Chromebook: ative o ambiente Linux e copie a pasta para "Arquivos do Linux".
+   No terminal Linux, abra a pasta extraída e execute bash iniciar.sh.
+   Android: instale o Termux pelo F-Droid e abra o aplicativo.
+   No Termux, rode termux-setup-storage, permita o acesso aos arquivos e execute:
+     pkg install -y unzip
+     unzip ~/storage/downloads/FaixaLab_Importador.zip -d ~
+     bash ~/FaixaLab_Importador/iniciar-android.sh
+   Mantenha a janela do importador aberta durante o uso.
+3. Abra https://marcelo-preigschadt.github.io/FaixaLab/ no mesmo aparelho.
+   Em "Link do YouTube", cole o link e escolha "Importar neste aparelho".
+   Permita o acesso local se o navegador solicitar.
+
+O aparelho obtém o áudio e o site o envia para o servidor de separação já
+configurado no FaixaLab. O importador aceita vídeos gravados de até 30 minutos
+e 128 MiB. No iPhone/iPad, use o seletor de arquivos do FaixaLab.
+
+Para atualizar o suporte do importador, abra INSTALAR.bat no Windows, ou
+execute o script de seu aparelho com --atualizar.

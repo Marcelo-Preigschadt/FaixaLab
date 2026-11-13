@@ -378,6 +378,84 @@ function setFile(file) {
   state.file = file;
   $("#file-title").textContent = file.name;
 }
+
+const youtubeImportMode = $("#youtube-import-mode");
+const youtubeImportMethod = $("#youtube-import-method");
+let localAudio;
+
+function setupLocalImport() {
+  if (!window.faixaLabPages || !youtubeImportMethod) return;
+  const agent = navigator.userAgent;
+  const platform = navigator.userAgentData?.platform || navigator.platform || "";
+  const ios = /iPhone|iPad|iPod/i.test(agent) ||
+    (/^Mac/i.test(platform) && navigator.maxTouchPoints > 1);
+  const device = ios ? "ios"
+    : /Android/i.test(agent + platform) ? "android"
+    : /CrOS|Chrome OS/i.test(agent + platform) ? "chromeos"
+    : /Windows|Win32|Win64/i.test(agent + platform) ? "windows"
+    : /Linux/i.test(agent + platform) ? "linux" : "other";
+  const instructions = {
+    windows: "No Windows, abra INICIAR.bat e permita acesso local se o navegador solicitar.",
+    chromeos: "No Chromebook, ative o ambiente Linux e execute iniciar.sh nele.",
+    linux: "No Linux, execute iniciar.sh para abrir o importador.",
+    android: "No Android, abra o importador no Termux com iniciar-android.sh e volte ao Chrome.",
+    ios: "No iPhone ou iPad, use um áudio do app Arquivos ou tente importar pelo servidor.",
+    other: "Escolha um arquivo de áudio ou tente importar pelo servidor.",
+  };
+  const canRunLocally = ["windows", "chromeos", "linux", "android"].includes(device);
+  youtubeImportMode.querySelector('[value="local"]').hidden = !canRunLocally;
+  youtubeImportMode.querySelector('[value="local"]').disabled = !canRunLocally;
+  youtubeImportMode.value = canRunLocally ? "local" : "cloud";
+  $("#youtube-import-download").hidden = !canRunLocally;
+  $("#youtube-import-help").textContent = instructions[device];
+  youtubeImportMethod.hidden = false;
+  $("#youtube-url").addEventListener("input", () => { localAudio = null; });
+  $("#youtube-select-file").onclick = () => {
+    $('[data-source="file"]').click();
+    $("#audio-file").click();
+  };
+}
+setupLocalImport();
+
+async function getLocalAudio(url) {
+  if (localAudio?.url === url) return localAudio.file;
+  let response;
+  try {
+    response = await fetch("http://127.0.0.1:17861/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-FaixaLab-Import": "1" },
+      credentials: "omit",
+      redirect: "error",
+      signal: AbortSignal.timeout(250000),
+      body: JSON.stringify({ url }),
+    });
+  } catch (err) {
+    if (err.name === "TimeoutError") {
+      throw new Error("O importador demorou demais. Confira a janela do importador e tente novamente.");
+    }
+    throw new Error("Abra o Importador FaixaLab neste aparelho e permita o acesso local no navegador.");
+  }
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.detail || "A importação neste aparelho falhou.");
+  }
+  const encodedName = response.headers.get("X-FaixaLab-Filename");
+  if (!encodedName) throw new Error("O importador não retornou um arquivo de áudio.");
+  const blob = await response.blob();
+  if (!blob.size) throw new Error("O importador retornou um arquivo vazio.");
+  const file = new File([blob], decodeURIComponent(encodedName), { type: blob.type });
+  localAudio = { url, file };
+  return file;
+}
+
+function uploadAudio(file, video) {
+  const data = new FormData();
+  data.append("file", file);
+  data.append("options", JSON.stringify(options()));
+  if (video) data.append("youtube_url", video);
+  return api("/api/import/file", { method: "POST", body: data });
+}
+
 $("#audio-file").onchange = (e) => setFile(e.target.files[0]);
 $("#dropzone").ondragover = (e) => {
   e.preventDefault();
@@ -400,13 +478,17 @@ $("#import-form").onsubmit = async (e) => {
     if (state.source === "file") {
       if (!state.file)
         throw new Error("Escolha ou arraste um arquivo de áudio.");
-      const data = new FormData();
-      data.append("file", state.file);
-      data.append("options", JSON.stringify(options()));
       const video = $("#file-youtube-url").value.trim();
-      if (video) data.append("youtube_url", video);
-      p = await api("/api/import/file", { method: "POST", body: data });
+      p = await uploadAudio(state.file, video);
       $("#file-youtube-url").value = "";
+    } else if (youtubeImportMethod && !youtubeImportMethod.hidden && youtubeImportMode.value === "local") {
+      const url = $("#youtube-url").value.trim();
+      if (!url) throw new Error("Cole o link do vídeo do YouTube.");
+      button.textContent = "Obtendo áudio neste aparelho…";
+      const file = await getLocalAudio(url);
+      button.textContent = "Enviando áudio para separação…";
+      p = await uploadAudio(file, url);
+      localAudio = null;
     } else {
       p = await api("/api/import/youtube", {
         method: "POST",
