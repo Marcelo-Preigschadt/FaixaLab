@@ -35,8 +35,6 @@
     if (!banner) return;
     banner.hidden = !message;
     banner.querySelector('span').textContent = message;
-    document.getElementById('new-project').disabled = Boolean(message);
-    document.getElementById('start-import').disabled = Boolean(message);
     document.getElementById('pages-signout').hidden = Boolean(message) || !connected();
   }
   const error = (detail, statusCode) => new Response(JSON.stringify({ detail }), { status: statusCode });

@@ -384,6 +384,20 @@
             disabled
           />
           <p class="small muted">Cole o link e escolha as opções de separação.</p>
+          <div id="youtube-import-method" hidden>
+            <label class="field-label" for="youtube-import-mode">Origem do áudio</label>
+            <select id="youtube-import-mode">
+              <option value="local">Importar neste aparelho</option>
+              <option value="cloud">Importar pelo servidor</option>
+            </select>
+            <p class="small muted" id="youtube-import-help"></p>
+            <p class="small">
+              <a id="youtube-import-download" target="_blank" rel="noopener"
+                href="https://marcelo-preigschadt.github.io/FaixaLab/FaixaLab_Importador.zip"
+                >Baixar importador</a>
+              <button id="youtube-select-file" class="button secondary" type="button">Escolher arquivo de áudio</button>
+            </p>
+          </div>
         </div>
         <div class="options-grid">
           <label
