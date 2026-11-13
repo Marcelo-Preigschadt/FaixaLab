@@ -423,6 +423,7 @@ async function getLocalAudio(url) {
   try {
     response = await fetch("http://127.0.0.1:17861/import", {
       method: "POST",
+      targetAddressSpace: "loopback",
       headers: { "Content-Type": "application/json", "X-FaixaLab-Import": "1" },
       credentials: "omit",
       redirect: "error",
