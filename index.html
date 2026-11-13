@@ -9,8 +9,8 @@
     <script src="./guitar.js" defer></script>
     <meta name="referrer" content="no-referrer" />
     <script src="./pages-config.js" defer></script>
-    <script src="./pages-connection.js?v=f8f0efef10d5" defer></script>
-    <script src="./app.js?v=06d68285e324" defer></script>
+    <script src="./pages-connection.js?v=82cabd8ef8d9" defer></script>
+    <script src="./app.js?v=35363674081f" defer></script>
     <link rel="stylesheet" href="./mobile.css" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <meta name="theme-color" content="#101213" />
@@ -393,6 +393,20 @@
             disabled
           />
           <p class="small muted">Cole o link e escolha as opções de separação.</p>
+          <div id="youtube-import-method" hidden>
+            <label class="field-label" for="youtube-import-mode">Origem do áudio</label>
+            <select id="youtube-import-mode">
+              <option value="local">Importar neste aparelho</option>
+              <option value="cloud">Importar pelo servidor</option>
+            </select>
+            <p class="small muted" id="youtube-import-help"></p>
+            <p class="small">
+              <a id="youtube-import-download" target="_blank" rel="noopener"
+                href="https://marcelo-preigschadt.github.io/FaixaLab/FaixaLab_Importador.zip"
+                >Baixar importador</a>
+              <button id="youtube-select-file" class="button secondary" type="button">Escolher arquivo de áudio</button>
+            </p>
+          </div>
         </div>
         <div class="options-grid">
           <label
