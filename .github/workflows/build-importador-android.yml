@@ -22,11 +22,15 @@ jobs:
           git checkout --detach FETCH_HEAD
       - name: Compilar APK de teste
         run: |
+          export JAVA_HOME="${JAVA_HOME_21_X64:?JDK 21 indisponível}"
+          export PATH="$JAVA_HOME/bin:$PATH"
           curl -fsSL --retry 2 --max-time 90 https://downloads.gradle.org/distributions/gradle-8.11.1-bin.zip -o "$RUNNER_TEMP/gradle.zip"
           sum=$(curl -fsSL --retry 2 --max-time 30 https://downloads.gradle.org/distributions/gradle-8.11.1-bin.zip.sha256)
           printf '%s  %s\n' "$sum" "$RUNNER_TEMP/gradle.zip" | sha256sum -c
           unzip -q "$RUNNER_TEMP/gradle.zip" -d "$RUNNER_TEMP"
-          test -d "$ANDROID_HOME/platforms/android-35" || sdkmanager 'platforms;android-35'
+          if [[ ! -d "$ANDROID_HOME/platforms/android-35" || ! -d "$ANDROID_HOME/build-tools/35.0.0" ]]; then
+            sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+          fi
           "$RUNNER_TEMP/gradle-8.11.1/bin/gradle" -p android :app:assembleDebug --no-daemon
       - name: Validar pacote e extrator
         run: |
