@@ -392,11 +392,17 @@
             </select>
             <p class="small muted" id="youtube-import-help"></p>
             <p class="small">
-              <a id="youtube-import-download" target="_blank" rel="noopener"
-                href="https://marcelo-preigschadt.github.io/FaixaLab/FaixaLab_Importador.zip"
-                >Baixar importador</a>
+              <a id="youtube-import-download" class="button primary" hidden>Instalar importador</a>
               <button id="youtube-select-file" class="button secondary" type="button">Escolher arquivo de áudio</button>
             </p>
+            <details id="youtube-import-android" hidden>
+              <summary>Configurar o importador no Android</summary>
+              <p class="small">Abra o <a href="https://f-droid.org/packages/com.termux/" target="_blank" rel="noopener">Termux</a> e execute este comando uma vez.</p>
+              <p class="small">
+                <button id="youtube-copy-android" class="button secondary" type="button">Copiar comando</button>
+                <code id="youtube-android-command" style="overflow-wrap:anywhere"></code>
+              </p>
+            </details>
           </div>
         </div>
         <div class="options-grid">

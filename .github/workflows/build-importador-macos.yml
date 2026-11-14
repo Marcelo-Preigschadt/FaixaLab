@@ -1,0 +1,31 @@
+name: Compilar instalador macOS do FaixaLab
+
+on:
+  push:
+    branches: [faixalab-instalador]
+    paths:
+      - '.github/workflows/build-importador-macos.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: macos-latest
+    timeout-minutes: 8
+    steps:
+      - name: Obter o código da revisão
+        run: |
+          git init .
+          git fetch --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" "${GITHUB_SHA}"
+          git checkout --detach FETCH_HEAD
+      - name: Gerar e verificar o pacote
+        run: |
+          python3 online/installers/build.py macos Instalar_FaixaLab_macOS.pkg
+          pkgutil --expand-full Instalar_FaixaLab_macOS.pkg "${RUNNER_TEMP}/faixalab"
+          test -n "$(find "${RUNNER_TEMP}/faixalab" -name Preparar.command -type f -perm -100)"
+          test -n "$(find "${RUNNER_TEMP}/faixalab" -name local_import.py -type f)"
+      - name: Publicar na versão existente
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload v0.10.1 Instalar_FaixaLab_macOS.pkg --repo "${GITHUB_REPOSITORY}" --clobber
