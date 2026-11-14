@@ -20,8 +20,7 @@ for (const asset of ['style.css', 'studio.css', 'mobile.css', 'app.js', 'guitar.
 const connectionScript = readFileSync(path.join(here, 'pages-connection.js'));
 const connectionVersion = version(connectionScript);
 writeFileSync(path.join(output, 'pages-connection.js'), connectionScript);
-const config = { backend: `https://${codespace}-7861.app.github.dev`,
-                 connect: `https://${codespace}-7860.app.github.dev/connect-pages` };
+const config = { backend: `https://${codespace}-7861.app.github.dev` };
 writeFileSync(path.join(output, 'pages-config.js'), 'window.faixaLabPagesConfig = ' + JSON.stringify(config) + ';\n');
 
 const html = readFileSync(path.join(web, 'index.html'), 'utf8')
@@ -29,14 +28,14 @@ const html = readFileSync(path.join(web, 'index.html'), 'utf8')
   .replace('href="./style.css"', 'href="./style.css?v=' + version(readFileSync(path.join(web, 'style.css'))) + '"')
   .replace('<script src="./app.js" defer></script>',
     '<meta name="referrer" content="no-referrer" />\n    <script src="./pages-config.js" defer></script>\n    <script src="./pages-connection.js?v=' + connectionVersion + '" defer></script>\n    <script src="./app.js?v=' + version(readFileSync(path.join(web, 'app.js'))) + '" defer></script>')
-  .replace('Processamento local', 'Processamento no Codespace')
-  .replace('Suas músicas ficam salvas neste computador.', 'Suas músicas ficam salvas no Codespace.')
-  .replace('no seu computador. O link', 'no Codespace. O link')
+  .replace('Processamento local', 'Processamento online')
+  .replace('Suas músicas ficam salvas neste computador.', 'Suas músicas online ficam salvas no servidor.')
   .replace('<main>', `<main>
       <aside id="pages-connection" role="status" hidden>
         <span></span>
         <div id="pages-google" hidden></div>
-        <button class="button primary" id="pages-owner-connect" type="button" data-resume-url="https://${codespace}.github.dev">Conectar ao FaixaLab</button>
+        <a id="pages-device-action" class="button primary" href="#" hidden></a>
+        <button class="button secondary" id="pages-retry" type="button" hidden>Tentar novamente</button>
       </aside>`)
   .replace('<div class="top-actions">', '<div class="top-actions"><button id="pages-signout" class="button secondary" hidden>Sair</button>')
   .replace('</head>', '<style>#pages-connection:not([hidden]){display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 16px;background:#1d272a;color:#dde7ea;border-bottom:1px solid #3b4950;flex-wrap:wrap}#pages-connection [hidden],#pages-signout[hidden]{display:none}</style>\n  </head>');

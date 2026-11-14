@@ -32,6 +32,13 @@ def windows(client, output):
     ], check=True)
 
 
+def windows_desktop(output):
+    subprocess.run([
+        'makensis', '-WX', '-V3', f'-DOUTPUT={output}', f'-DBOOTSTRAP={HERE / "windows-desktop.ps1"}',
+        str(HERE / 'windows-desktop.nsi'),
+    ], check=True)
+
+
 def linux(client, output):
     for unused in ['INICIAR.bat', 'INSTALAR.bat', 'importador.pyw']:
         (client / unused).unlink()
@@ -83,10 +90,13 @@ def macos(client, output):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('target', choices=['windows', 'linux', 'macos'])
+    parser.add_argument('target', choices=['windows', 'windows-desktop', 'linux', 'macos'])
     parser.add_argument('output', type=Path)
     args = parser.parse_args()
     output = args.output.resolve()
+    if args.target == 'windows-desktop':
+        windows_desktop(output)
+        return
     with tempfile.TemporaryDirectory(prefix='faixalab-package-') as directory:
         client = stage_client(Path(directory))
         globals()[args.target](client, output)
