@@ -22,5 +22,5 @@ if errorlevel 1 goto erro
 exit /b 0
 :erro
 echo Falha na instalacao. Execute INSTALAR.bat para tentar novamente.
-pause
+if /I not "%~1"=="/quiet" pause
 exit /b 1

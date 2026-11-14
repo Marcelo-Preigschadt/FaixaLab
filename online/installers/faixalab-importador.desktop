@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Importador FaixaLab
+Comment=Importa áudio no mesmo aparelho que acessa o FaixaLab
+Exec=faixalab-importador
+Icon=faixalab-importador
+Terminal=true
+Categories=AudioVideo;
