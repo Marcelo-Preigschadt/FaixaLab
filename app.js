@@ -382,6 +382,7 @@ function setFile(file) {
 const youtubeImportMode = $("#youtube-import-mode");
 const youtubeImportMethod = $("#youtube-import-method");
 let localAudio;
+let localImportPort = 17861;
 
 function saveLocalAudio(file) {
   const url = URL.createObjectURL(file);
@@ -407,22 +408,23 @@ function setupLocalImport() {
     : /^Mac/i.test(platform) || /Macintosh/i.test(agent) ? "macos"
     : /Linux/i.test(agent + platform) ? "linux" : "other";
   const instructions = {
-    windows: "Instale ou abra o FaixaLab para colar o link e separar as faixas no Windows.",
+    windows: "Instale o importador para obter o áudio no Chrome. Para separar sem o servidor, abra o FaixaLab completo.",
     macos: "Abra o pacote baixado, conclua a instalação e abra Importador FaixaLab em Aplicativos.",
     chromeos: "Com o Linux ativado no Chromebook, abra o pacote baixado em Arquivos e instale. Depois abra Importador FaixaLab.",
     linux: "Abra o pacote baixado no instalador do Debian ou Ubuntu. Depois abra Importador FaixaLab.",
-    android: "Com o importador aberto no Termux, você pode obter e salvar o áudio no Android. A separação no navegador usa o servidor.",
+    android: "Instale e abra o Importador FaixaLab. Volte a esta aba, cole o link e importe neste aparelho.",
     ios: "No iPhone ou iPad, selecione um áudio do app Arquivos ou tente importar pelo servidor.",
     other: "Escolha um arquivo de áudio ou tente importar pelo servidor.",
   };
   const installers = {
-    windows: ["Windows", "Instalar_FaixaLab_Desktop.exe"],
+    windows: ["Windows", "Instalar_FaixaLab_Windows.exe"],
+    android: ["Android", "https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/FaixaLab_Importador_Android.apk"],
     macos: ["macOS", "https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/Instalar_FaixaLab_macOS.pkg"],
     chromeos: ["Chromebook", "Instalar_FaixaLab_Linux.deb"],
     linux: ["Debian ou Ubuntu", "Instalar_FaixaLab_Linux.deb"],
   };
   const installer = installers[device];
-  const canRunLocally = (Boolean(installer) && device !== "windows") || device === "android";
+  const canRunLocally = Boolean(installer);
   youtubeImportMode.querySelector('[value="local"]').hidden = !canRunLocally;
   youtubeImportMode.querySelector('[value="local"]').disabled = !canRunLocally;
   youtubeImportMode.value = canRunLocally ? "local" : "cloud";
@@ -431,26 +433,20 @@ function setupLocalImport() {
     const [name, location] = installer;
     download.href = location.startsWith("https://") ? location : "./" + location;
     download.download = location.split("/").at(-1);
-    download.textContent = device === "windows" ? "Instalar FaixaLab no Windows" : "Instalar no " + name;
+    download.textContent = "Instalar importador no " + name;
     download.hidden = false;
   }
   if (device === "android") {
-    const command = 'pkg install -y curl && curl -fL https://marcelo-preigschadt.github.io/FaixaLab/Instalar_FaixaLab_Android.sh -o instalar-faixalab.sh && bash instalar-faixalab.sh';
-    $("#youtube-import-android").hidden = false;
-    $("#youtube-android-command").textContent = command;
-    $("#youtube-copy-android").onclick = async event => {
-      try {
-        await navigator.clipboard.writeText(command);
-        event.target.textContent = "Comando copiado";
-      } catch {
-        event.target.textContent = "Selecione e copie o comando";
-      }
-    };
+    localImportPort = 17862;
+    const open = $("#youtube-open-importer");
+    const fallback = encodeURIComponent(download.href);
+    open.href = `intent://abrir/#Intent;scheme=faixalab-importador;package=io.github.faixalab.android;S.browser_fallback_url=${fallback};end`;
+    open.hidden = false;
   }
   if (device === "windows") {
     const open = $("#youtube-open-desktop");
     open.hidden = false;
-    $("#pages-device-action").href = download.href;
+    $("#pages-device-action").href = "./Instalar_FaixaLab_Desktop.exe";
     $("#pages-device-action").textContent = "Instalar FaixaLab no Windows";
     $("#pages-device-action").hidden = false;
   } else if (canRunLocally) {
@@ -461,6 +457,8 @@ function setupLocalImport() {
       openImport();
       $('[data-source="youtube"]').click();
     };
+  }
+  if (canRunLocally) {
     const save = $("#youtube-save-local");
     save.hidden = false;
     save.onclick = () => {
@@ -481,7 +479,7 @@ async function getLocalAudio(url) {
   if (localAudio?.url === url) return localAudio.file;
   let response;
   try {
-    response = await fetch("http://127.0.0.1:17861/import", {
+    response = await fetch(`http://127.0.0.1:${localImportPort}/import`, {
       method: "POST",
       targetAddressSpace: "loopback",
       headers: { "Content-Type": "application/json", "X-FaixaLab-Import": "1" },
