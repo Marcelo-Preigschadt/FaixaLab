@@ -1,0 +1,51 @@
+plugins {
+    id "com.android.application" version "8.9.3"
+}
+
+android {
+    namespace "io.github.faixalab.android"
+    compileSdk 35
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+
+    defaultConfig {
+        applicationId "io.github.faixalab.android"
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName "1.0"
+        ndk { abiFilters "arm64-v8a", "armeabi-v7a", "x86_64" }
+    }
+    packaging { jniLibs { useLegacyPackaging = true } }
+}
+
+dependencies {
+    implementation "io.github.junkfood02.youtubedl-android:library:0.18.1"
+    implementation "org.nanohttpd:nanohttpd:2.3.1"
+}
+
+def runtime = layout.buildDirectory.file("download/yt-dlp")
+def runtimeResources = layout.buildDirectory.dir("generated/runtime")
+tasks.register("prepareExtractor") {
+    inputs.file("build.gradle")
+    outputs.file(runtimeResources.map { it.file("raw/ytdlp") })
+    doLast {
+        def archive = runtime.get().asFile
+        archive.parentFile.mkdirs()
+        def url = "https://github.com/yt-dlp/yt-dlp/releases/download/2026.10.26/yt-dlp"
+        def expected = "e51e69e89489f199530f13d32a4342da3ddb2cf34842f364603a066db05afbf3"
+        def downloaded = System.getenv("FAIXALAB_YTDLP_PREBUILT")
+        if (downloaded) {
+            java.nio.file.Files.copy(file(downloaded).toPath(), archive.toPath(),
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+        } else {
+            exec { commandLine "curl", "-fsSL", "--retry", "2", "--max-time", "120", url, "-o", archive }
+        }
+        def actual = java.security.MessageDigest.getInstance("SHA-256").digest(archive.bytes).encodeHex().toString()
+        if (actual != expected) throw new GradleException("O SHA-256 do yt-dlp não confere.")
+        def resource = runtimeResources.get().file("raw/ytdlp").asFile
+        resource.parentFile.mkdirs()
+        java.nio.file.Files.copy(archive.toPath(), resource.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+    }
+}
+android.sourceSets.main.res.srcDir(runtimeResources)
+tasks.named("preBuild").configure { dependsOn("prepareExtractor") }
