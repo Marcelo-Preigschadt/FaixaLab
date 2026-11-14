@@ -393,20 +393,49 @@ function setupLocalImport() {
     : /Android/i.test(agent + platform) ? "android"
     : /CrOS|Chrome OS/i.test(agent + platform) ? "chromeos"
     : /Windows|Win32|Win64/i.test(agent + platform) ? "windows"
+    : /^Mac/i.test(platform) || /Macintosh/i.test(agent) ? "macos"
     : /Linux/i.test(agent + platform) ? "linux" : "other";
   const instructions = {
-    windows: "No Windows, abra INICIAR.bat e permita acesso local se o navegador solicitar.",
-    chromeos: "No Chromebook, ative o ambiente Linux e execute iniciar.sh nele.",
-    linux: "No Linux, execute iniciar.sh para abrir o importador.",
-    android: "No Android, abra o importador no Termux com iniciar-android.sh e volte ao Chrome.",
-    ios: "No iPhone ou iPad, use um áudio do app Arquivos ou tente importar pelo servidor.",
+    windows: "Clique em instalar, abra o arquivo baixado e conclua o assistente. O importador inicia sozinho.",
+    macos: "Abra o pacote baixado, conclua a instalação e abra Importador FaixaLab em Aplicativos.",
+    chromeos: "Com o Linux ativado no Chromebook, abra o pacote baixado em Arquivos e instale. Depois abra Importador FaixaLab.",
+    linux: "Abra o pacote baixado no instalador do Debian ou Ubuntu. Depois abra Importador FaixaLab.",
+    android: "Configure o importador no Termux e volte ao Chrome com o importador aberto.",
+    ios: "No iPhone ou iPad, selecione um áudio do app Arquivos ou tente importar pelo servidor.",
     other: "Escolha um arquivo de áudio ou tente importar pelo servidor.",
   };
-  const canRunLocally = ["windows", "chromeos", "linux", "android"].includes(device);
+  const installers = {
+    windows: ["Windows", "Instalar_FaixaLab_Windows.exe"],
+    macos: ["macOS", "https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/Instalar_FaixaLab_macOS.pkg"],
+    chromeos: ["Chromebook", "Instalar_FaixaLab_Linux.deb"],
+    linux: ["Debian ou Ubuntu", "Instalar_FaixaLab_Linux.deb"],
+  };
+  const installer = installers[device];
+  const canRunLocally = Boolean(installer) || device === "android";
   youtubeImportMode.querySelector('[value="local"]').hidden = !canRunLocally;
   youtubeImportMode.querySelector('[value="local"]').disabled = !canRunLocally;
   youtubeImportMode.value = canRunLocally ? "local" : "cloud";
-  $("#youtube-import-download").hidden = !canRunLocally;
+  const download = $("#youtube-import-download");
+  if (installer) {
+    const [name, location] = installer;
+    download.href = location.startsWith("https://") ? location : "./" + location;
+    download.download = location.split("/").at(-1);
+    download.textContent = "Instalar no " + name;
+    download.hidden = false;
+  }
+  if (device === "android") {
+    const command = 'pkg install -y curl && curl -fL https://marcelo-preigschadt.github.io/FaixaLab/Instalar_FaixaLab_Android.sh -o instalar-faixalab.sh && bash instalar-faixalab.sh';
+    $("#youtube-import-android").hidden = false;
+    $("#youtube-android-command").textContent = command;
+    $("#youtube-copy-android").onclick = async event => {
+      try {
+        await navigator.clipboard.writeText(command);
+        event.target.textContent = "Comando copiado";
+      } catch {
+        event.target.textContent = "Selecione e copie o comando";
+      }
+    };
+  }
   $("#youtube-import-help").textContent = instructions[device];
   youtubeImportMethod.hidden = false;
   $("#youtube-url").addEventListener("input", () => { localAudio = null; });
