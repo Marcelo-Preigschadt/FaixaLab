@@ -1,0 +1,44 @@
+name: Compilar importador Android do FaixaLab
+
+on:
+  push:
+    branches: [faixalab-android-app]
+    paths:
+      - 'android/**'
+      - '.github/workflows/build-importador-android.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Obter a revisão
+        run: |
+          git init .
+          git fetch --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" "${GITHUB_SHA}"
+          git checkout --detach FETCH_HEAD
+      - name: Compilar APK de teste
+        run: |
+          export JAVA_HOME="${JAVA_HOME_21_X64:?JDK 21 indisponível}"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          curl -fsSL --retry 2 --max-time 90 https://downloads.gradle.org/distributions/gradle-8.11.1-bin.zip -o "$RUNNER_TEMP/gradle.zip"
+          sum=$(curl -fsSL --retry 2 --max-time 30 https://downloads.gradle.org/distributions/gradle-8.11.1-bin.zip.sha256)
+          printf '%s  %s\n' "$sum" "$RUNNER_TEMP/gradle.zip" | sha256sum -c
+          unzip -q "$RUNNER_TEMP/gradle.zip" -d "$RUNNER_TEMP"
+          if [[ ! -d "$ANDROID_HOME/platforms/android-35" || ! -d "$ANDROID_HOME/build-tools/35.0.0" ]]; then
+            sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+          fi
+          "$RUNNER_TEMP/gradle-8.11.1/bin/gradle" -p android :app:assembleDebug --no-daemon
+      - name: Validar pacote e extrator
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk FaixaLab_Importador_Android.apk
+          apksigner=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
+          "$apksigner" verify --print-certs FaixaLab_Importador_Android.apk
+          unzip -p FaixaLab_Importador_Android.apk res/raw/ytdlp | sha256sum | cut -d' ' -f1 | grep -Fx e51e69e89489f199530f13d32a4342da3ddb2cf34842f364603a066db05afbf3
+      - name: Publicar APK de teste
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload v0.10.1 FaixaLab_Importador_Android.apk --repo "${GITHUB_REPOSITORY}"
