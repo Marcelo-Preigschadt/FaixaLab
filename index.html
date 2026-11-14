@@ -9,8 +9,8 @@
     <script src="./guitar.js" defer></script>
     <meta name="referrer" content="no-referrer" />
     <script src="./pages-config.js" defer></script>
-    <script src="./pages-connection.js?v=82cabd8ef8d9" defer></script>
-    <script src="./app.js?v=5f6e1c5bbf4e" defer></script>
+    <script src="./pages-connection.js?v=6f09a05f64f3" defer></script>
+    <script src="./app.js?v=27f4b8e0d335" defer></script>
     <link rel="stylesheet" href="./mobile.css" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <meta name="theme-color" content="#101213" />
@@ -32,10 +32,10 @@
       <button id="dictionary-toggle" class="rail-button" title="Dicionário de acordes" aria-label="Dicionário de acordes">▦</button>
       <div class="nav-label">BIBLIOTECA <span id="project-count">0</span></div>
       <div id="project-list" class="project-list">
-        <p class="muted small">Suas músicas ficam salvas no Codespace.</p>
+        <p class="muted small">Suas músicas online ficam salvas no servidor.</p>
       </div>
       <div class="sidebar-bottom">
-        <span class="status-dot"></span> Processamento no Codespace
+        <span class="status-dot"></span> Processamento online
         <button
           class="icon-button"
           id="about"
@@ -50,7 +50,8 @@
       <aside id="pages-connection" role="status" hidden>
         <span></span>
         <div id="pages-google" hidden></div>
-        <button class="button primary" id="pages-owner-connect" type="button" data-resume-url="https://expert-space-funicular-gjxr569wq4939wg9.github.dev">Conectar ao FaixaLab</button>
+        <a id="pages-device-action" class="button primary" href="#" hidden></a>
+        <button class="button secondary" id="pages-retry" type="button" hidden>Tentar novamente</button>
       </aside>
       <header class="topbar">
         <div class="breadcrumb">
@@ -402,6 +403,8 @@
             <p class="small muted" id="youtube-import-help"></p>
             <p class="small">
               <a id="youtube-import-download" class="button primary" hidden>Instalar importador</a>
+              <a id="youtube-open-desktop" class="button secondary" href="faixalab-local://open" hidden>Abrir FaixaLab instalado</a>
+              <button id="youtube-save-local" class="button secondary" type="button" hidden>Salvar áudio neste aparelho</button>
               <button id="youtube-select-file" class="button secondary" type="button">Escolher arquivo de áudio</button>
             </p>
             <details id="youtube-import-android" hidden>
@@ -492,7 +495,7 @@
       </p>
       <p>
         Os modelos de separação e transcrição são baixados no primeiro uso. A IA de acordes já acompanha este pacote. Os projetos e resultados ficam
-        no Codespace. O link do YouTube depende da disponibilidade do vídeo
+        no seu computador. O link do YouTube depende da disponibilidade do vídeo
         e do acesso permitido pelo serviço.
       </p>
     </dialog>
