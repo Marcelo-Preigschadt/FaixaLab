@@ -1,12 +1,14 @@
 # Importador FaixaLab para Android
 
-O aplicativo instala o extrator yt-dlp e o runtime QuickJS no Android. O botão
-**Abrir importador** do FaixaLab inicia o aplicativo. Ao voltar para a mesma aba
-no Chrome, **Importar neste aparelho** envia o link para o serviço local. O
-aplicativo volta a parar após cinco minutos sem atividade.
+O app **FaixaLab Áudio** obtém o áudio com yt-dlp e QuickJS no Android. Abra o
+aplicativo e cole o link ou use **Salvar no app Android** no site. O arquivo
+fica em Downloads no Android 10 ou mais recente. No Android 8 e 9, o sistema
+pede que o usuário escolha o destino. O aplicativo confirma a gravação na
+própria tela e permite abrir o arquivo salvo.
 
-O serviço escuta em 127.0.0.1:17862 e aceita chamadas apenas da origem HTTPS do
-FaixaLab. O navegador recebe o áudio e pode salvá-lo ou enviá-lo ao servidor
+Para separar pelo site, **Abrir importador** ativa o serviço local por cinco
+minutos de inatividade. Ele escuta em 127.0.0.1:17863 e aceita chamadas apenas
+da origem HTTPS do FaixaLab. O navegador recebe o áudio e o envia ao servidor
 de separação. O serviço local não usa credenciais do Codespace.
 
 ## Compilação
