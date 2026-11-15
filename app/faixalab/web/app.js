@@ -412,13 +412,13 @@ function setupLocalImport() {
     macos: "Abra o pacote baixado, conclua a instalação e abra Importador FaixaLab em Aplicativos.",
     chromeos: "Com o Linux ativado no Chromebook, abra o pacote baixado em Arquivos e instale. Depois abra Importador FaixaLab.",
     linux: "Abra o pacote baixado no instalador do Debian ou Ubuntu. Depois abra Importador FaixaLab.",
-    android: "Instale e abra o Importador FaixaLab. Volte a esta aba, cole o link e importe neste aparelho.",
+    android: "Cole o link e toque em Salvar no app Android. O importador mostra o resultado e grava em Downloads.",
     ios: "No iPhone ou iPad, selecione um áudio do app Arquivos ou tente importar pelo servidor.",
     other: "Escolha um arquivo de áudio ou tente importar pelo servidor.",
   };
   const installers = {
     windows: ["Windows", "Instalar_FaixaLab_Windows.exe"],
-    android: ["Android", "https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/FaixaLab_Importador_Android.apk"],
+    android: ["Android", "https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/FaixaLab_Importador_Android_1_1.apk"],
     macos: ["macOS", "https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/Instalar_FaixaLab_macOS.pkg"],
     chromeos: ["Chromebook", "Instalar_FaixaLab_Linux.deb"],
     linux: ["Debian ou Ubuntu", "Instalar_FaixaLab_Linux.deb"],
@@ -437,10 +437,10 @@ function setupLocalImport() {
     download.hidden = false;
   }
   if (device === "android") {
-    localImportPort = 17862;
+    localImportPort = 17863;
     const open = $("#youtube-open-importer");
     const fallback = encodeURIComponent(download.href);
-    open.href = `intent://abrir/#Intent;scheme=faixalab-importador;package=io.github.faixalab.android;S.browser_fallback_url=${fallback};end`;
+    open.href = `intent://abrir/#Intent;scheme=faixalab-importador;package=io.github.faixalab.importador;S.browser_fallback_url=${fallback};end`;
     open.hidden = false;
   }
   if (device === "windows") {
@@ -461,9 +461,27 @@ function setupLocalImport() {
   if (canRunLocally) {
     const save = $("#youtube-save-local");
     save.hidden = false;
-    save.onclick = () => {
-      if ($("#import-form").reportValidity()) void importAudio(true);
-    };
+    if (device === "android") {
+      save.textContent = "Salvar no app Android";
+      save.onclick = () => {
+        const field = $("#youtube-url");
+        if (!field.value.trim()) {
+          field.focus();
+          $("#import-error").textContent = "Cole o link do vídeo do YouTube.";
+          $("#import-error").hidden = false;
+          return;
+        }
+        if (!field.reportValidity()) return;
+        $("#import-error").hidden = true;
+        const url = encodeURIComponent(field.value.trim());
+        const apk = encodeURIComponent(download.href);
+        location.href = `intent://salvar/?url=${url}#Intent;scheme=faixalab-importador;package=io.github.faixalab.importador;S.browser_fallback_url=${apk};end`;
+      };
+    } else {
+      save.onclick = () => {
+        if ($("#import-form").reportValidity()) void importAudio(true);
+      };
+    }
   }
   $("#youtube-import-help").textContent = instructions[device];
   youtubeImportMethod.hidden = false;

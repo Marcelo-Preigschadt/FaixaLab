@@ -2,7 +2,7 @@ name: Compilar importador Android do FaixaLab
 
 on:
   push:
-    branches: [faixalab-android-app]
+    branches: [faixalab-android-save]
     paths:
       - 'android/**'
       - '.github/workflows/build-importador-android.yml'
@@ -34,11 +34,11 @@ jobs:
           "$RUNNER_TEMP/gradle-8.11.1/bin/gradle" -p android :app:assembleDebug --no-daemon
       - name: Validar pacote e extrator
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk FaixaLab_Importador_Android.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk FaixaLab_Importador_Android_1_1.apk
           apksigner=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
-          "$apksigner" verify --print-certs FaixaLab_Importador_Android.apk
-          unzip -p FaixaLab_Importador_Android.apk res/raw/ytdlp | sha256sum | cut -d' ' -f1 | grep -Fx e51e69e89489f199530f13d32a4342da3ddb2cf34842f364603a066db05afbf3
+          "$apksigner" verify --print-certs FaixaLab_Importador_Android_1_1.apk
+          unzip -p FaixaLab_Importador_Android_1_1.apk res/raw/ytdlp | sha256sum | cut -d' ' -f1 | grep -Fx e51e69e89489f199530f13d32a4342da3ddb2cf34842f364603a066db05afbf3
       - name: Publicar APK de teste
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload v0.10.1 FaixaLab_Importador_Android.apk --repo "${GITHUB_REPOSITORY}"
+        run: gh release upload v0.10.1 FaixaLab_Importador_Android_1_1.apk --repo "${GITHUB_REPOSITORY}"
