@@ -3,7 +3,7 @@
   const { backend } = window.faixaLabPagesConfig;
   const storageKey = 'faixalab-pages-session:' + backend;
   const signInMessage = 'Entre para acessar sua biblioteca e separar músicas.';
-  const unavailableMessage = 'A separação online está indisponível. Confira as opções para seu aparelho abaixo.';
+  const unavailableMessage = 'O servidor de separação está indisponível.';
   const fragment = new URLSearchParams(location.hash.slice(1));
   const api = fragment.get('faixalab_api');
   const media = fragment.get('faixalab_media');
@@ -74,18 +74,19 @@
         const result = await response.json();
         if (!response.ok) throw new Error(typeof result.detail === 'string' ? result.detail : 'Não foi possível entrar.');
         if (!tokenPattern.test(result.api) || !tokenPattern.test(result.media)) throw new Error('Sessão inválida.');
-        sessionStorage.setItem(storageKey, JSON.stringify({ api: result.api, media: result.media }));
-        location.reload();
+        session = { api: result.api, media: result.media };
+        try { sessionStorage.setItem(storageKey, JSON.stringify(session)); } catch {}
+        googleSetup = null;
+        document.getElementById('pages-retry').hidden = true;
+        status('');
+        document.dispatchEvent(new Event('faixalab-refresh'));
       } catch (failure) {
         status(failure.message);
         showRetry();
       }
     }
 
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client?hl=pt-BR';
-    script.async = true;
-    script.onload = () => {
+    function renderGoogleButton() {
       if (!window.google?.accounts?.id) {
         status('O login com Google está indisponível.');
         showRetry();
@@ -94,7 +95,15 @@
       google.accounts.id.initialize({ client_id: config.client_id, nonce: config.nonce, callback: signIn });
       button.hidden = false;
       google.accounts.id.renderButton(button, { theme: 'outline', size: 'large', locale: 'pt-BR' });
-    };
+    }
+    if (window.google?.accounts?.id) {
+      renderGoogleButton();
+      return true;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client?hl=pt-BR';
+    script.async = true;
+    script.onload = renderGoogleButton;
     script.onerror = () => {
       status('O login com Google está indisponível.');
       showRetry();
@@ -164,7 +173,11 @@
   };
 
   document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('pages-retry').addEventListener('click', () => location.reload());
+    document.getElementById('pages-retry').addEventListener('click', () => {
+      googleSetup = null;
+      document.getElementById('pages-retry').hidden = true;
+      document.dispatchEvent(new Event('faixalab-refresh'));
+    });
     document.getElementById('pages-signout').addEventListener('click', () => {
       try {
         sessionStorage.removeItem(storageKey);

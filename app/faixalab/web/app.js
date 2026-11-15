@@ -379,149 +379,172 @@ function setFile(file) {
   $("#file-title").textContent = file.name;
 }
 
-const youtubeImportMode = $("#youtube-import-mode");
-const youtubeImportMethod = $("#youtube-import-method");
+const youtubeUrlField = $("#youtube-url");
+const youtubeSetup = $("#youtube-import-setup");
+const youtubeDraftKey = "faixalab:youtube-draft";
 let localAudio;
-let localImportPort = 17861;
 
-function saveLocalAudio(file) {
-  const url = URL.createObjectURL(file);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = file.name;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 15000);
-}
-
-function setupLocalImport() {
-  if (!window.faixaLabPages || !youtubeImportMethod) return;
+function localImportSettings() {
+  if (!window.faixaLabPages) return null;
   const agent = navigator.userAgent;
   const platform = navigator.userAgentData?.platform || navigator.platform || "";
   const ios = /iPhone|iPad|iPod/i.test(agent) ||
     (/^Mac/i.test(platform) && navigator.maxTouchPoints > 1);
-  const device = ios ? "ios"
-    : /Android/i.test(agent + platform) ? "android"
-    : /CrOS|Chrome OS/i.test(agent + platform) ? "chromeos"
-    : /Windows|Win32|Win64/i.test(agent + platform) ? "windows"
-    : /^Mac/i.test(platform) || /Macintosh/i.test(agent) ? "macos"
-    : /Linux/i.test(agent + platform) ? "linux" : "other";
-  const instructions = {
-    windows: "Instale o importador para obter o áudio no Chrome. Para separar sem o servidor, abra o FaixaLab completo.",
-    macos: "Abra o pacote baixado, conclua a instalação e abra Importador FaixaLab em Aplicativos.",
-    chromeos: "Com o Linux ativado no Chromebook, abra o pacote baixado em Arquivos e instale. Depois abra Importador FaixaLab.",
-    linux: "Abra o pacote baixado no instalador do Debian ou Ubuntu. Depois abra Importador FaixaLab.",
-    android: "Cole o link e toque em Salvar no app Android. O importador mostra o resultado e grava em Downloads.",
-    ios: "No iPhone ou iPad, selecione um áudio do app Arquivos ou tente importar pelo servidor.",
-    other: "Escolha um arquivo de áudio ou tente importar pelo servidor.",
-  };
-  const installers = {
-    windows: ["Windows", "Instalar_FaixaLab_Windows.exe"],
-    android: ["Android", "https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/FaixaLab_Audio_Android.apk"],
-    macos: ["macOS", "https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/Instalar_FaixaLab_macOS.pkg"],
-    chromeos: ["Chromebook", "Instalar_FaixaLab_Linux.deb"],
-    linux: ["Debian ou Ubuntu", "Instalar_FaixaLab_Linux.deb"],
-  };
-  const installer = installers[device];
-  const canRunLocally = Boolean(installer);
-  youtubeImportMode.querySelector('[value="local"]').hidden = !canRunLocally;
-  youtubeImportMode.querySelector('[value="local"]').disabled = !canRunLocally;
-  youtubeImportMode.value = canRunLocally ? "local" : "cloud";
-  const download = $("#youtube-import-download");
-  if (installer) {
-    const [name, location] = installer;
-    download.href = location.startsWith("https://") ? location : "./" + location;
-    download.download = location.split("/").at(-1);
-    download.textContent = "Instalar importador no " + name;
-    download.hidden = false;
-  }
-  if (device === "android") {
-    localImportPort = 17863;
-    const open = $("#youtube-open-importer");
-    const fallback = encodeURIComponent(download.href);
-    open.href = `intent://abrir/#Intent;scheme=faixalab-importador;package=io.github.faixalab.importador;S.browser_fallback_url=${fallback};end`;
-    open.hidden = false;
-  }
-  if (device === "windows") {
-    const open = $("#youtube-open-desktop");
-    open.hidden = false;
-    $("#pages-device-action").href = "./Instalar_FaixaLab_Desktop.exe";
-    $("#pages-device-action").textContent = "Instalar FaixaLab no Windows";
-    $("#pages-device-action").hidden = false;
-  } else if (canRunLocally) {
-    $("#pages-device-action").textContent = device === "android" ? "Importar no Android" : "Importar neste aparelho";
-    $("#pages-device-action").hidden = false;
-    $("#pages-device-action").onclick = event => {
-      event.preventDefault();
-      openImport();
-      $('[data-source="youtube"]').click();
+  if (ios) return null;
+
+  const releases = "https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/";
+  if (/Android/i.test(agent + platform)) {
+    return {
+      platform: "Android",
+      ports: [17863, 17862],
+      install: releases + "FaixaLab_Audio_Android.apk",
+      help: "Instale uma vez. Se o importador estiver parado, toque em Abrir importador e volte a esta aba.",
     };
   }
-  if (canRunLocally) {
-    const save = $("#youtube-save-local");
-    save.hidden = false;
-    if (device === "android") {
-      save.textContent = "Salvar no app Android";
-      save.onclick = () => {
-        const field = $("#youtube-url");
-        if (!field.value.trim()) {
-          field.focus();
-          $("#import-error").textContent = "Cole o link do vídeo do YouTube.";
-          $("#import-error").hidden = false;
-          return;
-        }
-        if (!field.reportValidity()) return;
-        $("#import-error").hidden = true;
-        const url = encodeURIComponent(field.value.trim());
-        const apk = encodeURIComponent(download.href);
-        location.href = `intent://salvar/?url=${url}#Intent;scheme=faixalab-importador;package=io.github.faixalab.importador;S.browser_fallback_url=${apk};end`;
-      };
-    } else {
-      save.onclick = () => {
-        if ($("#import-form").reportValidity()) void importAudio(true);
-      };
-    }
+  if (/CrOS|Chrome OS/i.test(agent + platform)) {
+    return {
+      platform: "Chromebook",
+      ports: [17861],
+      install: "./Instalar_FaixaLab_Linux.deb",
+      help: "Instale o pacote no ambiente Linux do Chromebook e abra Importador FaixaLab.",
+    };
   }
-  $("#youtube-import-help").textContent = instructions[device];
-  youtubeImportMethod.hidden = false;
-  $("#youtube-url").addEventListener("input", () => { localAudio = null; });
-  $("#youtube-select-file").onclick = () => {
-    $('[data-source="file"]').click();
-    $("#audio-file").click();
-  };
+  if (/Windows|Win32|Win64/i.test(agent + platform)) {
+    return {
+      platform: "Windows",
+      ports: [17861],
+      install: "./Instalar_FaixaLab_Windows.exe",
+      help: "Abra o instalador baixado. O importador será iniciado ao final da instalação.",
+    };
+  }
+  if (/^Mac/i.test(platform) || /Macintosh/i.test(agent)) {
+    return {
+      platform: "macOS",
+      ports: [17861],
+      install: releases + "Instalar_FaixaLab_macOS.pkg",
+      help: "Instale o pacote e abra Importador FaixaLab em Aplicativos.",
+    };
+  }
+  if (/Linux/i.test(agent + platform)) {
+    return {
+      platform: "Debian ou Ubuntu",
+      ports: [17861],
+      install: "./Instalar_FaixaLab_Linux.deb",
+      help: "Instale o pacote e abra Importador FaixaLab no menu de aplicativos.",
+    };
+  }
+  return null;
 }
+
+const localImporter = localImportSettings();
+
+function setupLocalImport() {
+  if (!window.faixaLabPages) return;
+  const sourceTab = $('[data-source="youtube"]');
+  if (!localImporter) {
+    sourceTab.disabled = true;
+    const note = document.createElement("p");
+    note.className = "small muted";
+    note.textContent = "O importador do YouTube ainda não está disponível para este sistema.";
+    sourceTab.closest(".source-tabs").after(note);
+    return;
+  }
+  $("#youtube-import-help").textContent =
+    "O FaixaLab obtém o áudio neste aparelho e envia para a separação.";
+  $("#youtube-setup-help").textContent = localImporter.help;
+  youtubeSetup.hidden = false;
+  const install = $("#youtube-import-download");
+  install.href = localImporter.install;
+  install.textContent = "Instalar no " + localImporter.platform;
+
+  const deviceAction = $("#pages-device-action");
+  deviceAction.textContent = "Importar do YouTube";
+  deviceAction.hidden = false;
+  deviceAction.onclick = event => {
+    event.preventDefault();
+    openImport();
+    sourceTab.click();
+  };
+  youtubeUrlField.addEventListener("input", () => {
+    localAudio = null;
+    $("#import-error").hidden = true;
+    $("#import-submit").textContent = "Separar e analisar música";
+  });
+
+  if (localImporter.platform === "Android") {
+    const open = $("#youtube-open-importer");
+    const fallback = encodeURIComponent(install.href);
+    open.href = `intent://abrir/#Intent;scheme=faixalab-importador;S.browser_fallback_url=${fallback};end`;
+    open.hidden = false;
+    open.addEventListener("click", () => {
+      try { sessionStorage.setItem(youtubeDraftKey, youtubeUrlField.value); } catch {}
+    });
+    try {
+      const draft = sessionStorage.getItem(youtubeDraftKey);
+      sessionStorage.removeItem(youtubeDraftKey);
+      if (draft) {
+        youtubeUrlField.value = draft;
+        openImport();
+        sourceTab.click();
+      }
+    } catch {}
+  }
+}
+
 setupLocalImport();
+
+async function localNetworkDenied() {
+  for (const name of ["loopback-network", "local-network-access", "local-network"]) {
+    try {
+      const permission = await navigator.permissions.query({ name });
+      return permission.state === "denied";
+    } catch {}
+  }
+  return false;
+}
 
 async function getLocalAudio(url) {
   if (localAudio?.url === url) return localAudio.file;
+
   let response;
-  try {
-    response = await fetch(`http://127.0.0.1:${localImportPort}/import`, {
-      method: "POST",
-      targetAddressSpace: "loopback",
-      headers: { "Content-Type": "application/json", "X-FaixaLab-Import": "1" },
-      credentials: "omit",
-      redirect: "error",
-      signal: AbortSignal.timeout(250000),
-      body: JSON.stringify({ url }),
-    });
-  } catch (err) {
-    if (err.name === "TimeoutError") {
-      throw new Error("O importador demorou demais. Confira a janela do importador e tente novamente.");
+  for (const port of localImporter.ports) {
+    try {
+      response = await fetch(`http://127.0.0.1:${port}/import`, {
+        method: "POST",
+        targetAddressSpace: "loopback",
+        headers: { "Content-Type": "application/json", "X-FaixaLab-Import": "1" },
+        credentials: "omit",
+        redirect: "error",
+        signal: AbortSignal.timeout(250000),
+        body: JSON.stringify({ url }),
+      });
+      break;
+    } catch (err) {
+      if (err.name === "TimeoutError") {
+        throw new Error("O importador iniciou a solicitação, mas excedeu o tempo limite.");
+      }
     }
-    throw new Error("Abra o Importador FaixaLab neste aparelho e permita o acesso local no navegador.");
+  }
+
+  if (!response) {
+    youtubeSetup.open = true;
+    if (await localNetworkDenied()) {
+      throw new Error("O navegador bloqueou o acesso local ao importador. Permita o acesso nas configurações deste site.");
+    }
+    throw new Error("O FaixaLab não alcançou o importador local. Confira a instalação e abra o importador.");
   }
   if (!response.ok) {
     const error = await response.json().catch(() => null);
-    throw new Error(error?.detail || "A importação neste aparelho falhou.");
+    throw new Error(error?.detail || "O importador não conseguiu obter o áudio do YouTube.");
   }
+
   const encodedName = response.headers.get("X-FaixaLab-Filename");
   if (!encodedName) throw new Error("O importador não retornou um arquivo de áudio.");
   const blob = await response.blob();
   if (!blob.size) throw new Error("O importador retornou um arquivo vazio.");
   const file = new File([blob], decodeURIComponent(encodedName), { type: blob.type });
   localAudio = { url, file };
+  youtubeSetup.open = false;
   return file;
 }
 
@@ -544,53 +567,50 @@ $("#dropzone").ondrop = (e) => {
   $("#dropzone").classList.remove("dragging");
   setFile(e.dataTransfer.files[0]);
 };
-async function importAudio(saveOnly = false) {
+async function importAudio() {
   const button = $("#import-submit");
-  const save = $("#youtube-save-local");
+  if (button.disabled) return;
   button.disabled = true;
-  if (save) save.disabled = true;
   button.textContent = "Importando…";
   $("#import-error").hidden = true;
+  let pendingUpload = false;
   try {
     let p;
     if (state.source === "file") {
-      if (!state.file)
-        throw new Error("Escolha ou arraste um arquivo de áudio.");
+      if (!state.file) throw new Error("Escolha ou arraste um arquivo de áudio.");
       const video = $("#file-youtube-url").value.trim();
       p = await uploadAudio(state.file, video);
       $("#file-youtube-url").value = "";
-    } else if (youtubeImportMethod && !youtubeImportMethod.hidden && (saveOnly || youtubeImportMode.value === "local")) {
-      const url = $("#youtube-url").value.trim();
+    } else if (window.faixaLabPages) {
+      if (!localImporter) throw new Error("O importador do YouTube ainda não está disponível para este sistema.");
+      const url = youtubeUrlField.value.trim();
       if (!url) throw new Error("Cole o link do vídeo do YouTube.");
       button.textContent = "Obtendo áudio neste aparelho…";
       const file = await getLocalAudio(url);
-      if (saveOnly) {
-        saveLocalAudio(file);
-        return;
-      }
+      pendingUpload = true;
       button.textContent = "Enviando áudio para separação…";
       p = await uploadAudio(file, url);
+      pendingUpload = false;
       localAudio = null;
+      try { sessionStorage.removeItem(youtubeDraftKey); } catch {}
     } else {
       p = await api("/api/import/youtube", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          url: $("#youtube-url").value,
-          options: options(),
-        }),
+        body: JSON.stringify({ url: youtubeUrlField.value, options: options() }),
       });
     }
     $("#import-dialog").close();
     await selectProject(p.id);
     await refreshLibrary();
   } catch (err) {
-    $("#import-error").textContent = err.message;
+    $("#import-error").textContent = pendingUpload
+      ? "Áudio obtido neste aparelho. " + err.message + " Tente enviar novamente nesta aba."
+      : err.message;
     $("#import-error").hidden = false;
   } finally {
     button.disabled = false;
-    if (save) save.disabled = false;
-    button.innerHTML = "Separar e analisar música <span>→</span>";
+    button.textContent = pendingUpload ? "Tentar enviar novamente" : "Separar e analisar música";
   }
 }
 $("#import-form").onsubmit = event => {
@@ -1185,6 +1205,9 @@ setInterval(()=>{
      (['queued','processing'].includes(p.status)||['queued','processing'].includes(tab?.status)))poll();
 },1500);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')poll();});
+document.addEventListener("faixalab-refresh", () => {
+  refreshLibrary().catch(error => toast(error.message));
+});
 Promise.all([refreshLibrary(),api('/api/chord-dictionary').then(data=>{
   GuitarVoicings.install(data);
   try{for(const [label,shape] of Object.entries(JSON.parse(localStorage.getItem('faixalabVoicings')||'{}')))GuitarVoicings.prefer(label,shape);}catch{}

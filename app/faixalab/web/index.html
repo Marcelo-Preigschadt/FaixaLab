@@ -383,22 +383,15 @@
             maxlength="2000"
             disabled
           />
-          <p class="small muted">Cole o link e escolha as opções de separação.</p>
-          <div id="youtube-import-method" hidden>
-            <label class="field-label" for="youtube-import-mode">Origem do áudio</label>
-            <select id="youtube-import-mode">
-              <option value="local">Importar neste aparelho</option>
-              <option value="cloud">Importar pelo servidor</option>
-            </select>
-            <p class="small muted" id="youtube-import-help"></p>
+          <p class="small muted" id="youtube-import-help">Cole o link e escolha as opções de separação.</p>
+          <details id="youtube-import-setup" hidden>
+            <summary>Configurar importador do YouTube</summary>
+            <p class="small muted" id="youtube-setup-help"></p>
             <p class="small">
-              <a id="youtube-import-download" class="button primary" hidden>Instalar importador</a>
+              <a id="youtube-import-download" class="button primary">Instalar importador</a>
               <a id="youtube-open-importer" class="button secondary" hidden>Abrir importador</a>
-              <a id="youtube-open-desktop" class="button secondary" href="faixalab-local://open" hidden>Abrir FaixaLab instalado</a>
-              <button id="youtube-save-local" class="button secondary" type="button" hidden>Salvar áudio neste aparelho</button>
-              <button id="youtube-select-file" class="button secondary" type="button">Escolher arquivo de áudio</button>
             </p>
-          </div>
+          </details>
         </div>
         <div class="options-grid">
           <label
@@ -436,7 +429,7 @@
           ><input id="lyrics-option" type="checkbox" checked /> Gerar letra
           sincronizada</label
         >
-        <p id="import-error" class="form-error" hidden></p>
+        <p id="import-error" class="form-error" role="alert" hidden></p>
         <button
           id="import-submit"
           class="button primary wide large"
