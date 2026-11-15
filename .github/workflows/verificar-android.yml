@@ -1,0 +1,70 @@
+name: Testar áudio real no APK publicado
+on:
+  push:
+    branches: [verificar-faixalab-android]
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 11
+    env:
+      VIDEO_URL: https://www.youtube.com/watch?v=QrgX3HgbNuE
+      APK_URL: https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/FaixaLab_Audio_Android.apk
+    steps:
+      - name: Instalar e inicializar o Android de teste
+        run: |
+          set -euo pipefail
+          test -c /dev/kvm
+          sudo chown "$(id -u):$(id -g)" /dev/kvm
+          export PATH="$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH"
+          export JAVA_HOME="${JAVA_HOME_21_X64:?JDK 21 indisponível}"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          sdkmanager_path=$(find "$ANDROID_HOME" -type f -name sdkmanager | sort -V | tail -1)
+          test -x "$sdkmanager_path"
+          export PATH="$(dirname "$sdkmanager_path"):$PATH"
+          image='system-images;android-34;google_apis;x86_64'
+          sdkmanager --sdk_root="$ANDROID_HOME" emulator platform-tools "$image"
+          unset ANDROID_SDK_HOME
+          export ANDROID_USER_HOME="$RUNNER_TEMP/android-user"
+          export ANDROID_AVD_HOME="$ANDROID_USER_HOME/avd"
+          mkdir -p "$ANDROID_AVD_HOME"
+          avdmanager create avd --name faixalab-test --package "$image" --path "$ANDROID_AVD_HOME/faixalab-test.avd" --force <<< no
+          emulator -list-avds | grep -Fx faixalab-test
+          emulator -avd faixalab-test -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -cores 2 -memory 2048 > "$RUNNER_TEMP/faixalab-emulator.log" 2>&1 &
+          emulator_pid=$!
+          trap 'if [[ $? -ne 0 ]]; then tail -35 "$RUNNER_TEMP/faixalab-emulator.log"; fi' EXIT
+          adb start-server
+          for i in {1..45}; do
+            kill -0 "$emulator_pid"
+            if [[ $(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r') == 1 ]]; then break; fi
+            sleep 3
+          done
+          test "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1
+          adb shell input keyevent 82
+      - name: Obter e verificar o áudio no Android
+        run: |
+          set -euo pipefail
+          export PATH="$ANDROID_HOME/platform-tools:$PATH"
+          cd "$RUNNER_TEMP"
+          curl -fsSL --max-time 45 "$APK_URL" -o faixalab.apk
+          adb install faixalab.apk
+          adb shell am start -W -a android.intent.action.VIEW -d 'faixalab-importador://abrir' -n io.github.faixalab.importador/io.github.faixalab.android.ImportActivity
+          adb forward tcp:39082 tcp:17863
+          trap 'adb logcat -d -t 450 AndroidRuntime:E "*:S" || true' EXIT
+          for i in {1..15}; do
+            result=$(curl -s --max-time 3 -o /dev/null -w '%{http_code}' http://127.0.0.1:39082/import -X OPTIONS -H 'Host: 127.0.0.1:17863' -H 'Origin: https://marcelo-preigschadt.github.io' -H 'Access-Control-Request-Method: POST' || true)
+            if [[ "$result" == 204 ]]; then break; fi
+            sleep 1
+          done
+          echo "Resposta local do importador Android: HTTP $result."
+          test "$result" = 204
+          status=$(curl -sS --max-time 245 -o faixalab-audio -D response.headers -w '%{http_code}' -H 'Host: 127.0.0.1:17863' -H 'Origin: https://marcelo-preigschadt.github.io' -H 'X-FaixaLab-Import: 1' -H 'Content-Type: application/json' --data "$(jq -nc --arg url "$VIDEO_URL" '{url:$url}')" http://127.0.0.1:39082/import)
+          echo "Extração no APK: HTTP $status."
+          if [[ "$status" != 200 ]]; then
+            jq -r .detail faixalab-audio
+            exit 1
+          fi
+          ffprobe -v error -select_streams a:0 -show_entries stream=codec_name:format=duration,size -of json faixalab-audio
+          ffmpeg -nostdin -v error -xerror -i faixalab-audio -map 0:a:0 -f null -
+          echo 'Áudio do link do usuário decodificado por completo.'
