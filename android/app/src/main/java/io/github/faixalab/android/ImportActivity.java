@@ -1,6 +1,7 @@
 package io.github.faixalab.android;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
@@ -24,6 +25,7 @@ import java.util.concurrent.Executors;
 public final class ImportActivity extends Activity {
     private static final int SAVE_AUDIO = 1;
     private static final String PROCESS = "faixalab-android-save";
+    private static final Uri SITE = Uri.parse("https://marcelo-preigschadt.github.io/FaixaLab/");
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private EditText link;
     private TextView status;
@@ -73,20 +75,35 @@ public final class ImportActivity extends Activity {
         layout.addView(openFile);
 
         Button connect = new Button(this);
-        connect.setText("Conectar ao Chrome para separar faixas");
-        connect.setOnClickListener(view -> {
-            startForegroundService(new Intent(this, ImportService.class));
-            finish();
-        });
-        layout.addView(connect);
-        if (start != null && "abrir".equals(start.getHost())) {
+        if (start != null && "faixalab-importador".equals(start.getScheme()) && "abrir".equals(start.getHost())) {
             startForegroundService(new Intent(this, ImportService.class));
             connect.setText("Voltar ao navegador");
+            connect.setOnClickListener(view -> finish());
             status.setText("O importador foi iniciado. Volte ao FaixaLab ou salve o áudio por aqui.");
+        } else {
+            connect.setText("Abrir FaixaLab no navegador");
+            connect.setOnClickListener(view -> openSite());
         }
+        layout.addView(connect);
         ScrollView scroll = new ScrollView(this);
         scroll.addView(layout);
         setContentView(scroll);
+    }
+
+    private void openSite() {
+        startForegroundService(new Intent(this, ImportService.class));
+        Intent browser = new Intent(Intent.ACTION_VIEW, SITE).addCategory(Intent.CATEGORY_BROWSABLE);
+        try {
+            startActivity(new Intent(browser).setPackage("com.android.chrome"));
+        } catch (ActivityNotFoundException chromeUnavailable) {
+            try {
+                startActivity(browser);
+            } catch (ActivityNotFoundException browserUnavailable) {
+                status.setText("Nenhum navegador disponível para abrir o FaixaLab.");
+                return;
+            }
+        }
+        finish();
     }
 
     private void download() {
