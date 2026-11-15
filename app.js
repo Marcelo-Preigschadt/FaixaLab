@@ -503,11 +503,11 @@ async function localNetworkDenied() {
   return false;
 }
 
-async function getLocalAudio(url) {
-  if (localAudio?.url === url) return localAudio.file;
-
-  let response;
-  for (const port of localImporter.ports) {
+async function requestLocalAudio(port, url, onProgress) {
+  const waitUntil = performance.now() + 220000;
+  let waiting = false;
+  for (;;) {
+    let response;
     try {
       response = await fetch(`http://127.0.0.1:${port}/import`, {
         method: "POST",
@@ -518,12 +518,35 @@ async function getLocalAudio(url) {
         signal: AbortSignal.timeout(250000),
         body: JSON.stringify({ url }),
       });
-      break;
     } catch (err) {
       if (err.name === "TimeoutError") {
         throw new Error("O importador iniciou a solicitação, mas excedeu o tempo limite.");
       }
+      if (!waiting) return null;
+      youtubeSetup.open = true;
+      throw new Error("A conexão com o importador foi interrompida enquanto a tarefa anterior rodava.");
     }
+    if (response.status !== 409 && response.status !== 429) return response;
+
+    await response.body?.cancel().catch(() => {});
+    if (performance.now() >= waitUntil) {
+      youtubeSetup.open = true;
+      throw new Error("A tarefa anterior ainda ocupa o importador. Reinicie o importador no aparelho para liberar a fila.");
+    }
+    waiting = true;
+    onProgress("Aguardando a importação anterior…");
+    await new Promise(resolve => setTimeout(resolve, 2500));
+    onProgress("Obtendo áudio neste aparelho…");
+  }
+}
+
+async function getLocalAudio(url, onProgress) {
+  if (localAudio?.url === url) return localAudio.file;
+
+  let response;
+  for (const port of localImporter.ports) {
+    response = await requestLocalAudio(port, url, onProgress);
+    if (response) break;
   }
 
   if (!response) {
@@ -586,7 +609,7 @@ async function importAudio() {
       const url = youtubeUrlField.value.trim();
       if (!url) throw new Error("Cole o link do vídeo do YouTube.");
       button.textContent = "Obtendo áudio neste aparelho…";
-      const file = await getLocalAudio(url);
+      const file = await getLocalAudio(url, text => { button.textContent = text; });
       pendingUpload = true;
       button.textContent = "Enviando áudio para separação…";
       p = await uploadAudio(file, url);
@@ -618,7 +641,19 @@ $("#import-form").onsubmit = event => {
   void importAudio();
 };
 async function refreshLibrary() {
-  const list = await api("/api/projects");
+  let list;
+  try {
+    list = await api("/api/projects");
+  } catch (error) {
+    if (!window.faixaLabPages?.libraryNotice()) throw error;
+  }
+  const notice = window.faixaLabPages?.libraryNotice();
+  if (notice) {
+    $("#project-count").textContent = "—";
+    $("#project-list").innerHTML = '<p class="muted small"></p>';
+    $("#project-list").firstElementChild.textContent = notice;
+    return;
+  }
   $("#project-count").textContent = list.length;
   $("#project-list").innerHTML = list.length
     ? list
@@ -637,7 +672,9 @@ async function refreshLibrary() {
           return `<div class="project-row"><button type="button" class="project-item ${p.id === state.project?.id ? "current" : ""}" data-id="${p.id}"><span class="project-icon">♫</span><span><b>${escapeHTML(p.title)}</b><small>${subtitle}</small></span></button>${remove}</div>`;
         })
         .join("")
-    : '<p class="muted small">Suas músicas ficam salvas neste computador.</p>';
+    : window.faixaLabPages
+      ? '<p class="muted small">Sua biblioteca está vazia.</p>'
+      : '<p class="muted small">Suas músicas ficam salvas neste computador.</p>';
   $$(".project-item").forEach(
     (b) => (b.onclick = () => selectProject(b.dataset.id)),
   );
