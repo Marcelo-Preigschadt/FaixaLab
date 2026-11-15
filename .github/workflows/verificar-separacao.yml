@@ -1,0 +1,55 @@
+name: Testar uma separação no backend
+on:
+  push:
+    branches: [verificar-faixalab-separacao]
+permissions:
+  contents: read
+jobs:
+  separacao:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    env:
+      FAIXALAB_REVISION: 97638b9e24a155ace31dcf91514d7bd0677df906
+      FAIXALAB_ORIGIN: http://127.0.0.1:7860
+    steps:
+      - name: Preparar a revisão do Codespace
+        run: |
+          set -euo pipefail
+          git init -q "$RUNNER_TEMP/faixalab"
+          cd "$RUNNER_TEMP/faixalab"
+          git fetch --quiet --depth=1 https://github.com/Marcelo-Preigschadt/FaixaLab.git "$FAIXALAB_REVISION"
+          git checkout --quiet --detach FETCH_HEAD
+          python3.12 -m venv "$RUNNER_TEMP/venv"
+          source "$RUNNER_TEMP/venv/bin/activate"
+          pip install --quiet --index-url https://download.pytorch.org/whl/cpu torch==2.5.1 torchaudio==2.5.1
+          pip install --quiet -r app/requirements.txt
+      - name: Enviar WebM e decodificar as quatro faixas do Demucs
+        run: |
+          set -euo pipefail
+          source "$RUNNER_TEMP/venv/bin/activate"
+          export FAIXALAB_DATA_DIR="$RUNNER_TEMP/faixalab-data"
+          cd "$RUNNER_TEMP/faixalab/app"
+          python server.py --host 127.0.0.1 --port 7860 > "$RUNNER_TEMP/faixalab.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true; tail -n 30 "$RUNNER_TEMP/faixalab.log"' EXIT
+          curl -sSf --retry 20 --retry-delay 1 --retry-connrefused "$FAIXALAB_ORIGIN/api/health"
+          cd "$RUNNER_TEMP"
+          ffmpeg -v error -f lavfi -i 'sine=frequency=440:sample_rate=48000:duration=12' -f lavfi -i 'sine=frequency=110:sample_rate=48000:duration=12' -filter_complex '[0:a][1:a]amerge=inputs=2' -ac 2 -c:a libopus entrada.webm
+          curl -fsS -H "Origin: $FAIXALAB_ORIGIN" -F 'file=@entrada.webm;type=audio/webm' -F 'options={"stems":4,"quality":"fast","lyrics":false,"device":"cpu"}' "$FAIXALAB_ORIGIN/api/import/file" -o project.json
+          project_id=$(jq -re .id project.json)
+          for i in {1..75}; do
+            curl -fsS "$FAIXALAB_ORIGIN/api/projects/$project_id" -o project.json
+            status=$(jq -re .status project.json)
+            case "$status" in
+              ready|partial) break ;;
+              failed|interrupted|cancelled) jq '{status,stage,error}' project.json; exit 1 ;;
+            esac
+            sleep 4
+          done
+          jq '{status,stage,engine,warnings,stems:[.stems[].name]}' project.json
+          jq -e '(.status == "ready" or .status == "partial") and .engine.engine == "Demucs" and ([.stems[].name] | sort) == ["bass","drums","other","vocals"]' project.json
+          for name in vocals drums bass other; do
+            curl -fsS "$FAIXALAB_ORIGIN/api/projects/$project_id/audio/$name" -o "$name.wav"
+            ffmpeg -nostdin -v error -xerror -i "$name.wav" -map 0:a:0 -f null -
+          done
+          echo 'Upload WebM e quatro stems decodificados.'
