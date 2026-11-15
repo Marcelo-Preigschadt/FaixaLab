@@ -139,7 +139,8 @@ public final class ImportActivity extends Activity {
         Uri destination = null;
         boolean complete = false;
         try {
-            destination = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+            Uri downloads = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+            destination = getContentResolver().insert(downloads, values);
             if (destination == null) throw new IOException();
             copyAudio(audio, destination);
             values.clear();

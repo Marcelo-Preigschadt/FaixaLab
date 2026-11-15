@@ -418,7 +418,7 @@ function setupLocalImport() {
   };
   const installers = {
     windows: ["Windows", "Instalar_FaixaLab_Windows.exe"],
-    android: ["Android", "https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/FaixaLab_Importador_Android_1_1.apk"],
+    android: ["Android", "https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/FaixaLab_Audio_Android.apk"],
     macos: ["macOS", "https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/Instalar_FaixaLab_macOS.pkg"],
     chromeos: ["Chromebook", "Instalar_FaixaLab_Linux.deb"],
     linux: ["Debian ou Ubuntu", "Instalar_FaixaLab_Linux.deb"],
