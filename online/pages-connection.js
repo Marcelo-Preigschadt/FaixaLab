@@ -150,7 +150,7 @@
           unavailable = false;
           document.getElementById('pages-retry').hidden = true;
           status('');
-        } else if (response.status >= 500 || (initialCheck && response.status === 404)) {
+        } else if (response.status >= 500 || (library && response.status === 404)) {
           markUnavailable();
           showRetry();
         }
@@ -162,6 +162,11 @@
         if (initialCheck) return new Response('[]');
         return error(statusText, 503);
       }
+    },
+    libraryNotice() {
+      if (unavailable) return 'A biblioteca está indisponível enquanto o servidor não responde.';
+      if (!connected()) return 'Entre com Google para acessar sua biblioteca.';
+      return '';
     },
     mediaUrl(path) {
       if (!connected()) return '#';

@@ -1,7 +1,7 @@
 name: Testar importação do site
 on:
   push:
-    branches: [faixalab-site-import]
+    branches: [faixalab-site-import, faixalab-import-retry]
 permissions:
   contents: read
 jobs:
