@@ -15,6 +15,8 @@ jobs:
       - name: Preparar a revisão do Codespace
         run: |
           set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
           git init -q "$RUNNER_TEMP/faixalab"
           cd "$RUNNER_TEMP/faixalab"
           git fetch --quiet --depth=1 https://github.com/Marcelo-Preigschadt/FaixaLab.git "$FAIXALAB_REVISION"
