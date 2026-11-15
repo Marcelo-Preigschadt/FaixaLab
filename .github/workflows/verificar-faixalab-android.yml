@@ -18,10 +18,16 @@ jobs:
           test -c /dev/kvm
           sudo chown "$(id -u):$(id -g)" /dev/kvm
           export PATH="$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH"
+          export JAVA_HOME="${JAVA_HOME_21_X64:?JDK 21 indisponível}"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          sdkmanager_path=$(find "$ANDROID_HOME" -type f -name sdkmanager | sort -V | tail -1)
+          test -x "$sdkmanager_path"
+          export PATH="$(dirname "$sdkmanager_path"):$PATH"
           image='system-images;android-34;google_apis;x86_64'
-          sdkmanager "$image"
-          echo no | avdmanager create avd --name faixalab-test --package "$image" --force
+          sdkmanager emulator platform-tools "$image"
+          avdmanager create avd --name faixalab-test --package "$image" --force <<< no
           emulator -avd faixalab-test -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -cores 2 -memory 2048 > "$RUNNER_TEMP/faixalab-emulator.log" 2>&1 &
+          trap 'if [[ $? -ne 0 ]]; then tail -35 "$RUNNER_TEMP/faixalab-emulator.log"; fi' EXIT
           timeout 150 adb wait-for-device
           for i in {1..45}; do
             if [[ $(adb shell getprop sys.boot_completed | tr -d '\r') == 1 ]]; then break; fi
