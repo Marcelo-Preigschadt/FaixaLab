@@ -1,0 +1,24 @@
+name: Testar importação do site
+on:
+  push:
+    branches: [faixalab-site-import]
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - name: Obter a revisão
+        run: |
+          git init .
+          git fetch --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" "${GITHUB_SHA}"
+          git checkout --detach FETCH_HEAD
+      - name: Build e teste no Chromium
+        run: |
+          python3 -m venv "$RUNNER_TEMP/faixalab-test"
+          source "$RUNNER_TEMP/faixalab-test/bin/activate"
+          pip install playwright==1.56.0
+          python -m playwright install chromium
+          node online/build-pages.mjs "$RUNNER_TEMP/site" expert-space-funicular-gjxr569wq4939wg9
+          python online/test_site_import.py "$RUNNER_TEMP/site"
