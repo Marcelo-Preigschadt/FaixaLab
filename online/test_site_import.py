@@ -32,6 +32,8 @@ def emulate_backend(route, state):
         return cors(route, json={'client_id':'test-client', 'nonce':'nonce'})
     if path == '/auth/google/session':
         return cors(route, json={'api':TOKEN, 'media':TOKEN})
+    if path == '/api/projects' and not state['server']:
+        return cors(route, 503, json={'detail':'Servidor de teste indisponível.'})
     if path == '/api/import/file':
         data = route.request.post_data_buffer
         assert data and AUDIO in data and VIDEO.encode() in data and b'name="options"' in data
@@ -52,6 +54,9 @@ def emulate_importer(route, state):
     if not state['active'] or port != state['port']: return route.abort('connectionrefused')
     assert route.request.post_data_json['url'] == VIDEO
     assert route.request.headers['x-faixalab-import']=='1'
+    if state['busy']:
+        state['busy'] = False
+        return cors(route, 409 if port in (17862, 17863) else 429, json={'detail':'Já existe uma importação em andamento.'})
     state['local_audio'] += 1
     route.fulfill(status=200, body=AUDIO, headers={'Content-Type':'audio/wav','Access-Control-Allow-Origin':SITE,'Access-Control-Expose-Headers':'X-FaixaLab-Filename','X-FaixaLab-Filename':'FaixaLab.wav'})
 
@@ -65,10 +70,12 @@ with sync_playwright() as p:
         ):
             page = browser.new_page(user_agent=ua)
             page.add_init_script('Object.defineProperty(navigator,"userAgentData",{value:undefined});Object.defineProperty(navigator,"platform",{value:'+json.dumps(platform)+'});sessionStorage.setItem("faixalab-pages-session:'+ORIGIN+'",'+json.dumps(json.dumps({'api':TOKEN,'media':TOKEN}))+');')
-            state={'uploads':0, 'local_audio':0, 'cloud_imports':0, 'active':False, 'server':False, 'port':port, 'ports':[]}
+            state={'uploads':0, 'local_audio':0, 'cloud_imports':0, 'active':False, 'server':False, 'port':port, 'ports':[], 'busy':True}
             page.route(ORIGIN+'/**',lambda route:emulate_backend(route,state))
             page.route('http://127.0.0.1:*/import', lambda route:emulate_importer(route,state))
             page.goto(SITE)
+            expect(page.locator('#project-list')).to_contain_text('A biblioteca está indisponível', use_inner_text=False)
+            expect(page.locator('#project-count')).to_have_text('—', use_inner_text=False)
             page.locator('#new-project').click()
             page.locator('[data-source=youtube]').click()
             assert page.locator('#youtube-import-mode, #youtube-save-local').count() == 0
@@ -79,6 +86,8 @@ with sync_playwright() as p:
             assert page.locator('#youtube-import-download').get_attribute('href').endswith(filename)
             state['active'] = True
             page.locator('#import-submit').click()
+            expect(page.locator('#import-submit')).to_contain_text('Aguardando a importação anterior')
+            expect(page.locator('#import-submit')).to_be_disabled()
             expect(page.locator('#import-error')).to_contain_text('Áudio obtido neste aparelho')
             assert state['uploads']==1 and state['local_audio']==1
             state['server'] = True
