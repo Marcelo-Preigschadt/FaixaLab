@@ -10,7 +10,7 @@
     <meta name="referrer" content="no-referrer" />
     <script src="./pages-config.js?v=524b21c82d66" defer></script>
     <script src="./pages-connection.js?v=68d0050dd45a" defer></script>
-    <script src="./app.js?v=5f3f2e16a3f9" defer></script>
+    <script src="./app.js?v=6f7c155d23f5" defer></script>
     <link rel="stylesheet" href="./mobile.css" />
     <link rel="manifest" href="./manifest.webmanifest?v=2cb18ba0abb6" />
     <meta name="theme-color" content="#101213" />
@@ -81,7 +81,7 @@
         <button id="start-import" class="button primary large">
           ＋ Importar minha primeira música
         </button>
-        <button id="install-faixalab" class="button secondary large" type="button" hidden>Instalar FaixaLab</button>
+        <button id="install-faixalab" class="button secondary large" type="button" hidden>Instalar site como app</button>
         <div class="feature-row">
           <span><b>01</b> Faixas independentes</span
           ><span><b>02</b> Cifras para tocar</span
@@ -347,8 +347,9 @@
     </dialog>
     <dialog id="install-faixalab-dialog" aria-labelledby="install-faixalab-title">
       <button class="dialog-close icon-button" data-close="install-faixalab-dialog" type="button" aria-label="Fechar">×</button>
-      <h2 id="install-faixalab-title">Instalar FaixaLab</h2>
+      <h2 id="install-faixalab-title">Instalar site como app</h2>
       <p>No Chrome, abra <strong>⋮ → Transmitir, salvar e compartilhar → Instalar esta página como um app</strong>.</p>
+      <p class="muted">A instalação pelo Chrome cria um ícone para abrir o FaixaLab. O importador do YouTube é um componente separado.</p>
     </dialog>
     <dialog id="import-dialog">
       <form id="import-form">

@@ -407,7 +407,7 @@ function localImportSettings() {
     return {
       platform: "Chromebook",
       ports: [17861],
-      help: "A importação por link usa o importador local, quando já configurado. Também é possível enviar um arquivo de áudio pelo Chromebook.",
+      help: "Ainda não há um instalador do importador do YouTube para ChromeOS. Se o importador já estiver ativo, você pode colar o link. O envio de arquivos de áudio está disponível.",
     };
   }
   if (/Windows|Win32|Win64/i.test(agent + platform)) {
@@ -422,16 +422,16 @@ function localImportSettings() {
     return {
       platform: "macOS",
       ports: [17861],
-      install: releases + "Instalar_FaixaLab_macOS.pkg",
-      help: "Instale o pacote e abra Importador FaixaLab em Aplicativos.",
+      install: releases + "Instalar_FaixaLab_macOS_1.2.0.pkg",
+      help: "Abra o pacote e depois inicie Importador FaixaLab em Aplicativos. Aguarde a confirmação de que o importador está ativo.",
     };
   }
   if (/Linux/i.test(agent + platform)) {
     return {
       platform: "Debian ou Ubuntu",
       ports: [17861],
-      install: "./Instalar_FaixaLab_Linux.deb",
-      help: "Instale o pacote e abra Importador FaixaLab no menu de aplicativos.",
+      install: releases + "Instalar_FaixaLab_Linux_1.2.0.deb",
+      help: "Abra o pacote no instalador de aplicativos do sistema. Depois abra Importador FaixaLab no menu de aplicativos.",
     };
   }
   return null;
@@ -485,12 +485,13 @@ function setupLocalImport() {
     sourceTab.closest(".source-tabs").after(note);
     return;
   }
-  $("#youtube-import-help").textContent =
-    "O FaixaLab obtém o áudio neste aparelho e envia para a separação.";
+  const chromebook = localImporter.platform === "Chromebook";
+  $("#youtube-import-help").textContent = chromebook
+    ? "O link requer um importador ativo neste Chromebook."
+    : "O FaixaLab obtém o áudio neste aparelho e envia para a separação.";
   $("#youtube-setup-help").textContent = localImporter.help;
   youtubeSetup.hidden = false;
   const install = $("#youtube-import-download");
-  const chromebook = localImporter.platform === "Chromebook";
   if (localImporter.install) {
     install.href = localImporter.install;
     install.textContent = "Instalar no " + localImporter.platform;
@@ -604,7 +605,7 @@ async function getLocalAudio(url, onProgress) {
       throw new Error("O navegador bloqueou o acesso local ao importador. Permita o acesso nas configurações deste site.");
     }
     if (localImporter.platform === "Chromebook") {
-      throw new Error("O importador de links não está ativo neste Chromebook. Selecione Usar arquivo de áudio para continuar.");
+      throw new Error("O importador do YouTube não está ativo neste Chromebook. A instalação do site como app não ativa o importador.");
     }
     throw new Error("O FaixaLab não alcançou o importador local. Confira a instalação e abra o importador.");
   }
