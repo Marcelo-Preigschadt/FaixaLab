@@ -192,7 +192,7 @@ with sync_playwright() as p:
     try:
         for platform, ua, port, filename in (
             ('Android','Mozilla/5.0 Android',17862,'FaixaLab_Audio_Android.apk'),
-            ('Win32','Mozilla/5.0 Windows',17861,'Instalar_FaixaLab_Windows.exe'),
+            ('Win32','Mozilla/5.0 Windows',17861,'FaixaLab_Online_Windows_1_3.exe'),
             ('MacIntel','Mozilla/5.0 Macintosh',17861,'Instalar_FaixaLab_macOS_1.2.0.pkg'),
             ('Linux x86_64','Mozilla/5.0 Linux',17861,'Instalar_FaixaLab_Linux_1.2.0.deb'),
             ('Chrome OS','Mozilla/5.0 CrOS',17861,None),
@@ -206,7 +206,7 @@ with sync_playwright() as p:
             expect(page.locator('#project-list')).to_contain_text('A biblioteca está indisponível', use_inner_text=False)
             expect(page.locator('#project-count')).to_have_text('—', use_inner_text=False)
             if platform == 'Chrome OS':
-                expect(page.get_by_role('button', name='Instalar site como app', exact=True)).to_be_visible()
+                expect(page.get_by_role('button', name='Instalar FaixaLab', exact=True)).to_be_visible()
                 expect(page.locator('#start-import')).to_be_visible()
                 devtools = page.context.new_cdp_session(page)
                 errors = devtools.send('Page.getInstallabilityErrors')['installabilityErrors']
@@ -227,6 +227,12 @@ with sync_playwright() as p:
                 expect(page.locator('#install-faixalab')).to_be_hidden()
             else:
                 expect(page.locator('#install-faixalab')).to_be_hidden()
+            download = page.locator('#install-faixalab-windows')
+            if platform == 'Win32':
+                expect(download).to_be_visible()
+                assert download.get_attribute('href').endswith(filename)
+            else:
+                expect(download).to_be_hidden()
             page.locator('#new-project').click()
             page.locator('[data-source=youtube]').click()
             assert page.locator('#youtube-import-mode, #youtube-save-local').count() == 0
@@ -246,7 +252,10 @@ with sync_playwright() as p:
                 expect(page.locator('#import-error')).to_be_hidden()
                 page.locator('[data-source=youtube]').click()
             else:
-                assert page.locator('#youtube-import-download').get_attribute('href').endswith(filename)
+                installer = page.locator('#youtube-import-download').get_attribute('href')
+                assert installer.endswith(filename)
+                if platform == 'Win32':
+                    assert installer == download.get_attribute('href')
             state['active'] = True
             page.locator('#import-submit').click()
             expect(page.locator('#import-submit')).to_contain_text('Aguardando a importação anterior')

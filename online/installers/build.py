@@ -1,5 +1,6 @@
 """Build installers from the existing FaixaLab import-only package."""
 import argparse
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -27,8 +28,11 @@ def stage_client(directory):
 
 def windows(client, output):
     (client / 'iniciar.sh').unlink()
+    switch = '/' if os.name == 'nt' else '-'
     subprocess.run([
-        'makensis', '-V3', f'-DPAYLOAD={client}', f'-DOUTPUT={output}', str(HERE / 'windows.nsi'),
+        'makensis', f'{switch}WX', f'{switch}V3',
+        f'{switch}DPAYLOAD={client}', f'{switch}DOUTPUT={output}',
+        f'{switch}DLAUNCHER={HERE / "windows-launcher.pyw"}', str(HERE / 'windows.nsi'),
     ], check=True)
 
 

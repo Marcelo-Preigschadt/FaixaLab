@@ -31,9 +31,12 @@ def main():
 
     directory = Path(__file__).resolve().parent
     log = directory / '.runtime' / 'importador.log'
+    command = [sys.executable, '-m', 'faixalab.local_import']
+    if sys.platform == 'win32':
+        command = [sys.executable, str(directory / 'importador.pyw')]
     with log.open('ab') as handle:
         process = subprocess.Popen(
-            [sys.executable, '-m', 'faixalab.local_import'], cwd=directory,
+            command, cwd=directory,
             stdin=subprocess.DEVNULL, stdout=handle, stderr=handle,
             start_new_session=True,
         )

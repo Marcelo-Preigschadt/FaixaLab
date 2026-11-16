@@ -71,7 +71,8 @@
         <button id="start-import" class="button primary large">
           ＋ Importar minha primeira música
         </button>
-        <button id="install-faixalab" class="button secondary large" type="button" hidden>Instalar site como app</button>
+        <button id="install-faixalab" class="button secondary large" type="button" hidden>Instalar FaixaLab</button>
+        <a id="install-faixalab-windows" class="button secondary large" hidden>Instalar FaixaLab Online</a>
         <div class="feature-row">
           <span><b>01</b> Faixas independentes</span
           ><span><b>02</b> Cifras para tocar</span
@@ -337,9 +338,9 @@
     </dialog>
     <dialog id="install-faixalab-dialog" aria-labelledby="install-faixalab-title">
       <button class="dialog-close icon-button" data-close="install-faixalab-dialog" type="button" aria-label="Fechar">×</button>
-      <h2 id="install-faixalab-title">Instalar site como app</h2>
+      <h2 id="install-faixalab-title">Instalar FaixaLab</h2>
       <p>No Chrome, abra <strong>⋮ → Transmitir, salvar e compartilhar → Instalar esta página como um app</strong>.</p>
-      <p class="muted">A instalação pelo Chrome cria um ícone para abrir o FaixaLab. O importador do YouTube é um componente separado.</p>
+      <p id="install-chromebook-youtube" class="muted" hidden>A importação do YouTube já vem no FaixaLab. Em Nova música, escolha Link do YouTube e compartilhe o áudio da aba.</p>
     </dialog>
     <dialog id="import-dialog">
       <form id="import-form">

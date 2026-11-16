@@ -1,0 +1,90 @@
+name: Empacotar e validar o FaixaLab Online no Windows
+on:
+  workflow_dispatch:
+  push:
+    branches: [instalar-faixalab-online]
+permissions:
+  contents: write
+  statuses: write
+jobs:
+  instalacao:
+    runs-on: windows-2025
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Obter a revisão
+        run: |
+          git init .
+          git fetch --depth 1 "https://github.com/$env:GITHUB_REPOSITORY.git" "$env:GITHUB_SHA"
+          git checkout --detach FETCH_HEAD
+      - name: Compilar o instalador
+        run: |
+          choco install nsis -y --no-progress --limit-output
+          $env:Path = "${env:ProgramFiles(x86)}\NSIS;$env:ProgramFiles\NSIS;$env:Path"
+          Get-Command makensis.exe -ErrorAction Stop
+          python online/installers/build.py windows FaixaLab_Online_Windows_1_3.exe
+      - name: Instalar e verificar o atalho e a importação
+        run: |
+          $package = Join-Path $PWD "FaixaLab_Online_Windows_1_3.exe"
+          $proc = Start-Process -FilePath $package -ArgumentList "/S" -PassThru
+          if (!$proc.WaitForExit(240000)) { throw "A instalação excedeu quatro minutos" }
+          if ($proc.ExitCode -ne 0) { throw "Instalador retornou $($proc.ExitCode)" }
+          $app = Join-Path $env:LOCALAPPDATA "Programs\FaixaLab Importador"
+          $launcher = Join-Path $app "faixalab-online.pyw"
+          $python = Join-Path $app ".venv\Scripts\python.exe"
+          $pythonw = Join-Path $app ".venv\Scripts\pythonw.exe"
+          foreach ($folder in @("DesktopDirectory", "Programs")) {
+            $path = Join-Path ([Environment]::GetFolderPath($folder)) "FaixaLab Online.lnk"
+            if (!(Test-Path $path)) { throw "Atalho ausente em $folder" }
+            $link = (New-Object -ComObject WScript.Shell).CreateShortcut($path)
+            if ($link.TargetPath -ne $pythonw -or $link.Arguments.Trim('"') -ne $launcher) {
+              throw "Atalho não abre o FaixaLab Online"
+            }
+          }
+          & $python (Join-Path $app "prepare_youtube.py") --check
+          if ($LASTEXITCODE -ne 0) { throw "O extrator instalado falhou na verificação" }
+          $installedScript = Join-Path $app "importador.pyw"
+          Get-CimInstance Win32_Process -Filter "Name='pythonw.exe'" |
+            Where-Object { $_.CommandLine -and $_.CommandLine.Contains($installedScript) } |
+            ForEach-Object { Stop-Process -Id $_.ProcessId -ErrorAction SilentlyContinue }
+          $env:FAIXALAB_TEST_PYTHONW = $pythonw
+          $test = @'
+          import os
+          import runpy
+          import sys
+          from unittest.mock import patch
+
+          from activate import importer_ready
+
+          assert not importer_ready(), 'O teste deve iniciar com o importador parado'
+          sys.executable = os.environ['FAIXALAB_TEST_PYTHONW']
+          with patch('os.startfile') as open_url:
+              runpy.run_path('faixalab-online.pyw', run_name='__main__')
+              open_url.assert_called_once_with('https://marcelo-preigschadt.github.io/FaixaLab/')
+          assert importer_ready(), 'O importador não ficou disponível ao abrir o FaixaLab'
+          print('Instalação única: atalhos do Windows, yt-dlp/Deno e importador HTTP local verificados.')
+          '@
+          Push-Location $app
+          try {
+            & $python -c $test
+            if ($LASTEXITCODE -ne 0) { throw "O fluxo de abertura do FaixaLab falhou" }
+          } finally {
+            Pop-Location
+          }
+      - name: Publicar o instalador validado
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload v0.10.1 FaixaLab_Online_Windows_1_3.exe --repo $env:GITHUB_REPOSITORY --clobber
+      - name: Registrar o resultado
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULTADO: ${{ job.status }}
+        run: |
+          $estado = if ($env:RESULTADO -eq 'success') { 'success' } else { 'failure' }
+          $status = "repos/$env:GITHUB_REPOSITORY/statuses/$env:GITHUB_SHA"
+          $url = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+          gh api --method POST $status --field "state=$estado" --field "context=faixalab/instalador-online-windows" --field "target_url=$url"
