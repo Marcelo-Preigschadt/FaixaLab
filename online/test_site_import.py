@@ -98,6 +98,8 @@ with sync_playwright() as p:
                 devtools = page.context.new_cdp_session(page)
                 errors = devtools.send('Page.getInstallabilityErrors')['installabilityErrors']
                 assert errors == [], errors
+                manifest = json.loads(devtools.send('Page.getAppManifest')['data'])
+                assert manifest['start_url'] == './' and 'id' not in manifest
                 page.locator('#install-faixalab').click()
                 expect(page.locator('#install-faixalab-dialog')).to_contain_text('Instalar esta página como um app')
                 page.locator('#install-faixalab-dialog button').click()
