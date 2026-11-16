@@ -24,6 +24,10 @@ jobs:
           node online/build-pages.mjs "$RUNNER_TEMP/site" expert-space-funicular-gjxr569wq4939wg9
           node online/build-pages.mjs "$RUNNER_TEMP/site-wake" expert-space-funicular-gjxr569wq4939wg9 https://faixalab-retomada.onrender.com
           if [[ "$GITHUB_REF_NAME" == captura-audio-chromebook ]]; then
+            if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+              sudo apt-get -qq update
+              sudo apt-get -qq install -y ffmpeg
+            fi
             FAIXALAB_TEST_TAB_CAPTURE=1 xvfb-run -a python online/test_site_import.py "$RUNNER_TEMP/site" "$RUNNER_TEMP/site-wake"
           else
             python online/test_site_import.py "$RUNNER_TEMP/site" "$RUNNER_TEMP/site-wake"
