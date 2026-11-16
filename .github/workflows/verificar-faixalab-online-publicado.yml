@@ -1,0 +1,42 @@
+name: Verificar a instalação publicada do FaixaLab Online
+on:
+  push:
+    branches: [verificar-faixalab-online-publicado]
+permissions:
+  contents: read
+  statuses: write
+jobs:
+  publicacao:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - name: Conferir o site e o instalador
+        run: |
+          set -euo pipefail
+          site=https://marcelo-preigschadt.github.io/FaixaLab
+          for rodada in {1..9}; do
+            if curl -fsSL --max-time 12 "$site/?v=76e7399076ce" -o index.html &&
+               grep -Fq 'app.js?v=76e7399076ce' index.html &&
+               grep -Fq 'id="install-faixalab-windows"' index.html; then
+              curl -fsSL --max-time 12 "$site/app.js?v=76e7399076ce" -o app.js
+              test "$(git hash-object app.js)" = '76e7399076cee63e04754d271eb91d145cd6e529'
+              node --check app.js
+              curl -fsSL --retry 2 --max-time 25 'https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/FaixaLab_Online_Windows_1_3.exe' -o instalador.exe
+              python3 -c "from pathlib import Path; x=Path('instalador.exe').read_bytes(); assert x[:2] == b'MZ' and len(x) > 50000"
+              echo 'Site e instalador Windows conferidos'
+              exit 0
+            fi
+            sleep 8
+          done
+          exit 1
+      - name: Registrar resultado
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULTADO: ${{ job.status }}
+        run: |
+          estado="$RESULTADO"
+          if [[ "$estado" != success ]]; then estado=failure; fi
+          gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            --field "state=$estado" --field 'context=faixalab/publicacao-instalar-online' \
+            --field "target_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
