@@ -1,9 +1,5 @@
 """Regression test for local YouTube import and retry in the public site."""
 import io, json, os, wave
-from email import policy
-from email.parser import BytesParser
-import re
-import subprocess
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
@@ -80,113 +76,6 @@ def emulate_importer(route, state):
     state['local_audio'] += 1
     route.fulfill(status=200, body=AUDIO, headers={'Content-Type':'audio/wav','Access-Control-Allow-Origin':SITE,'Access-Control-Expose-Headers':'X-FaixaLab-Filename','X-FaixaLab-Filename':'FaixaLab.wav'})
 
-def test_chromebook_capture(playwright):
-    title = 'FaixaLab Tab Capture Test'
-    source = '''<!doctype html><meta charset="utf-8"><title>'''+title+'''</title>
-    <button id="play">Tocar áudio de teste</button>
-    <script>
-    let player;
-    document.querySelector("#play").onclick = () => {
-        const audio = new AudioContext();
-        const tone = audio.createOscillator();
-        const volume = audio.createGain();
-        volume.gain.value = 0.25;
-        tone.frequency.value = 440;
-        tone.connect(volume).connect(audio.destination);
-        tone.start();
-        player = audio;
-    };
-    </script>'''
-    browser = playwright.chromium.launch(
-        headless=False,
-        executable_path=os.environ.get('FAIXALAB_TEST_CHROMIUM'),
-        args=['--auto-select-tab-capture-source-by-title='+title],
-    )
-    try:
-        context = browser.new_context(user_agent='Mozilla/5.0 (X11; CrOS x86_64)')
-        context.add_init_script(
-            'Object.defineProperty(navigator,"userAgentData",{value:undefined});'
-            'sessionStorage.setItem('+json.dumps('faixalab-pages-session:'+ORIGIN)+','
-            +json.dumps(json.dumps({'api':TOKEN,'media':TOKEN}))+');'
-        )
-        captures = []
-        local_requests = []
-        state = {'server':True, 'cloud_imports':0}
-
-        def mock_processing_server(route):
-            if route.request.method != 'POST' or not route.request.url.endswith('/api/import/file'):
-                return emulate_backend(route, state)
-            request = route.request
-            assert request.all_headers()['authorization'] == 'Bearer '+TOKEN
-            content_type = request.headers['content-type'].encode('ascii')
-            envelope = BytesParser(policy=policy.default).parsebytes(
-                b'Content-Type: '+content_type+b'\r\nMIME-Version: 1.0\r\n\r\n'+request.post_data_buffer
-            )
-            form = {part.get_param('name',header='content-disposition'):part for part in envelope.iter_parts()}
-            assert 'youtube_url' not in form
-            assert json.loads(form['options'].get_content())
-            assert form['file'].get_filename() == 'YouTube-aqz-KE-bpKQ.webm'
-            assert form['file'].get_content_type() == 'audio/webm'
-            captures.append(form['file'].get_payload(decode=True))
-            if len(captures) == 1:
-                return cors(route, 503, json={'detail':'Servidor temporariamente indisponível no teste.'})
-            return cors(route, 202, json={'id':'fixture'})
-
-        def local_request(route):
-            local_requests.append(route.request.url)
-            route.abort()
-
-        def serve_fixture(route):
-            assert route.request.url == VIDEO, route.request.url
-            route.fulfill(content_type='text/html; charset=utf-8',body=source)
-
-        context.route(ORIGIN+'/**', mock_processing_server)
-        context.route('http://127.0.0.1:*/import', local_request)
-        context.route('https://www.youtube.com/watch?*', serve_fixture)
-        page = context.new_page()
-        page.goto(SITE)
-        page.locator('#new-project').click()
-        page.locator('[data-source=youtube]').click()
-        page.locator('#youtube-url').fill(VIDEO+'&list=RDabc&index=3')
-        with context.expect_page() as popup:
-            page.locator('#youtube-open-video').click()
-        video_page = popup.value
-        video_page.wait_for_load_state()
-        assert video_page.url == VIDEO
-        video_page.locator('#play').click()
-        page.bring_to_front()
-
-        button = page.locator('#import-submit')
-        expect(button).to_have_text('Compartilhar áudio da aba')
-        button.click()
-        expect(button).to_have_text('Encerrar e separar', timeout=15000)
-        assert not captures
-        # Wait for full Opus frames in this real-time browser recording.
-        page.wait_for_timeout(2400)
-        button.click()
-        expect(button).to_have_text('Tentar enviar novamente')
-        expect(page.locator('#import-error')).to_contain_text('Áudio obtido neste aparelho')
-        button.click()
-        expect(page.locator('#import-dialog')).to_be_hidden()
-        assert len(captures) == 2 and captures[0] == captures[1]
-        assert not local_requests and state['cloud_imports'] == 0
-
-        probe = subprocess.run(
-            ['ffprobe','-v','error','-show_entries','stream=codec_type,codec_name','-of','json','-i','pipe:0'],
-            input=captures[0], capture_output=True,check=True,
-        )
-        assert json.loads(probe.stdout)['streams'] == [{'codec_name':'opus','codec_type':'audio'}]
-        sound = subprocess.run(
-            ['ffmpeg','-v','info','-i','pipe:0','-af','volumedetect','-f','null','-'],
-            input=captures[0],capture_output=True,check=True,
-        )
-        level = re.search(rb'max_volume: (-?\d+(?:\.\d+)?) dB', sound.stderr)
-        assert level and float(level[1]) > -30, sound.stderr.decode()[-2000:]
-        print('ChromeOS simulado: áudio audível de outra aba, WebM Opus sem vídeo, reenvio idêntico e nenhum importador local', flush=True)
-    finally:
-        browser.close()
-
-
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=True, executable_path=os.environ.get('FAIXALAB_TEST_CHROMIUM'))
     try:
@@ -237,14 +126,17 @@ with sync_playwright() as p:
             page.locator('[data-source=youtube]').click()
             assert page.locator('#youtube-import-mode, #youtube-save-local').count() == 0
             page.locator('#youtube-url').fill(VIDEO)
-            if platform == 'Chrome OS' and page.locator('#youtube-tab-capture').is_visible():
-                page.locator('#youtube-import-setup summary').click()
-                page.locator('#youtube-use-local').check()
-                expect(page.locator('#youtube-tab-capture')).to_be_hidden()
+            if platform == 'Chrome OS':
+                expect(page.locator('#youtube-tab-capture, #youtube-use-local, #youtube-open-video')).to_have_count(0)
+                expect(page.locator('#import-submit')).to_have_text('Separar e analisar música')
             page.locator('#import-submit').click()
             expect(page.locator('#import-error')).to_be_visible()
             expect(page.locator('#youtube-import-setup')).to_have_attribute('open','')
             if platform == 'Chrome OS':
+                expect(page.locator('#import-error')).to_contain_text(
+                    'O importador local está indisponível neste Chromebook')
+                assert state['ports'] and set(state['ports']) == {17861}
+                assert state['cloud_imports'] == 0
                 expect(page.locator('#youtube-import-download')).to_be_hidden()
                 assert page.locator('#youtube-import-download').get_attribute('href') is None
                 page.locator('#youtube-use-file').click()
@@ -324,9 +216,4 @@ with sync_playwright() as p:
             page.close()
     finally:
         browser.close()
-        try:
-            if sys.exc_info()[0] is None and os.environ.get('FAIXALAB_TEST_TAB_CAPTURE') == '1':
-                server.RequestHandlerClass.keywords['directory'] = sys.argv[1]
-                test_chromebook_capture(p)
-        finally:
-            server.shutdown()
+        server.shutdown()

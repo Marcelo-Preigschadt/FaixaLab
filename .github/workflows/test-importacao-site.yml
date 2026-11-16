@@ -1,7 +1,7 @@
 name: Testar importação do site
 on:
   push:
-    branches: [faixalab-site-import, faixalab-import-retry, retomada-faixalab, instalar-app-web-chromebook, instalar-importador-grafico, captura-audio-chromebook, instalar-faixalab-online]
+    branches: [faixalab-site-import, faixalab-import-retry, retomada-faixalab, instalar-app-web-chromebook, instalar-importador-grafico, instalar-faixalab-online, importacao-direta-chromebook]
 permissions:
   contents: read
   statuses: write
@@ -23,17 +23,9 @@ jobs:
           python -m playwright install chromium
           node online/build-pages.mjs "$RUNNER_TEMP/site" expert-space-funicular-gjxr569wq4939wg9
           node online/build-pages.mjs "$RUNNER_TEMP/site-wake" expert-space-funicular-gjxr569wq4939wg9 https://faixalab-retomada.onrender.com
-          if [[ "$GITHUB_REF_NAME" == captura-audio-chromebook || "$GITHUB_REF_NAME" == instalar-faixalab-online ]]; then
-            if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
-              sudo apt-get -qq update
-              sudo apt-get -qq install -y ffmpeg
-            fi
-            FAIXALAB_TEST_TAB_CAPTURE=1 xvfb-run -a python online/test_site_import.py "$RUNNER_TEMP/site" "$RUNNER_TEMP/site-wake"
-          else
-            python online/test_site_import.py "$RUNNER_TEMP/site" "$RUNNER_TEMP/site-wake"
-          fi
-      - name: Registrar resultado da captura
-        if: always() && (github.ref_name == 'captura-audio-chromebook' || github.ref_name == 'instalar-faixalab-online')
+          python online/test_site_import.py "$RUNNER_TEMP/site" "$RUNNER_TEMP/site-wake"
+      - name: Registrar resultado da importação local
+        if: always() && github.ref_name == 'importacao-direta-chromebook'
         env:
           GH_TOKEN: ${{ github.token }}
           RESULTADO: ${{ job.status }}
@@ -41,5 +33,5 @@ jobs:
           resultado="$RESULTADO"
           if [[ "$resultado" != success ]]; then resultado=failure; fi
           gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
-            --field "state=$resultado" --field 'context=faixalab/chromebook-audio' \
+            --field "state=$resultado" --field 'context=faixalab/importacao-local-chromebook' \
             --field "target_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
