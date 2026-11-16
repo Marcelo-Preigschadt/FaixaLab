@@ -419,8 +419,8 @@ function localImportSettings() {
     return {
       platform: "Windows",
       ports: [17861],
-      install: "./Instalar_FaixaLab_Windows.exe",
-      help: "Abra o instalador baixado. O importador será iniciado ao final da instalação.",
+      install: releases + "FaixaLab_Online_Windows_1_3.exe",
+      help: "O instalador põe o FaixaLab Online no menu Iniciar e instala junto a importação por link.",
     };
   }
   if (/^Mac/i.test(platform) || /Macintosh/i.test(agent)) {
@@ -474,8 +474,15 @@ function youtubeWatchURL(value) {
   throw new Error("Cole o link de um vídeo do YouTube para compartilhar o áudio.");
 }
 
-function setupChromebookApp() {
+function setupAppInstallation() {
+  if (localImporter?.platform === "Windows") {
+    const download = $("#install-faixalab-windows");
+    download.href = localImporter.install;
+    download.hidden = false;
+    return;
+  }
   if (localImporter?.platform !== "Chromebook") return;
+  $("#install-chromebook-youtube").hidden = !canCaptureTab;
 
   if (!canCaptureTab) {
     $("#welcome-import-help").textContent =
@@ -531,7 +538,9 @@ function setupLocalImport() {
   const install = $("#youtube-import-download");
   if (localImporter.install) {
     install.href = localImporter.install;
-    install.textContent = "Instalar no " + localImporter.platform;
+    install.textContent = localImporter.platform === "Windows"
+      ? "Instalar FaixaLab Online"
+      : "Instalar no " + localImporter.platform;
   } else if (chromebook) {
     install.hidden = true;
     youtubeSetup.querySelector("summary").textContent = "Sobre a importação por link";
@@ -602,7 +611,7 @@ function setupLocalImport() {
   }
 }
 
-setupChromebookApp();
+setupAppInstallation();
 setupLocalImport();
 
 async function localNetworkDenied() {
