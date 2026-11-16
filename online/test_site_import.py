@@ -50,7 +50,9 @@ def emulate_backend(route, state):
         return cors(route, 503, json={'detail':'Servidor de teste indisponível.'})
     if path == '/api/import/file':
         data = route.request.post_data_buffer
-        assert data and AUDIO in data and VIDEO.encode() in data and b'name="options"' in data
+        assert data and AUDIO in data and b'name="options"' in data
+        if not state.get('file_only'):
+            assert VIDEO.encode() in data
         assert route.request.all_headers().get('authorization') == 'Bearer ' + state.get('token', TOKEN)
         state['uploads'] += 1
         return cors(route, 202 if state['server'] else 503, json={'id':'fixture'} if state['server'] else {'detail':'Servidor de teste indisponível.'})
@@ -80,7 +82,7 @@ with sync_playwright() as p:
         for platform, ua, port, filename in (
             ('Android','Mozilla/5.0 Android',17862,'FaixaLab_Audio_Android.apk'),
             ('Win32','Mozilla/5.0 Windows',17861,'Instalar_FaixaLab_Windows.exe'),
-            ('Chrome OS','Mozilla/5.0 CrOS',17861,'Instalar_FaixaLab_Linux.deb'),
+            ('Chrome OS','Mozilla/5.0 CrOS',17861,None),
         ):
             page = browser.new_page(user_agent=ua)
             page.add_init_script('Object.defineProperty(navigator,"userAgentData",{value:undefined});Object.defineProperty(navigator,"platform",{value:'+json.dumps(platform)+'});sessionStorage.setItem("faixalab-pages-session:'+ORIGIN+'",'+json.dumps(json.dumps({'api':TOKEN,'media':TOKEN}))+');')
@@ -90,25 +92,42 @@ with sync_playwright() as p:
             page.goto(SITE)
             expect(page.locator('#project-list')).to_contain_text('A biblioteca está indisponível', use_inner_text=False)
             expect(page.locator('#project-count')).to_have_text('—', use_inner_text=False)
+            if platform == 'Chrome OS':
+                expect(page.get_by_role('button', name='Instalar FaixaLab', exact=True)).to_be_visible()
+                expect(page.locator('#start-import')).to_be_visible()
+                devtools = page.context.new_cdp_session(page)
+                errors = devtools.send('Page.getInstallabilityErrors')['installabilityErrors']
+                assert errors == [], errors
+                page.locator('#install-faixalab').click()
+                expect(page.locator('#install-faixalab-dialog')).to_contain_text('Instalar esta página como um app')
+                page.locator('#install-faixalab-dialog button').click()
+                page.evaluate("""() => {
+                    const event = new Event('beforeinstallprompt', {cancelable: true});
+                    event.prompt = () => { window.faixaLabPromptShown = true; };
+                    event.userChoice = Promise.resolve({outcome: 'accepted'});
+                    window.dispatchEvent(event);
+                }""")
+                page.locator('#install-faixalab').click()
+                assert page.evaluate('window.faixaLabPromptShown')
+                expect(page.locator('#install-faixalab')).to_be_hidden()
+            else:
+                expect(page.locator('#install-faixalab')).to_be_hidden()
             page.locator('#new-project').click()
             page.locator('[data-source=youtube]').click()
-            if platform == 'Chrome OS':
-                expect(page.locator('#youtube-import-setup')).to_have_attribute('open', '')
-                expect(page.locator('#youtube-chromebook-setup')).to_be_visible()
-                expect(page.locator('#youtube-chromebook-setup code')).to_have_text(
-                    'sudo apt install "$HOME/Instalar_FaixaLab_Linux.deb"')
-                expect(page.locator('#youtube-import-download')).to_have_text('Baixar pacote .deb')
-                page.locator('#youtube-use-file').click()
-                expect(page.locator('#file-source')).to_be_visible()
-                page.locator('[data-source=youtube]').click()
-            else:
-                expect(page.locator('#youtube-chromebook-setup')).to_be_hidden()
             assert page.locator('#youtube-import-mode, #youtube-save-local').count() == 0
             page.locator('#youtube-url').fill(VIDEO)
             page.locator('#import-submit').click()
             expect(page.locator('#import-error')).to_be_visible()
             expect(page.locator('#youtube-import-setup')).to_have_attribute('open','')
-            assert page.locator('#youtube-import-download').get_attribute('href').endswith(filename)
+            if platform == 'Chrome OS':
+                expect(page.locator('#youtube-import-download')).to_be_hidden()
+                assert page.locator('#youtube-import-download').get_attribute('href') is None
+                page.locator('#youtube-use-file').click()
+                expect(page.locator('#file-source')).to_be_visible()
+                expect(page.locator('#import-error')).to_be_hidden()
+                page.locator('[data-source=youtube]').click()
+            else:
+                assert page.locator('#youtube-import-download').get_attribute('href').endswith(filename)
             state['active'] = True
             page.locator('#import-submit').click()
             expect(page.locator('#import-submit')).to_contain_text('Aguardando a importação anterior')
@@ -156,6 +175,19 @@ with sync_playwright() as p:
             expect(page.locator('#import-dialog')).not_to_be_visible()
             assert state['uploads'] == 1 and state['local_audio'] == 1 and state['wake_calls'] == 2 and state['exchanges'] == 1
             print('Android com Codespace desligado: uma extração, retomada e um upload após verificar o Demucs', flush=True)
+            page.close()
+            page = browser.new_page(user_agent='Mozilla/5.0 (X11; CrOS x86_64)')
+            page.add_init_script('Object.defineProperty(navigator,"userAgentData",{value:undefined});sessionStorage.setItem("faixalab-pages-session:'+ORIGIN+'",'+json.dumps(json.dumps({'api':TOKEN,'media':TOKEN}))+');')
+            state = {'uploads':0, 'local_audio':0, 'server':True, 'file_only':True}
+            page.route(ORIGIN+'/**', lambda route: emulate_backend(route, state))
+            page.goto(SITE)
+            page.locator('#start-import').click()
+            page.locator('#audio-file').set_input_files(
+                {'name':'FaixaLab.wav', 'mimeType':'audio/wav', 'buffer':AUDIO})
+            page.locator('#import-submit').click()
+            expect(page.locator('#import-dialog')).not_to_be_visible()
+            assert state['uploads'] == 1 and state['local_audio'] == 0
+            print('Chromebook: instalação web e envio de arquivo sem importador nativo', flush=True)
             page.close()
     finally:
         browser.close()

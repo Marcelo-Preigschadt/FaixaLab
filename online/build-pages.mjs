@@ -17,7 +17,7 @@ const web = path.join(repo, 'app/faixalab/web');
 const output = path.resolve(destination);
 mkdirSync(output, { recursive: true });
 const version = content => createHash('sha256').update(content).digest('hex').slice(0, 12);
-for (const asset of ['style.css', 'studio.css', 'mobile.css', 'app.js', 'guitar.js', 'icon.svg']) {
+for (const asset of ['style.css', 'studio.css', 'mobile.css', 'app.js', 'guitar.js', 'icon.svg', 'icon-192.png', 'icon-512.png']) {
   copyFileSync(path.join(web, asset), path.join(output, asset));
 }
 const connectionScript = readFileSync(path.join(here, 'pages-connection.js'));
@@ -47,6 +47,7 @@ const html = readFileSync(path.join(web, 'index.html'), 'utf8')
   .replace('</head>', '<style>#pages-connection:not([hidden]){display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 16px;background:#1d272a;color:#dde7ea;border-bottom:1px solid #3b4950;flex-wrap:wrap}#pages-connection [hidden],#pages-signout[hidden]{display:none}</style>\n  </head>');
 writeFileSync(path.join(output, 'index.html'), html);
 const manifest = JSON.parse(readFileSync(path.join(web, 'manifest.webmanifest'), 'utf8'));
+manifest.id = './';
 manifest.start_url = './';
 manifest.scope = './';
 manifest.icons.forEach(icon => { icon.src = './' + icon.src.replace(/^\//, ''); });

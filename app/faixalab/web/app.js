@@ -407,8 +407,7 @@ function localImportSettings() {
     return {
       platform: "Chromebook",
       ports: [17861],
-      install: "./Instalar_FaixaLab_Linux.deb",
-      help: "Instale o pacote pelo Terminal do Linux. Se o ambiente Linux estiver indisponível neste aparelho, envie um arquivo de áudio.",
+      help: "A importação por link usa o importador local, quando já configurado. Também é possível enviar um arquivo de áudio pelo Chromebook.",
     };
   }
   if (/Windows|Win32|Win64/i.test(agent + platform)) {
@@ -440,6 +439,41 @@ function localImportSettings() {
 
 const localImporter = localImportSettings();
 
+function setupChromebookApp() {
+  if (localImporter?.platform !== "Chromebook") return;
+
+  $("#welcome-import-help").textContent =
+    "Importe um arquivo de áudio para separar voz e instrumentos, descobrir os acordes e acompanhar a letra.";
+  const install = $("#install-faixalab");
+  const standalone = matchMedia("(display-mode: standalone)");
+  install.hidden = standalone.matches;
+  let availablePrompt;
+
+  window.addEventListener("beforeinstallprompt", event => {
+    event.preventDefault();
+    availablePrompt = event;
+    install.hidden = standalone.matches;
+  });
+  window.addEventListener("appinstalled", () => {
+    availablePrompt = undefined;
+    install.hidden = true;
+  });
+  install.onclick = async () => {
+    if (!availablePrompt) {
+      $("#install-faixalab-dialog").showModal();
+      return;
+    }
+    const prompt = availablePrompt;
+    availablePrompt = undefined;
+    try {
+      await prompt.prompt();
+      if ((await prompt.userChoice).outcome === "accepted") install.hidden = true;
+    } catch {
+      $("#install-faixalab-dialog").showModal();
+    }
+  };
+}
+
 function setupLocalImport() {
   if (!window.faixaLabPages) return;
   const sourceTab = $('[data-source="youtube"]');
@@ -456,23 +490,28 @@ function setupLocalImport() {
   $("#youtube-setup-help").textContent = localImporter.help;
   youtubeSetup.hidden = false;
   const install = $("#youtube-import-download");
-  install.href = localImporter.install;
-  install.textContent = "Instalar no " + localImporter.platform;
-  if (localImporter.platform === "Chromebook") {
-    youtubeSetup.querySelector("summary").textContent = "Configurar no Chromebook";
-    youtubeSetup.open = true;
-    $("#youtube-chromebook-setup").hidden = false;
-    install.textContent = "Baixar pacote .deb";
-    $("#youtube-use-file").onclick = () => $('[data-source="file"]').click();
+  const chromebook = localImporter.platform === "Chromebook";
+  if (localImporter.install) {
+    install.href = localImporter.install;
+    install.textContent = "Instalar no " + localImporter.platform;
+  } else if (chromebook) {
+    install.hidden = true;
+    youtubeSetup.querySelector("summary").textContent = "Sobre a importação por link";
+    const useFile = $("#youtube-use-file");
+    useFile.hidden = false;
+    useFile.onclick = () => {
+      $('[data-source="file"]').click();
+      $("#import-error").hidden = true;
+    };
   }
 
   const deviceAction = $("#pages-device-action");
-  deviceAction.textContent = "Importar do YouTube";
+  deviceAction.textContent = chromebook ? "Importar música" : "Importar do YouTube";
   deviceAction.hidden = false;
   deviceAction.onclick = event => {
     event.preventDefault();
     openImport();
-    sourceTab.click();
+    (chromebook ? $('[data-source="file"]') : sourceTab).click();
   };
   youtubeUrlField.addEventListener("input", () => {
     localAudio = null;
@@ -500,6 +539,7 @@ function setupLocalImport() {
   }
 }
 
+setupChromebookApp();
 setupLocalImport();
 
 async function localNetworkDenied() {
@@ -564,7 +604,7 @@ async function getLocalAudio(url, onProgress) {
       throw new Error("O navegador bloqueou o acesso local ao importador. Permita o acesso nas configurações deste site.");
     }
     if (localImporter.platform === "Chromebook") {
-      throw new Error("Abra o Importador FaixaLab em Aplicativos Linux. Os passos da primeira instalação estão em Configurar no Chromebook.");
+      throw new Error("O importador de links não está ativo neste Chromebook. Selecione Usar arquivo de áudio para continuar.");
     }
     throw new Error("O FaixaLab não alcançou o importador local. Confira a instalação e abra o importador.");
   }

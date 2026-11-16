@@ -314,6 +314,11 @@ main {
   line-height: 1.1;
   margin: 23px 0;
 }
+#install-faixalab {
+  position: relative;
+  z-index: 1;
+  margin: 10px 0 0 10px;
+}
 .welcome em {
   font-style: normal;
   color: var(--mint);

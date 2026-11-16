@@ -64,13 +64,14 @@
       <section id="welcome" class="welcome">
         <span class="eyebrow">OUÇA CADA DETALHE. TOQUE DO SEU JEITO.</span>
         <h1>Da sua música<br />ao seu <em>instrumento.</em></h1>
-        <p>
+        <p id="welcome-import-help">
           Separe voz e instrumentos, descubra os acordes e acompanhe a letra.
           Cole um link do YouTube ou escolha um arquivo.
         </p>
         <button id="start-import" class="button primary large">
           ＋ Importar minha primeira música
         </button>
+        <button id="install-faixalab" class="button secondary large" type="button" hidden>Instalar FaixaLab</button>
         <div class="feature-row">
           <span><b>01</b> Faixas independentes</span
           ><span><b>02</b> Cifras para tocar</span
@@ -334,6 +335,11 @@
       <label class="settings-field">Cifra<select id="chord-mode-option"><option value="stable">Estável · acordes sustentados</option><option value="detailed">Detalhada · extensões e inversões</option></select></label>
       <button id="settings-chords" class="button secondary wide">Recalcular somente a cifra</button>
     </dialog>
+    <dialog id="install-faixalab-dialog" aria-labelledby="install-faixalab-title">
+      <button class="dialog-close icon-button" data-close="install-faixalab-dialog" type="button" aria-label="Fechar">×</button>
+      <h2 id="install-faixalab-title">Instalar FaixaLab</h2>
+      <p>No Chrome, abra <strong>⋮ → Transmitir, salvar e compartilhar → Instalar esta página como um app</strong>.</p>
+    </dialog>
     <dialog id="import-dialog">
       <form id="import-form">
         <button
@@ -387,18 +393,10 @@
           <details id="youtube-import-setup" hidden>
             <summary>Configurar importador do YouTube</summary>
             <p class="small muted" id="youtube-setup-help"></p>
-            <div id="youtube-chromebook-setup" hidden>
-              <ol class="small muted">
-                <li>Em Configurações → Sobre o ChromeOS → Desenvolvedores, configure o Ambiente para desenvolvedores do Linux.</li>
-                <li>Baixe o pacote abaixo e mova <strong>Instalar_FaixaLab_Linux.deb</strong> para <strong>Arquivos do Linux</strong>.</li>
-                <li>No app <strong>Terminal</strong>, abra o Linux e execute <code>sudo apt install "$HOME/Instalar_FaixaLab_Linux.deb"</code>.</li>
-                <li>Abra <strong>Importador FaixaLab</strong> no menu Aplicativos Linux e volte a esta aba.</li>
-              </ol>
-              <button type="button" id="youtube-use-file" class="button secondary">Usar arquivo de áudio</button>
-            </div>
             <p class="small">
               <a id="youtube-import-download" class="button primary">Instalar importador</a>
               <a id="youtube-open-importer" class="button secondary" hidden>Abrir importador</a>
+              <button type="button" id="youtube-use-file" class="button secondary" hidden>Usar arquivo de áudio</button>
             </p>
           </details>
         </div>
