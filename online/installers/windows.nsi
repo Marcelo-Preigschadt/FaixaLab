@@ -36,12 +36,13 @@ Section
   IfFileExists "$INSTDIR\.runtime\ready" done
 prepare:
   DetailPrint "Preparando o importador. O primeiro uso baixa os componentes de áudio."
-  nsExec::ExecToLog '"$SYSDIR\cmd.exe" /d /c INSTALAR.bat /quiet'
+  CreateDirectory "$INSTDIR\.runtime"
+  nsExec::ExecToLog '"$SYSDIR\cmd.exe" /d /c "INSTALAR.bat /quiet > .runtime\instalacao.log 2>&1"'
   Pop $0
   IfFileExists "$INSTDIR\.venv\Scripts\pythonw.exe" 0 failed
   StrCmp $0 "0" done failed
 failed:
-  MessageBox MB_OK|MB_ICONSTOP "Não foi possível preparar o importador. Confira sua conexão e execute o instalador novamente." /SD IDOK
+  MessageBox MB_OK|MB_ICONSTOP "Não foi possível preparar o importador. Confira sua conexão e execute o instalador novamente.$\r$\nRegistro: $INSTDIR\.runtime\instalacao.log" /SD IDOK
   Abort
 done:
   WriteUninstaller "$INSTDIR\Desinstalar.exe"

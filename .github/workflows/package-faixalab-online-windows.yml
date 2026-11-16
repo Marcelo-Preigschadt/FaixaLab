@@ -30,8 +30,12 @@ jobs:
           $package = Join-Path $PWD "FaixaLab_Online_Windows_1_3.exe"
           $proc = Start-Process -FilePath $package -ArgumentList "/S" -PassThru
           if (!$proc.WaitForExit(240000)) { throw "A instalação excedeu quatro minutos" }
-          if ($proc.ExitCode -ne 0) { throw "Instalador retornou $($proc.ExitCode)" }
           $app = Join-Path $env:LOCALAPPDATA "Programs\FaixaLab Importador"
+          if ($proc.ExitCode -ne 0) {
+            $log = Join-Path $app ".runtime\instalacao.log"
+            if (Test-Path $log) { Get-Content $log -Tail 45 }
+            throw "Instalador retornou $($proc.ExitCode)"
+          }
           $launcher = Join-Path $app "faixalab-online.pyw"
           $python = Join-Path $app ".venv\Scripts\python.exe"
           $pythonw = Join-Path $app ".venv\Scripts\pythonw.exe"
