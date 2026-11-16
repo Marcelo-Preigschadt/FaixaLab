@@ -77,7 +77,7 @@ def verify_google_identity(credential, audience):
             raise ValueError('Identidade do Google inválida.') from exc
 
 
-def create_app(upstream, url, key, backend_key='', google_client_id=''):
+def create_app(upstream, url, key, backend_key='', google_client_id='', *, relay_enabled=True):
     if not key:
         raise ValueError('FAIXALAB_PAGES_KEY precisa estar configurada.')
     origin = pages_origin(url)
@@ -86,6 +86,9 @@ def create_app(upstream, url, key, backend_key='', google_client_id=''):
 
     @asynccontextmanager
     async def lifespan(app):
+        if not relay_enabled:
+            yield
+            return
         async with httpx.AsyncClient(base_url=upstream, follow_redirects=False, trust_env=False,
                                      timeout=httpx.Timeout(240, connect=5)) as client:
             app.state.backend = client
@@ -141,6 +144,9 @@ def create_app(upstream, url, key, backend_key='', google_client_id=''):
         return JSONResponse({'api': issue_token(key, 'api', expires, account),
                              'media': issue_token(key, 'media', expires, account)},
                             headers={'Cache-Control': 'no-store'})
+
+    if not relay_enabled:
+        return app
 
     @app.api_route('/api/{path:path}', methods=['GET', 'HEAD', 'POST', 'PATCH', 'DELETE', 'PUT'])
     async def relay(request: Request, path: str):
