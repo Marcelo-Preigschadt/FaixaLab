@@ -1,5 +1,5 @@
 """Regression test for local YouTube import and retry in the public site."""
-import io, json, wave
+import io, json, os, wave
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
@@ -10,6 +10,8 @@ SITE = 'http://localhost:39081'
 ORIGIN = 'https://expert-space-funicular-gjxr569wq4939wg9-7861.app.github.dev'
 VIDEO = 'https://www.youtube.com/watch?v=aqz-KE-bpKQ'
 TOKEN = '9999999999.' + 'a' * 64
+WAKE = 'https://faixalab-retomada.onrender.com'
+PORTAL_TOKEN = TOKEN + '.' + 'b' * 128
 f = io.BytesIO()
 with wave.open(f, 'wb') as w:
     w.setparams((1, 2, 8000, 0, 'NONE', 'not compressed'))
@@ -28,6 +30,13 @@ def cors(route, status=200, **kwargs):
 def emulate_backend(route, state):
     path = route.request.url.removeprefix(ORIGIN)
     if route.request.method == 'OPTIONS': return cors(route, 204)
+    if path == '/api/health':
+        assert route.request.all_headers().get('authorization') == 'Bearer ' + state.get('token', TOKEN)
+        if state.get('starting'):
+            state['health_checks'] += 1
+            if state['health_checks'] >= 2:
+                state['server'] = True
+        return cors(route, 200, json={'status':'ok', 'engines':{'demucs':True}}) if state['server'] else cors(route, 404)
     if path == '/auth/google/config':
         return cors(route, json={'client_id':'test-client', 'nonce':'nonce'})
     if path == '/auth/google/session':
@@ -37,7 +46,7 @@ def emulate_backend(route, state):
     if path == '/api/import/file':
         data = route.request.post_data_buffer
         assert data and AUDIO in data and VIDEO.encode() in data and b'name="options"' in data
-        assert route.request.all_headers().get('authorization') == 'Bearer ' + TOKEN
+        assert route.request.all_headers().get('authorization') == 'Bearer ' + state.get('token', TOKEN)
         state['uploads'] += 1
         return cors(route, 202 if state['server'] else 503, json={'id':'fixture'} if state['server'] else {'detail':'Servidor de teste indisponível.'})
     if path == '/api/import/youtube':
@@ -61,7 +70,7 @@ def emulate_importer(route, state):
     route.fulfill(status=200, body=AUDIO, headers={'Content-Type':'audio/wav','Access-Control-Allow-Origin':SITE,'Access-Control-Expose-Headers':'X-FaixaLab-Filename','X-FaixaLab-Filename':'FaixaLab.wav'})
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
+    browser = p.chromium.launch(headless=True, executable_path=os.environ.get('FAIXALAB_TEST_CHROMIUM'))
     try:
         for platform, ua, port, filename in (
             ('Android','Mozilla/5.0 Android',17862,'FaixaLab_Audio_Android.apk'),
@@ -96,6 +105,41 @@ with sync_playwright() as p:
             expect(page.locator('#import-dialog')).not_to_be_visible()
             assert state['uploads']==2 and state['local_audio']==1 and state['cloud_imports']==0
             print(platform, state, flush=True)
+            page.close()
+        if len(sys.argv) > 2:
+            server.RequestHandlerClass.keywords['directory'] = sys.argv[2]
+            page = browser.new_page(user_agent='Mozilla/5.0 Android', viewport={'width': 393, 'height': 800})
+            page.add_init_script('Object.defineProperty(navigator,"userAgentData",{value:undefined});sessionStorage.setItem("faixalab-pages-session:'+ORIGIN+'",'+json.dumps(json.dumps({'api':PORTAL_TOKEN,'media':PORTAL_TOKEN}))+');')
+            state = {'uploads':0, 'local_audio':0, 'cloud_imports':0, 'active':True, 'server':False,
+                     'port':17863, 'ports':[], 'busy':False, 'wake_calls':0, 'starting':False, 'health_checks':0,
+                     'token':PORTAL_TOKEN}
+            page.route(ORIGIN+'/**', lambda route: emulate_backend(route, state))
+            page.route('http://127.0.0.1:*/import', lambda route: emulate_importer(route, state))
+
+            def wake(route):
+                if route.request.method == 'OPTIONS': return cors(route, 204)
+                assert route.request.url == WAKE + '/wake'
+                assert route.request.all_headers().get('authorization') == 'Bearer ' + PORTAL_TOKEN
+                assert state['local_audio'] == 1 and state['uploads'] == 0
+                state['wake_calls'] += 1
+                if state['wake_calls'] == 1:
+                    return cors(route, 503, json={'detail':'A retomada falhou neste teste.'})
+                state['starting'] = True
+                return cors(route, 202, json={'status':'starting'})
+
+            page.route(WAKE+'/**', wake)
+            page.goto(SITE)
+            page.locator('#new-project').click()
+            page.locator('[data-source=youtube]').click()
+            page.locator('#youtube-url').fill(VIDEO)
+            page.locator('#import-submit').click()
+            expect(page.locator('#import-error')).to_contain_text('Áudio obtido neste aparelho. A retomada falhou')
+            assert state['uploads'] == 0 and state['local_audio'] == 1 and state['wake_calls'] == 1
+            page.locator('#import-submit').click()
+            expect(page.locator('#import-submit')).to_have_text('Aguardando o servidor de separação…')
+            expect(page.locator('#import-dialog')).not_to_be_visible()
+            assert state['uploads'] == 1 and state['local_audio'] == 1 and state['wake_calls'] == 2
+            print('Android com Codespace desligado: uma extração, retomada e um upload após verificar o Demucs', flush=True)
             page.close()
     finally:
         browser.close()

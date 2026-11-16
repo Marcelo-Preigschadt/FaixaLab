@@ -6,9 +6,12 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.dirname(here);
-const [destination, codespace] = process.argv.slice(2);
+const [destination, codespace, wakeServer] = process.argv.slice(2);
 if (!destination || !/^[a-z0-9-]+$/.test(codespace ?? '')) {
-  throw new Error('Uso: node online/build-pages.mjs DIRETORIO NOME_DO_CODESPACE');
+  throw new Error('Uso: node online/build-pages.mjs DIRETORIO NOME_DO_CODESPACE [URL_RETOMADA]');
+}
+if (wakeServer && (new URL(wakeServer).origin !== wakeServer || !wakeServer.startsWith('https://'))) {
+  throw new Error('Use a origem HTTPS do serviço de retomada.');
 }
 const web = path.join(repo, 'app/faixalab/web');
 const output = path.resolve(destination);
@@ -21,13 +24,16 @@ const connectionScript = readFileSync(path.join(here, 'pages-connection.js'));
 const connectionVersion = version(connectionScript);
 writeFileSync(path.join(output, 'pages-connection.js'), connectionScript);
 const config = { backend: `https://${codespace}-7861.app.github.dev` };
-writeFileSync(path.join(output, 'pages-config.js'), 'window.faixaLabPagesConfig = ' + JSON.stringify(config) + ';\n');
+if (wakeServer) config.wakeServer = wakeServer;
+const configScript = 'window.faixaLabPagesConfig = ' + JSON.stringify(config) + ';\n';
+writeFileSync(path.join(output, 'pages-config.js'), configScript);
 
 const html = readFileSync(path.join(web, 'index.html'), 'utf8')
   .replace(/\b(href|src)="\//g, '$1="./')
   .replace('href="./style.css"', 'href="./style.css?v=' + version(readFileSync(path.join(web, 'style.css'))) + '"')
   .replace('<script src="./app.js" defer></script>',
-    '<meta name="referrer" content="no-referrer" />\n    <script src="./pages-config.js" defer></script>\n    <script src="./pages-connection.js?v=' + connectionVersion + '" defer></script>\n    <script src="./app.js?v=' + version(readFileSync(path.join(web, 'app.js'))) + '" defer></script>')
+    '<meta name="referrer" content="no-referrer" />\n    <script src="./pages-config.js?v=' + version(configScript) + '" defer></script>\n    <script src="./pages-connection.js?v=' + connectionVersion + '" defer></script>\n    <script src="./app.js?v=' + version(readFileSync(path.join(web, 'app.js'))) + '" defer></script>')
+  .replace('<button\n          id="import-submit"', '<div id="import-google" hidden></div>\n        <button\n          id="import-submit"')
   .replace('Processamento local', 'Processamento online')
   .replace('Suas músicas ficam salvas neste computador.', 'Suas músicas online ficam salvas no servidor.')
   .replace('<main>', `<main>

@@ -1,7 +1,7 @@
 name: Testar importação do site
 on:
   push:
-    branches: [faixalab-site-import, faixalab-import-retry]
+    branches: [faixalab-site-import, faixalab-import-retry, retomada-faixalab]
 permissions:
   contents: read
 jobs:
@@ -21,4 +21,5 @@ jobs:
           pip install playwright==1.56.0
           python -m playwright install chromium
           node online/build-pages.mjs "$RUNNER_TEMP/site" expert-space-funicular-gjxr569wq4939wg9
-          python online/test_site_import.py "$RUNNER_TEMP/site"
+          node online/build-pages.mjs "$RUNNER_TEMP/site-wake" expert-space-funicular-gjxr569wq4939wg9 https://faixalab-retomada.onrender.com
+          python online/test_site_import.py "$RUNNER_TEMP/site" "$RUNNER_TEMP/site-wake"

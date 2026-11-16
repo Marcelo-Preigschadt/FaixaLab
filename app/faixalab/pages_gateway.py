@@ -77,10 +77,13 @@ def verify_google_identity(credential, audience):
             raise ValueError('Identidade do Google inválida.') from exc
 
 
-def create_app(upstream, url, key, backend_key='', google_client_id='', *, relay_enabled=True):
+def create_app(upstream, url, key, backend_key='', google_client_id='', *, relay_enabled=True,
+               issue_session=None, verify_portal_session=None):
     if not key:
         raise ValueError('FAIXALAB_PAGES_KEY precisa estar configurada.')
     origin = pages_origin(url)
+    if issue_session is None:
+        issue_session = partial(issue_token, key)
     challenges = {}
     challenge_lock = Lock()
 
@@ -141,8 +144,8 @@ def create_app(upstream, url, key, backend_key='', google_client_id='', *, relay
             raise HTTPException(401, 'O Google não confirmou esta solicitação de login.')
         account = hashlib.sha256(f'google:{subject}'.encode()).hexdigest()
         expires = int(time.time()) + SESSION_SECONDS
-        return JSONResponse({'api': issue_token(key, 'api', expires, account),
-                             'media': issue_token(key, 'media', expires, account)},
+        return JSONResponse({'api': issue_session('api', expires, account),
+                             'media': issue_session('media', expires, account)},
                             headers={'Cache-Control': 'no-store'})
 
     if not relay_enabled:
@@ -154,10 +157,19 @@ def create_app(upstream, url, key, backend_key='', google_client_id='', *, relay
             return JSONResponse({'detail': 'Origem não autorizada.'}, status_code=403)
         authorization = request.headers.get('authorization', '')
         token = authorization[7:] if authorization.startswith('Bearer ') else ''
-        account = token_account(token, key, 'api')
+        scope = 'api'
+        account = token_account(token, key, scope)
+        external = False
+        if account is None and verify_portal_session:
+            account = verify_portal_session(token, scope)
+            external = account is not None
         if account is None and request.method in {'GET', 'HEAD'} and MEDIA_ROUTE.fullmatch(request.url.path):
             token = request.query_params.get('access', '')
-            account = token_account(token, key, 'media')
+            scope = 'media'
+            account = token_account(token, key, scope)
+            if account is None and verify_portal_session:
+                account = verify_portal_session(token, scope)
+                external = account is not None
         if account is None:
             return JSONResponse({'detail': 'Entre novamente para acessar o FaixaLab.'}, status_code=401)
 
@@ -166,6 +178,8 @@ def create_app(upstream, url, key, backend_key='', google_client_id='', *, relay
         if backend_key:
             headers['x-faixalab-key'] = backend_key
         if account:
+            if external:
+                token = issue_token(key, scope, token.split('.')[0], account)
             headers[SESSION_HEADER] = token
         params = [(name, value) for name, value in request.query_params.multi_items() if name != 'access']
         body = None if request.method in {'GET', 'HEAD'} else request.stream()
@@ -187,7 +201,12 @@ def create_app(upstream, url, key, backend_key='', google_client_id='', *, relay
 if __name__ == '__main__':
     import uvicorn
 
+    verify_portal_session = None
+    if public_key := os.environ.get('FAIXALAB_WAKE_PUBLIC_KEY', '').strip():
+        from .wake_session import WakeSession
+        verify_portal_session = WakeSession.from_public_key(public_key).verify
     uvicorn.run(create_app(f'http://127.0.0.1:{os.environ.get("PORT", "7860")}',
                            os.environ['FAIXALAB_PAGES_URL'], os.environ['FAIXALAB_PAGES_KEY'],
-                           os.environ.get('FAIXALAB_API_KEY', ''), os.environ.get('FAIXALAB_GOOGLE_CLIENT_ID', '').strip()),
+                           os.environ.get('FAIXALAB_API_KEY', ''), os.environ.get('FAIXALAB_GOOGLE_CLIENT_ID', '').strip(),
+                           verify_portal_session=verify_portal_session),
                 host='0.0.0.0', port=7861, access_log=False)

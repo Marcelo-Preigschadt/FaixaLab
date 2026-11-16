@@ -95,10 +95,12 @@ async function api(path, options = {}) {
   if (Array.isArray(detail)) {
     detail = detail.map((issue) => issue?.msg).filter((message) => typeof message === "string").join(" ");
   }
-  if (typeof detail === "string" && detail.trim()) throw new Error(detail.trim());
+  if (typeof detail === "string" && detail.trim()) {
+    throw Object.assign(new Error(detail.trim()), { status: result.status });
+  }
 
   if (result.status === 401) {
-    throw new Error("A sessão não autorizou a solicitação (HTTP 401). Entre novamente e tente outra vez.");
+    throw Object.assign(new Error("A sessão não autorizou a solicitação (HTTP 401). Entre novamente e tente outra vez."), { status: 401 });
   }
   if ([502, 503, 504].includes(result.status)) {
     throw new Error(`O servidor de processamento está indisponível (HTTP ${result.status}).`);
@@ -571,12 +573,12 @@ async function getLocalAudio(url, onProgress) {
   return file;
 }
 
-function uploadAudio(file, video) {
+function uploadAudio(file, video, onWaiting) {
   const data = new FormData();
   data.append("file", file);
   data.append("options", JSON.stringify(options()));
   if (video) data.append("youtube_url", video);
-  return api("/api/import/file", { method: "POST", body: data });
+  return api("/api/import/file", { method: "POST", body: data, onWaiting });
 }
 
 $("#audio-file").onchange = (e) => setFile(e.target.files[0]);
@@ -590,11 +592,14 @@ $("#dropzone").ondrop = (e) => {
   $("#dropzone").classList.remove("dragging");
   setFile(e.dataTransfer.files[0]);
 };
+let retryImportOnSignIn = false;
 async function importAudio() {
   const button = $("#import-submit");
   if (button.disabled) return;
   button.disabled = true;
+  retryImportOnSignIn = false;
   button.textContent = "Importando…";
+  const onWaiting = text => { button.textContent = text; };
   $("#import-error").hidden = true;
   let pendingUpload = false;
   try {
@@ -602,7 +607,7 @@ async function importAudio() {
     if (state.source === "file") {
       if (!state.file) throw new Error("Escolha ou arraste um arquivo de áudio.");
       const video = $("#file-youtube-url").value.trim();
-      p = await uploadAudio(state.file, video);
+      p = await uploadAudio(state.file, video, onWaiting);
       $("#file-youtube-url").value = "";
     } else if (window.faixaLabPages) {
       if (!localImporter) throw new Error("O importador do YouTube ainda não está disponível para este sistema.");
@@ -612,7 +617,7 @@ async function importAudio() {
       const file = await getLocalAudio(url, text => { button.textContent = text; });
       pendingUpload = true;
       button.textContent = "Enviando áudio para separação…";
-      p = await uploadAudio(file, url);
+      p = await uploadAudio(file, url, onWaiting);
       pendingUpload = false;
       localAudio = null;
       try { sessionStorage.removeItem(youtubeDraftKey); } catch {}
@@ -627,6 +632,7 @@ async function importAudio() {
     await selectProject(p.id);
     await refreshLibrary();
   } catch (err) {
+    retryImportOnSignIn = Boolean(window.faixaLabPages) && err.status === 401;
     $("#import-error").textContent = pendingUpload
       ? "Áudio obtido neste aparelho. " + err.message + " Tente enviar novamente nesta aba."
       : err.message;
@@ -636,6 +642,9 @@ async function importAudio() {
     button.textContent = pendingUpload ? "Tentar enviar novamente" : "Separar e analisar música";
   }
 }
+document.addEventListener("faixalab-session-ready", () => {
+  if (retryImportOnSignIn && $("#import-dialog").open) void importAudio();
+});
 $("#import-form").onsubmit = event => {
   event.preventDefault();
   void importAudio();
