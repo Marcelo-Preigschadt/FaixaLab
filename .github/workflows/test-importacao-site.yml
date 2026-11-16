@@ -1,7 +1,7 @@
 name: Testar importação do site
 on:
   push:
-    branches: [faixalab-site-import, faixalab-import-retry, retomada-faixalab, instalar-app-web-chromebook]
+    branches: [faixalab-site-import, faixalab-import-retry, retomada-faixalab, instalar-app-web-chromebook, instalar-importador-grafico]
 permissions:
   contents: read
 jobs:

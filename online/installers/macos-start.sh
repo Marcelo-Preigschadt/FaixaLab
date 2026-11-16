@@ -1,9 +1,11 @@
 #!/bin/bash
 set -euo pipefail
+umask 077
 cd -- "$(dirname -- "$0")"
 
 data="$HOME/Library/Application Support/FaixaLab/Importador"
-mkdir -p "$data"
+mkdir -p "$data/.runtime"
+exec >>"$data/.runtime/instalacao.log" 2>&1
 cp -R payload/. "$data/"
 cd "$data"
 
@@ -29,4 +31,4 @@ if [[ ! -f .runtime/ready ]]; then
   .venv/bin/python prepare_youtube.py
   printf '1\n' > .runtime/ready
 fi
-exec .venv/bin/python -m faixalab.local_import
+exec .venv/bin/python activate.py

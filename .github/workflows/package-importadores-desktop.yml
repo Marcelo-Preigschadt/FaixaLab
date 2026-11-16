@@ -1,0 +1,81 @@
+name: Empacotar importadores gráficos do FaixaLab
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [instalar-importador-grafico]
+    paths:
+      - 'online/installers/**'
+      - 'online/local-import/**'
+      - '.github/workflows/package-importadores-desktop.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Obter a revisão
+        run: |
+          git init .
+          git fetch --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" "${GITHUB_SHA}"
+          git checkout --detach FETCH_HEAD
+      - name: Empacotar e testar a abertura pelo menu
+        run: |
+          pacote=Instalar_FaixaLab_Linux_1.2.0.deb
+          python3 online/installers/build.py linux "$pacote"
+          sudo apt-get -qq update
+          sudo apt-get -qq install "./$pacote" xvfb xdotool
+          grep -Fx 'Terminal=false' /usr/share/applications/faixalab-importador.desktop
+          xvfb-run -a bash -e <<'SH'
+          faixalab-importador &
+          launcher=$!
+          if ! window=$(timeout 150 xdotool search --sync --onlyvisible --name '^Importador FaixaLab ativo$'); then
+            cat "$HOME/.local/share/FaixaLab/Importador/.runtime/instalacao.log"
+            exit 1
+          fi
+          xdotool key --window "$window" Return
+          wait "$launcher"
+          SH
+          cliente="$HOME/.local/share/FaixaLab/Importador"
+          "$cliente/.venv/bin/python" "$cliente/prepare_youtube.py" --check
+          curl -fsS -X OPTIONS http://127.0.0.1:17861/import -o /dev/null -D - \
+            -H 'Origin: https://marcelo-preigschadt.github.io' -H 'Access-Control-Request-Method: POST' \
+            | grep -i '^Access-Control-Allow-Origin: https://marcelo-preigschadt.github.io'
+      - name: Publicar pacote e conferir os instaladores existentes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view v0.10.1 --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '.assets[] | [.name, .size, .state] | @tsv'
+          gh release upload v0.10.1 Instalar_FaixaLab_Linux_1.2.0.deb --repo "$GITHUB_REPOSITORY" --clobber
+
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - name: Obter a revisão
+        run: |
+          git init .
+          git fetch --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" "${GITHUB_SHA}"
+          git checkout --detach FETCH_HEAD
+      - name: Empacotar e testar a ativação
+        run: |
+          pacote=Instalar_FaixaLab_macOS_1.2.0.pkg
+          python3 online/installers/build.py macos "$pacote"
+          sudo installer -pkg "$pacote" -target /
+          cliente="$HOME/Library/Application Support/FaixaLab/Importador"
+          if ! /bin/bash '/Applications/Importador FaixaLab.app/Contents/Resources/Preparar.sh'; then
+            cat "$cliente/.runtime/instalacao.log"
+            exit 1
+          fi
+          "$cliente/.venv/bin/python" "$cliente/prepare_youtube.py" --check
+          curl -fsS -X OPTIONS http://127.0.0.1:17861/import -o /dev/null -D - \
+            -H 'Origin: https://marcelo-preigschadt.github.io' -H 'Access-Control-Request-Method: POST' \
+            | grep -i '^Access-Control-Allow-Origin: https://marcelo-preigschadt.github.io'
+      - name: Publicar pacote
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload v0.10.1 Instalar_FaixaLab_macOS_1.2.0.pkg --repo "$GITHUB_REPOSITORY" --clobber

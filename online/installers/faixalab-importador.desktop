@@ -4,5 +4,5 @@ Name=Importador FaixaLab
 Comment=Importa áudio no mesmo aparelho que acessa o FaixaLab
 Exec=faixalab-importador
 Icon=faixalab-importador
-Terminal=true
+Terminal=false
 Categories=AudioVideo;

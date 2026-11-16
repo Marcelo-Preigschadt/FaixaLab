@@ -82,6 +82,8 @@ with sync_playwright() as p:
         for platform, ua, port, filename in (
             ('Android','Mozilla/5.0 Android',17862,'FaixaLab_Audio_Android.apk'),
             ('Win32','Mozilla/5.0 Windows',17861,'Instalar_FaixaLab_Windows.exe'),
+            ('MacIntel','Mozilla/5.0 Macintosh',17861,'Instalar_FaixaLab_macOS_1.2.0.pkg'),
+            ('Linux x86_64','Mozilla/5.0 Linux',17861,'Instalar_FaixaLab_Linux_1.2.0.deb'),
             ('Chrome OS','Mozilla/5.0 CrOS',17861,None),
         ):
             page = browser.new_page(user_agent=ua)
@@ -93,7 +95,7 @@ with sync_playwright() as p:
             expect(page.locator('#project-list')).to_contain_text('A biblioteca está indisponível', use_inner_text=False)
             expect(page.locator('#project-count')).to_have_text('—', use_inner_text=False)
             if platform == 'Chrome OS':
-                expect(page.get_by_role('button', name='Instalar FaixaLab', exact=True)).to_be_visible()
+                expect(page.get_by_role('button', name='Instalar site como app', exact=True)).to_be_visible()
                 expect(page.locator('#start-import')).to_be_visible()
                 devtools = page.context.new_cdp_session(page)
                 errors = devtools.send('Page.getInstallabilityErrors')['installabilityErrors']
@@ -143,6 +145,11 @@ with sync_playwright() as p:
             assert state['uploads']==2 and state['local_audio']==1 and state['cloud_imports']==0
             print(platform, state, flush=True)
             page.close()
+        page = browser.new_page(user_agent='Mozilla/5.0 iPhone')
+        page.goto(SITE)
+        expect(page.locator('[data-source=youtube]')).to_be_disabled()
+        expect(page.locator('#youtube-import-download')).not_to_be_visible()
+        page.close()
         if len(sys.argv) > 2:
             server.RequestHandlerClass.keywords['directory'] = sys.argv[2]
             page = browser.new_page(user_agent='Mozilla/5.0 Android', viewport={'width': 393, 'height': 800})

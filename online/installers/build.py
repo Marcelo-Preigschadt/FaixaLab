@@ -11,7 +11,7 @@ HERE = Path(__file__).resolve().parent
 ONLINE = HERE.parent
 ROOT = ONLINE.parent
 NAME = 'FaixaLab_Importador'
-VERSION = '1.1.0'
+VERSION = '1.2.0'
 
 
 def stage_client(directory):
@@ -48,7 +48,7 @@ def linux(client, output):
     (metadata / 'control').write_text(
         'Package: faixalab-importador\nVersion: ' + VERSION + '\nArchitecture: all\n'
         'Maintainer: FaixaLab <faixalablab@gmail.com>\n'
-        'Depends: bash, python3 (>= 3.10), python3-venv, ffmpeg\n'
+        'Depends: bash, python3 (>= 3.10), python3-venv, ffmpeg, zenity\n'
         'Section: sound\nPriority: optional\n'
         'Description: Importador de áudio local para o FaixaLab\n'
     )
@@ -77,7 +77,7 @@ def macos(client, output):
     app = payload / 'Importador FaixaLab.app'
     subprocess.run(['osacompile', '-o', str(app), str(HERE / 'macos-launcher.applescript')], check=True)
     resources = app / 'Contents/Resources'
-    launcher = resources / 'Preparar.command'
+    launcher = resources / 'Preparar.sh'
     shutil.copyfile(HERE / 'macos-start.sh', launcher)
     launcher.chmod(0o755)
     shutil.copytree(client, resources / 'payload')
