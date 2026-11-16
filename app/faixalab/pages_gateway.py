@@ -60,6 +60,10 @@ class GoogleCredential(BaseModel):
     nonce: str = Field(pattern=r'^[a-zA-Z0-9_-]{43}$')
 
 
+class PortalCredential(BaseModel):
+    credential: str = Field(min_length=1, max_length=8192)
+
+
 def verify_google_identity(credential, audience):
     from google.auth.exceptions import GoogleAuthError, TransportError
     from google.auth.transport.requests import Request as GoogleRequest
@@ -77,13 +81,23 @@ def verify_google_identity(credential, audience):
             raise ValueError('Identidade do Google inválida.') from exc
 
 
+def checked_google_identity(credential, audience):
+    try:
+        identity = verify_google_identity(credential, audience)
+    except (ValueError, TypeError):
+        raise HTTPException(401, 'O Google não confirmou a sessão.') from None
+    except (ImportError, RuntimeError):
+        raise HTTPException(503, 'O login do Google está indisponível.') from None
+    if not isinstance(identity.get('sub'), str) or not identity['sub']:
+        raise HTTPException(401, 'O Google não confirmou esta solicitação de login.')
+    return identity
+
+
 def create_app(upstream, url, key, backend_key='', google_client_id='', *, relay_enabled=True,
-               issue_session=None, verify_portal_session=None):
+               google_portal=False):
     if not key:
         raise ValueError('FAIXALAB_PAGES_KEY precisa estar configurada.')
     origin = pages_origin(url)
-    if issue_session is None:
-        issue_session = partial(issue_token, key)
     challenges = {}
     challenge_lock = Lock()
 
@@ -133,23 +147,32 @@ def create_app(upstream, url, key, backend_key='', google_client_id='', *, relay
             deadline = challenges.pop(data.nonce, 0)
         if deadline <= time.monotonic():
             raise HTTPException(401, 'Pedido de login expirado. Recarregue o FaixaLab e tente novamente.')
-        try:
-            identity = verify_google_identity(data.credential, google_client_id)
-        except (ValueError, TypeError):
-            raise HTTPException(401, 'O Google não confirmou a sessão.') from None
-        except (ImportError, RuntimeError):
-            raise HTTPException(503, 'O login do Google está indisponível.') from None
-        subject = identity.get('sub')
-        if identity.get('nonce') != data.nonce or not isinstance(subject, str) or not subject:
+        identity = checked_google_identity(data.credential, google_client_id)
+        if identity.get('nonce') != data.nonce:
             raise HTTPException(401, 'O Google não confirmou esta solicitação de login.')
+        if not relay_enabled:
+            return JSONResponse({'expires': identity['exp']}, headers={'Cache-Control': 'no-store'})
+        return issue_account_session(identity['sub'])
+
+    def issue_account_session(subject):
         account = hashlib.sha256(f'google:{subject}'.encode()).hexdigest()
         expires = int(time.time()) + SESSION_SECONDS
-        return JSONResponse({'api': issue_session('api', expires, account),
-                             'media': issue_session('media', expires, account)},
+        return JSONResponse({'api': issue_token(key, 'api', expires, account),
+                             'media': issue_token(key, 'media', expires, account)},
                             headers={'Cache-Control': 'no-store'})
 
     if not relay_enabled:
         return app
+
+    if google_portal:
+        @app.post('/auth/google/portal-session')
+        def portal_session(request: Request, data: PortalCredential):
+            if request.headers.get('origin') != origin:
+                raise HTTPException(403, 'Origem não autorizada.')
+            if not google_client_id:
+                raise HTTPException(503, 'Login com Google ainda não configurado.')
+            identity = checked_google_identity(data.credential, google_client_id)
+            return issue_account_session(identity['sub'])
 
     @app.api_route('/api/{path:path}', methods=['GET', 'HEAD', 'POST', 'PATCH', 'DELETE', 'PUT'])
     async def relay(request: Request, path: str):
@@ -157,19 +180,10 @@ def create_app(upstream, url, key, backend_key='', google_client_id='', *, relay
             return JSONResponse({'detail': 'Origem não autorizada.'}, status_code=403)
         authorization = request.headers.get('authorization', '')
         token = authorization[7:] if authorization.startswith('Bearer ') else ''
-        scope = 'api'
-        account = token_account(token, key, scope)
-        external = False
-        if account is None and verify_portal_session:
-            account = verify_portal_session(token, scope)
-            external = account is not None
+        account = token_account(token, key, 'api')
         if account is None and request.method in {'GET', 'HEAD'} and MEDIA_ROUTE.fullmatch(request.url.path):
             token = request.query_params.get('access', '')
-            scope = 'media'
-            account = token_account(token, key, scope)
-            if account is None and verify_portal_session:
-                account = verify_portal_session(token, scope)
-                external = account is not None
+            account = token_account(token, key, 'media')
         if account is None:
             return JSONResponse({'detail': 'Entre novamente para acessar o FaixaLab.'}, status_code=401)
 
@@ -178,8 +192,6 @@ def create_app(upstream, url, key, backend_key='', google_client_id='', *, relay
         if backend_key:
             headers['x-faixalab-key'] = backend_key
         if account:
-            if external:
-                token = issue_token(key, scope, token.split('.')[0], account)
             headers[SESSION_HEADER] = token
         params = [(name, value) for name, value in request.query_params.multi_items() if name != 'access']
         body = None if request.method in {'GET', 'HEAD'} else request.stream()
@@ -201,12 +213,8 @@ def create_app(upstream, url, key, backend_key='', google_client_id='', *, relay
 if __name__ == '__main__':
     import uvicorn
 
-    verify_portal_session = None
-    if public_key := os.environ.get('FAIXALAB_WAKE_PUBLIC_KEY', '').strip():
-        from .wake_session import WakeSession
-        verify_portal_session = WakeSession.from_public_key(public_key).verify
     uvicorn.run(create_app(f'http://127.0.0.1:{os.environ.get("PORT", "7860")}',
                            os.environ['FAIXALAB_PAGES_URL'], os.environ['FAIXALAB_PAGES_KEY'],
                            os.environ.get('FAIXALAB_API_KEY', ''), os.environ.get('FAIXALAB_GOOGLE_CLIENT_ID', '').strip(),
-                           verify_portal_session=verify_portal_session),
+                           google_portal=os.environ.get('FAIXALAB_ENABLE_GOOGLE_PORTAL') == '1'),
                 host='0.0.0.0', port=7861, access_log=False)

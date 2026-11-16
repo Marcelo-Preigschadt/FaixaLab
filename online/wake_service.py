@@ -7,9 +7,9 @@ from time import monotonic
 import httpx
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
+from starlette.concurrency import run_in_threadpool
 
-from faixalab.pages_gateway import create_app, pages_origin
-from faixalab.wake_session import WakeSession
+from faixalab.pages_gateway import checked_google_identity, create_app, pages_origin
 
 
 async def dispatch_restore(client, repository):
@@ -25,37 +25,24 @@ def make_app(pages_url, google_client_id, dispatch_token, repository):
     if not google_client_id or not re.fullmatch(r'[\w.-]+/[\w.-]+', repository):
         raise ValueError('Configuração incompleta para a retomada do FaixaLab')
     origin = pages_origin(pages_url)
-    sessions = WakeSession.from_dispatch_token(dispatch_token) if dispatch_token else None
-
-    def issue_session(scope, expires, account):
-        if sessions is None:
-            raise HTTPException(503, 'A retomada do servidor ainda está em configuração.')
-        return sessions.issue(scope, expires, account)
-
-    app = create_app(None, pages_url, 'auth-only', google_client_id=google_client_id, relay_enabled=False,
-                     issue_session=issue_session)
+    app = create_app(None, pages_url, 'auth-only', google_client_id=google_client_id, relay_enabled=False)
     lock = asyncio.Lock()
     next_request = 0.0
 
     @app.get('/wake/health')
     async def wake_health():
-        return {'service': 'faixalab-wake', 'configured': sessions is not None}
-
-    @app.get('/wake/public-key')
-    async def public_key():
-        if sessions is None:
-            raise HTTPException(503, 'A retomada do servidor ainda está em configuração.')
-        return {'key': sessions.public.public_bytes_raw().hex()}
+        return {'service': 'faixalab-wake', 'configured': bool(dispatch_token)}
 
     @app.post('/wake', status_code=202)
     async def wake(request: Request):
         if request.headers.get('origin') != origin:
             raise HTTPException(403, 'Origem não autorizada.')
-        if sessions is None:
+        if not dispatch_token:
             raise HTTPException(503, 'A retomada do servidor ainda está em configuração.')
         authorization = request.headers.get('authorization', '')
-        if not authorization.startswith('Bearer ') or sessions.verify(authorization[7:], 'api') is None:
+        if not authorization.startswith('Bearer ') or not 7 < len(authorization) <= 8199:
             raise HTTPException(401, 'Entre com Google para iniciar a separação.')
+        await run_in_threadpool(checked_google_identity, authorization[7:], google_client_id)
         nonlocal next_request
         async with lock:
             if monotonic() >= next_request:

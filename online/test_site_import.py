@@ -11,7 +11,7 @@ ORIGIN = 'https://expert-space-funicular-gjxr569wq4939wg9-7861.app.github.dev'
 VIDEO = 'https://www.youtube.com/watch?v=aqz-KE-bpKQ'
 TOKEN = '9999999999.' + 'a' * 64
 WAKE = 'https://faixalab-retomada.onrender.com'
-PORTAL_TOKEN = TOKEN + '.' + 'b' * 128
+GOOGLE_IDENTITY = 'stub-signed-google-identity'
 f = io.BytesIO()
 with wave.open(f, 'wb') as w:
     w.setparams((1, 2, 8000, 0, 'NONE', 'not compressed'))
@@ -40,6 +40,11 @@ def emulate_backend(route, state):
     if path == '/auth/google/config':
         return cors(route, json={'client_id':'test-client', 'nonce':'nonce'})
     if path == '/auth/google/session':
+        return cors(route, json={'api':TOKEN, 'media':TOKEN})
+    if path == '/auth/google/portal-session':
+        assert route.request.post_data_json['credential'] == GOOGLE_IDENTITY
+        if not state['starting']: return cors(route, 404)
+        state['exchanges'] += 1
         return cors(route, json={'api':TOKEN, 'media':TOKEN})
     if path == '/api/projects' and not state['server']:
         return cors(route, 503, json={'detail':'Servidor de teste indisponível.'})
@@ -109,17 +114,17 @@ with sync_playwright() as p:
         if len(sys.argv) > 2:
             server.RequestHandlerClass.keywords['directory'] = sys.argv[2]
             page = browser.new_page(user_agent='Mozilla/5.0 Android', viewport={'width': 393, 'height': 800})
-            page.add_init_script('Object.defineProperty(navigator,"userAgentData",{value:undefined});sessionStorage.setItem("faixalab-pages-session:'+ORIGIN+'",'+json.dumps(json.dumps({'api':PORTAL_TOKEN,'media':PORTAL_TOKEN}))+');')
+            page.add_init_script('Object.defineProperty(navigator,"userAgentData",{value:undefined});sessionStorage.setItem("faixalab-google-identity:'+ORIGIN+'",'+json.dumps(json.dumps({'credential':GOOGLE_IDENTITY,'expires':9999999999}))+');')
             state = {'uploads':0, 'local_audio':0, 'cloud_imports':0, 'active':True, 'server':False,
                      'port':17863, 'ports':[], 'busy':False, 'wake_calls':0, 'starting':False, 'health_checks':0,
-                     'token':PORTAL_TOKEN}
+                     'exchanges':0}
             page.route(ORIGIN+'/**', lambda route: emulate_backend(route, state))
             page.route('http://127.0.0.1:*/import', lambda route: emulate_importer(route, state))
 
             def wake(route):
                 if route.request.method == 'OPTIONS': return cors(route, 204)
                 assert route.request.url == WAKE + '/wake'
-                assert route.request.all_headers().get('authorization') == 'Bearer ' + PORTAL_TOKEN
+                assert route.request.all_headers().get('authorization') == 'Bearer ' + GOOGLE_IDENTITY
                 assert state['local_audio'] == 1 and state['uploads'] == 0
                 state['wake_calls'] += 1
                 if state['wake_calls'] == 1:
@@ -138,7 +143,7 @@ with sync_playwright() as p:
             page.locator('#import-submit').click()
             expect(page.locator('#import-submit')).to_have_text('Aguardando o servidor de separação…')
             expect(page.locator('#import-dialog')).not_to_be_visible()
-            assert state['uploads'] == 1 and state['local_audio'] == 1 and state['wake_calls'] == 2
+            assert state['uploads'] == 1 and state['local_audio'] == 1 and state['wake_calls'] == 2 and state['exchanges'] == 1
             print('Android com Codespace desligado: uma extração, retomada e um upload após verificar o Demucs', flush=True)
             page.close()
     finally:

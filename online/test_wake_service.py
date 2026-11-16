@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import time
 from unittest.mock import AsyncMock, patch
 
@@ -6,34 +7,39 @@ import httpx
 from fastapi.testclient import TestClient
 
 from faixalab.pages_gateway import create_app, token_account
-from faixalab.wake_session import WakeSession
 from online.wake_service import dispatch_restore, make_app
 
 SITE = 'https://marcelo-preigschadt.github.io'
 REPO = 'Marcelo-Preigschadt/mvlab'
-DISPATCH_TOKEN = 'test-dispatch-token'
-ACCOUNT = 'a' * 64
-SIGNER = WakeSession.from_dispatch_token(DISPATCH_TOKEN)
-EXPIRES = int(time.time()) + 3600
-HEADERS = {'Origin': SITE, 'Authorization': 'Bearer ' + SIGNER.issue('api', EXPIRES, ACCOUNT)}
+IDENTITY = 'google-signed-id-token'
+HEADERS = {'Origin': SITE, 'Authorization': 'Bearer ' + IDENTITY}
+CLAIMS = {'sub': 'test-google-subject', 'exp': int(time.time()) + 3600}
 
 
-def test_wake_requires_the_site_and_a_valid_session_and_coalesces_requests():
-    app = make_app(SITE + '/FaixaLab/', 'google-client', DISPATCH_TOKEN, REPO)
-    with TestClient(app) as browser, patch('online.wake_service.dispatch_restore', new_callable=AsyncMock) as dispatch:
+def verify_identity(credential, audience):
+    assert audience == 'google-client'
+    if credential != IDENTITY:
+        raise ValueError('Invalid identity')
+    return CLAIMS
+
+
+def test_wake_requires_google_identity_and_coalesces_requests():
+    app = make_app(SITE + '/FaixaLab/', 'google-client', 'dispatch-token', REPO)
+    with (TestClient(app) as browser,
+          patch('faixalab.pages_gateway.verify_google_identity', side_effect=verify_identity),
+          patch('online.wake_service.dispatch_restore', new_callable=AsyncMock) as dispatch):
         assert browser.post('/wake', headers={'Origin': SITE}).status_code == 401
         assert browser.post('/wake', headers={**HEADERS, 'Origin': 'https://example.com'}).status_code == 403
+        assert browser.post('/wake', headers={**HEADERS, 'Authorization': 'Bearer dispatch-token'}).status_code == 401
         assert browser.get('/api/projects', headers=HEADERS).status_code == 404
         assert browser.get('/auth/google/config', headers={'Origin': SITE}).json()['client_id'] == 'google-client'
-        key = browser.get('/wake/public-key').json()['key']
-        assert WakeSession.from_public_key(key).verify(HEADERS['Authorization'][7:], 'api') == ACCOUNT
         assert browser.post('/wake', headers=HEADERS).status_code == 202
         assert browser.post('/wake', headers=HEADERS).status_code == 202
         dispatch.assert_awaited_once()
         assert dispatch.await_args.args[1] == REPO
 
 
-def test_missing_dispatch_token_is_an_explicit_blocker():
+def test_missing_dispatch_token_keeps_start_disabled():
     with TestClient(make_app(SITE + '/FaixaLab/', 'google-client', '', REPO)) as browser:
         assert browser.get('/wake/health').json()['configured'] is False
         assert browser.post('/wake', headers=HEADERS).status_code == 503
@@ -52,16 +58,26 @@ def test_dispatch_targets_only_the_existing_restore_workflow():
     asyncio.run(verify())
 
 
-def test_gateway_keeps_account_isolation_when_verifying_portal_sessions():
-    def respond(request):
-        token = request.headers['x-faixalab-pages-session']
-        assert token_account(token, 'codespace-signing-key', 'api') == ACCOUNT
-        return httpx.Response(200, stream=httpx.ByteStream(b'{"status":"ok"}'))
-
+def test_gateway_preserves_account_isolation_and_issues_fresh_sessions():
     gateway = create_app('http://upstream', SITE + '/FaixaLab/', 'codespace-signing-key',
-                         verify_portal_session=SIGNER.verify)
-    upstream = httpx.AsyncClient(base_url='http://upstream', transport=httpx.MockTransport(respond))
-    with patch('faixalab.pages_gateway.httpx.AsyncClient', return_value=upstream), TestClient(gateway) as browser:
-        assert browser.get('/api/health', headers=HEADERS).status_code == 200
-        wrong_scope = SIGNER.issue('media', EXPIRES, ACCOUNT)
-        assert browser.get('/api/health', headers={**HEADERS, 'Authorization': 'Bearer ' + wrong_scope}).status_code == 401
+                         google_client_id='google-client', google_portal=True)
+    account = hashlib.sha256(('google:' + CLAIMS['sub']).encode()).hexdigest()
+    with (TestClient(gateway) as browser,
+          patch('faixalab.pages_gateway.verify_google_identity', side_effect=verify_identity)):
+        route = '/auth/google/portal-session'
+        assert browser.post(route, headers={'Origin': SITE}, json={'credential': 'dispatch-token'}).status_code == 401
+        response = browser.post(route, headers={'Origin': SITE}, json={'credential': IDENTITY})
+        assert response.status_code == 200
+        assert token_account(response.json()['api'], 'codespace-signing-key', 'api') == account
+        assert token_account(response.json()['media'], 'codespace-signing-key', 'media') == account
+        assert token_account(response.json()['media'], 'codespace-signing-key', 'api') is None
+
+
+def test_google_signin_does_not_need_the_codespace_running():
+    with TestClient(make_app(SITE + '/FaixaLab/', 'google-client', 'dispatch-token', REPO)) as browser:
+        nonce = browser.get('/auth/google/config', headers={'Origin': SITE}).json()['nonce']
+        with patch('faixalab.pages_gateway.verify_google_identity', return_value={**CLAIMS, 'nonce': nonce}):
+            body = {'credential': IDENTITY, 'nonce': nonce}
+            reply = browser.post('/auth/google/session', headers={'Origin': SITE}, json=body)
+            assert reply.json() == {'expires': CLAIMS['exp']}
+            assert browser.post('/auth/google/session', headers={'Origin': SITE}, json=body).status_code == 401
