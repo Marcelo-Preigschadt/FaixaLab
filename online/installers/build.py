@@ -44,7 +44,7 @@ def windows_desktop(output):
 
 
 def linux(client, output):
-    for unused in ['INICIAR.bat', 'INSTALAR.bat', 'importador.pyw']:
+    for unused in ['INICIAR.bat', 'INSTALAR.bat', 'prepare-runtime.ps1', 'importador.pyw']:
         (client / unused).unlink()
     package = client.parent / 'deb'
     metadata = package / 'DEBIAN'
@@ -74,7 +74,7 @@ def linux(client, output):
 
 
 def macos(client, output):
-    for unused in ['INICIAR.bat', 'INSTALAR.bat', 'importador.pyw', 'iniciar.sh']:
+    for unused in ['INICIAR.bat', 'INSTALAR.bat', 'prepare-runtime.ps1', 'importador.pyw', 'iniciar.sh']:
         (client / unused).unlink()
     payload = client.parent / 'macos'
     payload.mkdir()

@@ -6,7 +6,7 @@ title Preparando Importador FaixaLab
 echo Preparando Python, FFmpeg e suporte ao YouTube.
 if not exist ".runtime" mkdir ".runtime"
 if not exist ".runtime\uv.exe" (
-  powershell.exe -NoProfile -Command "$ErrorActionPreference='Stop'; $r=Invoke-RestMethod 'https://api.github.com/repos/astral-sh/uv/releases/latest'; $arch=if($env:PROCESSOR_ARCHITECTURE -eq 'ARM64'){'aarch64'}else{'x86_64'}; $a=$r.assets|Where-Object name -eq ('uv-'+$arch+'-pc-windows-msvc.zip')|Select-Object -First 1; if(!$a){throw 'Pacote uv indisponivel'}; $z=Join-Path (Get-Location) '.runtime\uv.zip'; Invoke-WebRequest -UseBasicParsing $a.browser_download_url -OutFile $z; if($a.digest -and $a.digest.StartsWith('sha256:')){if((Get-FileHash $z -Algorithm SHA256).Hash.ToLower() -ne $a.digest.Substring(7)){throw 'Falha na verificacao do uv'}}; Expand-Archive $z '.runtime' -Force; $p=Get-ChildItem '.runtime' -Filter uv.exe -Recurse|Select-Object -First 1; $d=Join-Path (Get-Location) '.runtime\uv.exe'; if($p.FullName -ne $d){Copy-Item $p.FullName $d}; Remove-Item $z"
+  powershell.exe -NoProfile -NonInteractive -Command "& ([scriptblock]::Create([IO.File]::ReadAllText((Join-Path (Get-Location) 'prepare-runtime.ps1'))))"
   if errorlevel 1 goto erro
 )
 set "UV_PYTHON_INSTALL_DIR=%~dp0.runtime\python"
