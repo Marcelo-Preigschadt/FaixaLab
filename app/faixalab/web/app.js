@@ -815,8 +815,9 @@ async function importAudio() {
       if (!localImporter) throw new Error("O importador do YouTube ainda não está disponível para este sistema.");
       let url = youtubeUrlField.value.trim();
       if (!url) throw new Error("Cole o link do vídeo do YouTube.");
+      const recordedFromTab = captureTabSelected();
       let file;
-      if (captureTabSelected()) {
+      if (recordedFromTab) {
         url = youtubeWatchURL(url);
         file = localAudio?.url === url ? localAudio.file : await captureYouTubeTab(url, button);
         localAudio = { url, file };
@@ -826,7 +827,8 @@ async function importAudio() {
       }
       pendingUpload = true;
       button.textContent = "Enviando áudio para separação…";
-      p = await uploadAudio(file, url, onWaiting);
+      // Tab recordings may contain only a clip. Keep them out of the full-video cache.
+      p = await uploadAudio(file, recordedFromTab ? "" : url, onWaiting);
       pendingUpload = false;
       localAudio = null;
       try { sessionStorage.removeItem(youtubeDraftKey); } catch {}

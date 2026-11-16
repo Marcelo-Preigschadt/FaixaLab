@@ -81,7 +81,7 @@ def emulate_importer(route, state):
     route.fulfill(status=200, body=AUDIO, headers={'Content-Type':'audio/wav','Access-Control-Allow-Origin':SITE,'Access-Control-Expose-Headers':'X-FaixaLab-Filename','X-FaixaLab-Filename':'FaixaLab.wav'})
 
 def test_chromebook_capture(playwright):
-    title = 'FaixaLab captura de áudio para teste'
+    title = 'FaixaLab Tab Capture Test'
     source = '''<!doctype html><meta charset="utf-8"><title>'''+title+'''</title>
     <button id="play">Tocar áudio de teste</button>
     <script>
@@ -123,7 +123,7 @@ def test_chromebook_capture(playwright):
                 b'Content-Type: '+content_type+b'\r\nMIME-Version: 1.0\r\n\r\n'+request.post_data_buffer
             )
             form = {part.get_param('name',header='content-disposition'):part for part in envelope.iter_parts()}
-            assert form['youtube_url'].get_content() == VIDEO
+            assert 'youtube_url' not in form
             assert json.loads(form['options'].get_content())
             assert form['file'].get_filename() == 'YouTube-aqz-KE-bpKQ.webm'
             assert form['file'].get_content_type() == 'audio/webm'
@@ -315,11 +315,9 @@ with sync_playwright() as p:
             page.close()
     finally:
         browser.close()
-        if os.environ.get('FAIXALAB_TEST_TAB_CAPTURE') == '1':
-            try:
+        try:
+            if sys.exc_info()[0] is None and os.environ.get('FAIXALAB_TEST_TAB_CAPTURE') == '1':
                 server.RequestHandlerClass.keywords['directory'] = sys.argv[1]
                 test_chromebook_capture(p)
-            finally:
-                server.shutdown()
-        else:
+        finally:
             server.shutdown()
