@@ -408,7 +408,7 @@ function localImportSettings() {
       platform: "Chromebook",
       ports: [17861],
       install: "./Instalar_FaixaLab_Linux.deb",
-      help: "Instale o pacote no ambiente Linux do Chromebook e abra Importador FaixaLab.",
+      help: "Instale o pacote pelo Terminal do Linux. Se o ambiente Linux estiver indisponível neste aparelho, envie um arquivo de áudio.",
     };
   }
   if (/Windows|Win32|Win64/i.test(agent + platform)) {
@@ -458,6 +458,13 @@ function setupLocalImport() {
   const install = $("#youtube-import-download");
   install.href = localImporter.install;
   install.textContent = "Instalar no " + localImporter.platform;
+  if (localImporter.platform === "Chromebook") {
+    youtubeSetup.querySelector("summary").textContent = "Configurar no Chromebook";
+    youtubeSetup.open = true;
+    $("#youtube-chromebook-setup").hidden = false;
+    install.textContent = "Baixar pacote .deb";
+    $("#youtube-use-file").onclick = () => $('[data-source="file"]').click();
+  }
 
   const deviceAction = $("#pages-device-action");
   deviceAction.textContent = "Importar do YouTube";
@@ -555,6 +562,9 @@ async function getLocalAudio(url, onProgress) {
     youtubeSetup.open = true;
     if (await localNetworkDenied()) {
       throw new Error("O navegador bloqueou o acesso local ao importador. Permita o acesso nas configurações deste site.");
+    }
+    if (localImporter.platform === "Chromebook") {
+      throw new Error("Abra o Importador FaixaLab em Aplicativos Linux. Os passos da primeira instalação estão em Configurar no Chromebook.");
     }
     throw new Error("O FaixaLab não alcançou o importador local. Confira a instalação e abra o importador.");
   }

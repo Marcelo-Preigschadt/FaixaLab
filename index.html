@@ -10,7 +10,7 @@
     <meta name="referrer" content="no-referrer" />
     <script src="./pages-config.js?v=524b21c82d66" defer></script>
     <script src="./pages-connection.js?v=68d0050dd45a" defer></script>
-    <script src="./app.js?v=25fda564748e" defer></script>
+    <script src="./app.js?v=f2348e3d581d" defer></script>
     <link rel="stylesheet" href="./mobile.css" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <meta name="theme-color" content="#101213" />
@@ -397,6 +397,15 @@
           <details id="youtube-import-setup" hidden>
             <summary>Configurar importador do YouTube</summary>
             <p class="small muted" id="youtube-setup-help"></p>
+            <div id="youtube-chromebook-setup" hidden>
+              <ol class="small muted">
+                <li>Em Configurações → Sobre o ChromeOS → Desenvolvedores, configure o Ambiente para desenvolvedores do Linux.</li>
+                <li>Baixe o pacote abaixo e mova <strong>Instalar_FaixaLab_Linux.deb</strong> para <strong>Arquivos do Linux</strong>.</li>
+                <li>No app <strong>Terminal</strong>, abra o Linux e execute <code>sudo apt install "$HOME/Instalar_FaixaLab_Linux.deb"</code>.</li>
+                <li>Abra <strong>Importador FaixaLab</strong> no menu Aplicativos Linux e volte a esta aba.</li>
+              </ol>
+              <button type="button" id="youtube-use-file" class="button secondary">Usar arquivo de áudio</button>
+            </div>
             <p class="small">
               <a id="youtube-import-download" class="button primary">Instalar importador</a>
               <a id="youtube-open-importer" class="button secondary" hidden>Abrir importador</a>
