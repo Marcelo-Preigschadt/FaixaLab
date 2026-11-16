@@ -13,26 +13,42 @@ jobs:
           set -euo pipefail
           SITE=https://marcelo-preigschadt.github.io/FaixaLab/
           for i in {1..20}; do
-            if curl -fsS --max-time 8 "${SITE}?pwa=${GITHUB_SHA}" -o "$RUNNER_TEMP/faixalab.html" && grep -q 'id="install-faixalab"' "$RUNNER_TEMP/faixalab.html"; then break; fi
+            if curl -fsS --max-time 8 "${SITE}?pwa=${GITHUB_SHA}" -o "$RUNNER_TEMP/faixalab.html" && grep -q 'manifest.webmanifest?v=2cb18ba0abb6' "$RUNNER_TEMP/faixalab.html"; then break; fi
             sleep 3
           done
-          grep -q 'id="install-faixalab"' "$RUNNER_TEMP/faixalab.html"
+          grep -q 'manifest.webmanifest?v=2cb18ba0abb6' "$RUNNER_TEMP/faixalab.html"
           python3 -m venv "$RUNNER_TEMP/pwa"
           source "$RUNNER_TEMP/pwa/bin/activate"
           pip install playwright==1.56.0
           python -m playwright install chromium
           FAIXALAB_SITE="$SITE" xvfb-run -a python - <<'PY'
+          import json
           import os
+          import time
           from playwright.sync_api import sync_playwright
 
           site = os.environ['FAIXALAB_SITE']
           app_id = {'manifestId': site}
           with sync_playwright() as p:
               browser = p.chromium.launch(headless=False)
+              page = browser.new_page()
+              response = page.goto(site, wait_until='domcontentloaded')
+              assert response and response.ok
+              page_session = page.context.new_cdp_session(page)
+              manifest = json.loads(page_session.send('Page.getAppManifest')['data'])
+              assert manifest.get('id') is None and manifest['start_url'] == './'
+              tab = page_session.send('Target.getTargetInfo')['targetInfo']['targetId']
               session = browser.new_browser_cdp_session()
               session.send('PWA.install', {**app_id, 'installUrlOrBundleUrl': site})
               app = session.send('PWA.launch', app_id)
-              target = session.send('Target.getTargetInfo', {'targetId': app['targetId']})['targetInfo']
+              for _ in range(20):
+                  target = session.send('Target.getTargetInfo', {'targetId': app['targetId']})['targetInfo']
+                  if target['url'] == site:
+                      break
+                  time.sleep(0.25)
+              window = session.send('Browser.getWindowForTarget', {'targetId': app['targetId']})
+              browser_window = session.send('Browser.getWindowForTarget', {'targetId': tab})
+              assert window['windowId'] != browser_window['windowId']
               assert target['url'] == site, target['url']
               os_state = session.send('PWA.getOsAppState', app_id)
               print('FaixaLab instalado no Chromium e aberto no endereço:', target['url'])
