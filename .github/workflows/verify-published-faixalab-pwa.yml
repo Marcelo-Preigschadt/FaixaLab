@@ -1,0 +1,41 @@
+name: Verificar instalação do FaixaLab publicado no Chromium
+on:
+  push:
+    branches: [verificar-app-web-faixalab]
+permissions: {}
+jobs:
+  app:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Instalar e abrir em uma janela própria
+        run: |
+          set -euo pipefail
+          SITE=https://marcelo-preigschadt.github.io/FaixaLab/
+          for i in {1..20}; do
+            if curl -fsS --max-time 8 "${SITE}?pwa=${GITHUB_SHA}" -o "$RUNNER_TEMP/faixalab.html" && grep -q 'id="install-faixalab"' "$RUNNER_TEMP/faixalab.html"; then break; fi
+            sleep 3
+          done
+          grep -q 'id="install-faixalab"' "$RUNNER_TEMP/faixalab.html"
+          python3 -m venv "$RUNNER_TEMP/pwa"
+          source "$RUNNER_TEMP/pwa/bin/activate"
+          pip install playwright==1.56.0
+          python -m playwright install chromium
+          FAIXALAB_SITE="$SITE" xvfb-run -a python - <<'PY'
+          import os
+          from playwright.sync_api import sync_playwright
+
+          site = os.environ['FAIXALAB_SITE']
+          app_id = {'manifestId': site}
+          with sync_playwright() as p:
+              browser = p.chromium.launch(headless=False)
+              session = browser.new_browser_cdp_session()
+              session.send('PWA.install', {**app_id, 'installUrlOrBundleUrl': site})
+              app = session.send('PWA.launch', app_id)
+              target = session.send('Target.getTargetInfo', {'targetId': app['targetId']})['targetInfo']
+              assert target['url'] == site, target['url']
+              os_state = session.send('PWA.getOsAppState', app_id)
+              print('FaixaLab instalado no Chromium e aberto no endereço:', target['url'])
+              print('Registro do app no Chromium disponível:', isinstance(os_state, dict))
+              browser.close()
+          PY
