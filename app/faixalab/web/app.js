@@ -373,6 +373,7 @@ $$("[data-source]").forEach(
       $("#youtube-source").hidden = state.source !== "youtube";
       $("#youtube-url").disabled = state.source !== "youtube";
       $("#file-youtube-url").disabled = state.source !== "file";
+      if (!$("#import-submit").disabled) $("#import-submit").textContent = importButtonLabel();
     }),
 );
 function setFile(file) {
@@ -384,7 +385,11 @@ function setFile(file) {
 const youtubeUrlField = $("#youtube-url");
 const youtubeSetup = $("#youtube-import-setup");
 const youtubeDraftKey = "faixalab:youtube-draft";
+const youtubeUseLocal = $("#youtube-use-local");
+const captureStatus = $("#youtube-capture-status");
+const captureInstructions = captureStatus?.textContent;
 let localAudio;
+let finishCapture;
 
 function localImportSettings() {
   if (!window.faixaLabPages) return null;
@@ -407,7 +412,7 @@ function localImportSettings() {
     return {
       platform: "Chromebook",
       ports: [17861],
-      help: "Ainda não há um instalador do importador do YouTube para ChromeOS. Se o importador já estiver ativo, você pode colar o link. O envio de arquivos de áudio está disponível.",
+      help: "Você pode usar um importador já ativo ou escolher um arquivo de áudio.",
     };
   }
   if (/Windows|Win32|Win64/i.test(agent + platform)) {
@@ -438,12 +443,44 @@ function localImportSettings() {
 }
 
 const localImporter = localImportSettings();
+const captureMimeType = "audio/webm;codecs=opus";
+const canCaptureTab = localImporter?.platform === "Chromebook" &&
+  Boolean(navigator.mediaDevices?.getDisplayMedia && window.MediaRecorder?.isTypeSupported(captureMimeType));
+
+function captureTabSelected() {
+  return canCaptureTab && !youtubeUseLocal.checked;
+}
+
+function importButtonLabel() {
+  if (state.source === "youtube" && captureTabSelected()) {
+    return localAudio ? "Enviar áudio para separação" : "Compartilhar áudio da aba";
+  }
+  return "Separar e analisar música";
+}
+
+function youtubeWatchURL(value) {
+  let input;
+  try { input = new URL(value); } catch {}
+  if (input?.protocol === "https:" && !input.username && !input.password && !input.port) {
+    let id;
+    if (["youtu.be", "www.youtu.be"].includes(input.hostname)) {
+      id = input.pathname.split("/")[1];
+    } else if (["youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com"].includes(input.hostname)) {
+      id = input.pathname === "/watch" ? input.searchParams.get("v") :
+        input.pathname.match(/^\/(?:shorts|live|embed)\/([^/]+)\/?$/)?.[1];
+    }
+    if (/^[A-Za-z0-9_-]{11}$/.test(id ?? "")) return "https://www.youtube.com/watch?v=" + id;
+  }
+  throw new Error("Cole o link de um vídeo do YouTube para compartilhar o áudio.");
+}
 
 function setupChromebookApp() {
   if (localImporter?.platform !== "Chromebook") return;
 
-  $("#welcome-import-help").textContent =
-    "Importe um arquivo de áudio para separar voz e instrumentos, descobrir os acordes e acompanhar a letra.";
+  if (!canCaptureTab) {
+    $("#welcome-import-help").textContent =
+      "Importe um arquivo de áudio para separar voz e instrumentos, descobrir os acordes e acompanhar a letra.";
+  }
   const install = $("#install-faixalab");
   const standalone = matchMedia("(display-mode: standalone)");
   install.hidden = standalone.matches;
@@ -487,7 +524,7 @@ function setupLocalImport() {
   }
   const chromebook = localImporter.platform === "Chromebook";
   $("#youtube-import-help").textContent = chromebook
-    ? "O link requer um importador ativo neste Chromebook."
+    ? "Escolha como obter o áudio neste Chromebook."
     : "O FaixaLab obtém o áudio neste aparelho e envia para a separação.";
   $("#youtube-setup-help").textContent = localImporter.help;
   youtubeSetup.hidden = false;
@@ -504,20 +541,45 @@ function setupLocalImport() {
       $('[data-source="file"]').click();
       $("#import-error").hidden = true;
     };
+    if (canCaptureTab) {
+      const showCapture = () => {
+        $("#youtube-tab-capture").hidden = !captureTabSelected();
+        $("#youtube-import-help").textContent = captureTabSelected()
+          ? "No Chromebook, o Chrome grava o áudio da aba enquanto o vídeo toca."
+          : "O FaixaLab usa o importador local ativo neste Chromebook.";
+        $("#import-submit").textContent = importButtonLabel();
+      };
+      $("#youtube-local-option").hidden = false;
+      youtubeUseLocal.onchange = () => {
+        $("#import-error").hidden = true;
+        showCapture();
+      };
+      $("#youtube-open-video").onclick = () => {
+        $("#import-error").hidden = true;
+        try {
+          window.open(youtubeWatchURL(youtubeUrlField.value.trim()), "_blank", "noopener,noreferrer");
+        } catch (error) {
+          $("#import-error").textContent = error.message;
+          $("#import-error").hidden = false;
+          youtubeUrlField.focus();
+        }
+      };
+      showCapture();
+    }
   }
 
   const deviceAction = $("#pages-device-action");
-  deviceAction.textContent = chromebook ? "Importar música" : "Importar do YouTube";
+  deviceAction.textContent = chromebook && !canCaptureTab ? "Importar música" : "Importar do YouTube";
   deviceAction.hidden = false;
   deviceAction.onclick = event => {
     event.preventDefault();
     openImport();
-    (chromebook ? $('[data-source="file"]') : sourceTab).click();
+    (chromebook && !canCaptureTab ? $('[data-source="file"]') : sourceTab).click();
   };
   youtubeUrlField.addEventListener("input", () => {
     localAudio = null;
     $("#import-error").hidden = true;
-    $("#import-submit").textContent = "Separar e analisar música";
+    $("#import-submit").textContent = importButtonLabel();
   });
 
   if (localImporter.platform === "Android") {
@@ -605,7 +667,9 @@ async function getLocalAudio(url, onProgress) {
       throw new Error("O navegador bloqueou o acesso local ao importador. Permita o acesso nas configurações deste site.");
     }
     if (localImporter.platform === "Chromebook") {
-      throw new Error("O importador do YouTube não está ativo neste Chromebook. A instalação do site como app não ativa o importador.");
+      throw new Error(canCaptureTab
+        ? "O importador local não respondeu. Desmarque Usar importador local já instalado para gravar pelo Chrome."
+        : "O importador local não respondeu. Você pode usar um arquivo de áudio.");
     }
     throw new Error("O FaixaLab não alcançou o importador local. Confira a instalação e abra o importador.");
   }
@@ -622,6 +686,92 @@ async function getLocalAudio(url, onProgress) {
   localAudio = { url, file };
   youtubeSetup.open = false;
   return file;
+}
+
+async function captureYouTubeTab(url, button) {
+  const dialog = $("#import-dialog");
+  const fields = [youtubeUrlField, youtubeUseLocal, $("#youtube-open-video"), ...$$("[data-source]")];
+  const originalDisabled = fields.map(field => field.disabled);
+  const cancellation = new AbortController();
+  const cancel = () => cancellation.abort();
+  dialog.addEventListener("close", cancel, { once: true });
+  fields.forEach(field => { field.disabled = true; });
+  let stream;
+  let limit;
+  button.textContent = "Aguardando compartilhamento…";
+  try {
+    try {
+      stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { displaySurface: "browser" },
+        audio: { suppressLocalAudioPlayback: false },
+        monitorTypeSurfaces: "exclude",
+        selfBrowserSurface: "exclude",
+        systemAudio: "exclude",
+        windowAudio: "exclude",
+        surfaceSwitching: "exclude",
+      });
+    } catch (error) {
+      cancellation.signal.throwIfAborted();
+      if (error.name === "NotAllowedError") {
+        throw new Error("O compartilhamento foi cancelado ou bloqueado pelo Chrome. Tente novamente e escolha a aba do vídeo.");
+      }
+      throw new Error("O Chrome não iniciou o compartilhamento. Abra o vídeo em uma aba do Chrome e tente novamente.");
+    }
+    cancellation.signal.throwIfAborted();
+    const videoTrack = stream.getVideoTracks()[0];
+    const audioTrack = stream.getAudioTracks()[0];
+    if (videoTrack?.getSettings().displaySurface !== "browser" || !audioTrack) {
+      throw new Error("Selecione a aba do vídeo no Chrome e marque Compartilhar áudio da aba.");
+    }
+
+    // The browser picker requires a display track. Only the audio track is encoded or sent.
+    const recorder = new MediaRecorder(new MediaStream([audioTrack]), {
+      mimeType: captureMimeType,
+      audioBitsPerSecond: 128000,
+    });
+    const chunks = [];
+    const started = performance.now();
+    const file = await new Promise((resolve, reject) => {
+      const stop = () => {
+        if (recorder.state === "inactive") return;
+        button.disabled = true;
+        button.textContent = "Preparando áudio…";
+        recorder.stop();
+      };
+      finishCapture = stop;
+      recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+      recorder.onerror = () => reject(new Error("O Chrome interrompeu a gravação do áudio."));
+      recorder.onstop = () => {
+        if (cancellation.signal.aborted) return reject(cancellation.signal.reason);
+        const id = new URL(url).searchParams.get("v");
+        const audio = new File(chunks, "YouTube-" + id + ".webm", { type: "audio/webm" });
+        if (audio.size < 1024 || performance.now() - started < 1500) {
+          return reject(new Error("A gravação ficou curta. Dê play no vídeo e aguarde a música antes de encerrar."));
+        }
+        resolve(audio);
+      };
+      cancellation.signal.addEventListener("abort", stop, { once: true });
+      [audioTrack, videoTrack].forEach(track => track.addEventListener("ended", stop, { once: true }));
+      recorder.start(1000);
+      limit = setTimeout(() => {
+        reject(new Error("A gravação chegou a 30 minutos. Compartilhe um trecho mais curto."));
+        stop();
+      }, 30 * 60 * 1000);
+      captureStatus.textContent = "Dê play no vídeo. Ao terminar, clique em Parar compartilhamento no Chrome ou em Encerrar e separar no FaixaLab.";
+      button.textContent = "Encerrar e separar";
+      button.disabled = false;
+    });
+    button.disabled = true;
+    cancellation.signal.throwIfAborted();
+    return file;
+  } finally {
+    clearTimeout(limit);
+    finishCapture = undefined;
+    stream?.getTracks().forEach(track => track.stop());
+    dialog.removeEventListener("close", cancel);
+    fields.forEach((field, index) => { field.disabled = originalDisabled[index]; });
+    captureStatus.textContent = captureInstructions;
+  }
 }
 
 function uploadAudio(file, video, onWaiting) {
@@ -647,6 +797,7 @@ let retryImportOnSignIn = false;
 async function importAudio() {
   const button = $("#import-submit");
   if (button.disabled) return;
+  if (finishCapture) return finishCapture();
   button.disabled = true;
   retryImportOnSignIn = false;
   button.textContent = "Importando…";
@@ -662,10 +813,17 @@ async function importAudio() {
       $("#file-youtube-url").value = "";
     } else if (window.faixaLabPages) {
       if (!localImporter) throw new Error("O importador do YouTube ainda não está disponível para este sistema.");
-      const url = youtubeUrlField.value.trim();
+      let url = youtubeUrlField.value.trim();
       if (!url) throw new Error("Cole o link do vídeo do YouTube.");
-      button.textContent = "Obtendo áudio neste aparelho…";
-      const file = await getLocalAudio(url, text => { button.textContent = text; });
+      let file;
+      if (captureTabSelected()) {
+        url = youtubeWatchURL(url);
+        file = localAudio?.url === url ? localAudio.file : await captureYouTubeTab(url, button);
+        localAudio = { url, file };
+      } else {
+        button.textContent = "Obtendo áudio neste aparelho…";
+        file = await getLocalAudio(url, onWaiting);
+      }
       pendingUpload = true;
       button.textContent = "Enviando áudio para separação…";
       p = await uploadAudio(file, url, onWaiting);
@@ -683,6 +841,7 @@ async function importAudio() {
     await selectProject(p.id);
     await refreshLibrary();
   } catch (err) {
+    if (err.name === "AbortError") return;
     retryImportOnSignIn = Boolean(window.faixaLabPages) && err.status === 401;
     $("#import-error").textContent = pendingUpload
       ? "Áudio obtido neste aparelho. " + err.message + " Tente enviar novamente nesta aba."
@@ -690,7 +849,7 @@ async function importAudio() {
     $("#import-error").hidden = false;
   } finally {
     button.disabled = false;
-    button.textContent = pendingUpload ? "Tentar enviar novamente" : "Separar e analisar música";
+    button.textContent = pendingUpload ? "Tentar enviar novamente" : importButtonLabel();
   }
 }
 document.addEventListener("faixalab-session-ready", () => {

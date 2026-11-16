@@ -1,9 +1,10 @@
 name: Testar importação do site
 on:
   push:
-    branches: [faixalab-site-import, faixalab-import-retry, retomada-faixalab, instalar-app-web-chromebook, instalar-importador-grafico]
+    branches: [faixalab-site-import, faixalab-import-retry, retomada-faixalab, instalar-app-web-chromebook, instalar-importador-grafico, captura-audio-chromebook]
 permissions:
   contents: read
+  statuses: write
 jobs:
   browser:
     runs-on: ubuntu-24.04
@@ -22,4 +23,19 @@ jobs:
           python -m playwright install chromium
           node online/build-pages.mjs "$RUNNER_TEMP/site" expert-space-funicular-gjxr569wq4939wg9
           node online/build-pages.mjs "$RUNNER_TEMP/site-wake" expert-space-funicular-gjxr569wq4939wg9 https://faixalab-retomada.onrender.com
-          python online/test_site_import.py "$RUNNER_TEMP/site" "$RUNNER_TEMP/site-wake"
+          if [[ "$GITHUB_REF_NAME" == captura-audio-chromebook ]]; then
+            FAIXALAB_TEST_TAB_CAPTURE=1 xvfb-run -a python online/test_site_import.py "$RUNNER_TEMP/site" "$RUNNER_TEMP/site-wake"
+          else
+            python online/test_site_import.py "$RUNNER_TEMP/site" "$RUNNER_TEMP/site-wake"
+          fi
+      - name: Registrar resultado da captura
+        if: always() && github.ref_name == 'captura-audio-chromebook'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULTADO: ${{ job.status }}
+        run: |
+          resultado="$RESULTADO"
+          if [[ "$resultado" != success ]]; then resultado=failure; fi
+          gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            --field "state=$resultado" --field 'context=faixalab/chromebook-audio' \
+            --field "target_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
