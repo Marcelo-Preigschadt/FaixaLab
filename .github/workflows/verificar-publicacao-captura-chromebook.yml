@@ -1,0 +1,40 @@
+name: Verificar captura de áudio publicada
+on:
+  push:
+    branches: [verificar-publicacao-captura-chromebook]
+permissions:
+  contents: read
+  statuses: write
+jobs:
+  publicacao:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - name: Verificar a versão pública sem acionar o servidor de áudio
+        run: |
+          set -euo pipefail
+          site=https://marcelo-preigschadt.github.io/FaixaLab
+          for rodada in {1..9}; do
+            if curl -fsSL --max-time 12 "$site/?v=b5908bfee640" -o index.html &&
+               grep -Fq 'app.js?v=b5908bfee640' index.html &&
+               grep -Fq 'id="youtube-open-video"' index.html; then
+              curl -fsSL --max-time 12 "$site/app.js?v=b5908bfee640" -o app.js
+              test "$(git hash-object app.js)" = 'b5908bfee640386f72dca31de745ea591538ead3'
+              node --check app.js
+              echo 'Versão pública confirmada'
+              exit 0
+            fi
+            sleep 8
+          done
+          exit 1
+      - name: Registrar publicação
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULTADO: ${{ job.status }}
+        run: |
+          resultado="$RESULTADO"
+          if [[ "$resultado" != success ]]; then resultado=failure; fi
+          gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            --field "state=$resultado" --field 'context=faixalab/publicacao-chromebook' \
+            --field "target_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
