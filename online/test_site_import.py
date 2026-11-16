@@ -92,6 +92,17 @@ with sync_playwright() as p:
             expect(page.locator('#project-count')).to_have_text('—', use_inner_text=False)
             page.locator('#new-project').click()
             page.locator('[data-source=youtube]').click()
+            if platform == 'Chrome OS':
+                expect(page.locator('#youtube-import-setup')).to_have_attribute('open', '')
+                expect(page.locator('#youtube-chromebook-setup')).to_be_visible()
+                expect(page.locator('#youtube-chromebook-setup code')).to_have_text(
+                    'sudo apt install "$HOME/Instalar_FaixaLab_Linux.deb"')
+                expect(page.locator('#youtube-import-download')).to_have_text('Baixar pacote .deb')
+                page.locator('#youtube-use-file').click()
+                expect(page.locator('#file-source')).to_be_visible()
+                page.locator('[data-source=youtube]').click()
+            else:
+                expect(page.locator('#youtube-chromebook-setup')).to_be_hidden()
             assert page.locator('#youtube-import-mode, #youtube-save-local').count() == 0
             page.locator('#youtube-url').fill(VIDEO)
             page.locator('#import-submit').click()
