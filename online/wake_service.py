@@ -1,5 +1,6 @@
 """Authenticated request to start the FaixaLab Codespace through GitHub Actions."""
 import asyncio
+from contextlib import asynccontextmanager
 import os
 import re
 from time import monotonic
@@ -17,6 +18,7 @@ async def dispatch_restore(client, repository):
         response = await client.post(f'/repos/{repository}/actions/workflows/faixalab-codespace.yml/dispatches',
                                      json={'ref': 'main'})
         response.raise_for_status()
+        return response.json().get('workflow_run_id') if response.status_code == 200 else None
     except httpx.HTTPError:
         raise HTTPException(503, 'O GitHub não confirmou a retomada do servidor.') from None
 
@@ -67,3 +69,29 @@ def app_from_env():
         os.environ['FAIXALAB_PAGES_URL'], os.environ['FAIXALAB_GOOGLE_CLIENT_ID'],
         os.environ.get('FAIXALAB_WAKE_DISPATCH_TOKEN', ''), os.environ['FAIXALAB_WAKE_REPOSITORY'],
     )
+
+# Temporary deployment verification: use the linked Render credential once on startup.
+normal_app_from_env = app_from_env
+
+def app_from_env():
+    app = normal_app_from_env()
+    original_lifespan = app.router.lifespan_context
+
+    @asynccontextmanager
+    async def verify_startup(instance):
+        async with original_lifespan(instance):
+            async with httpx.AsyncClient(
+                base_url='https://api.github.com',
+                headers={
+                    'Authorization': 'Bearer ' + os.environ['FAIXALAB_WAKE_DISPATCH_TOKEN'],
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2026-03-10',
+                },
+                timeout=12, trust_env=False,
+            ) as client:
+                run = await dispatch_restore(client, os.environ['FAIXALAB_WAKE_REPOSITORY'])
+            print(f'FAIXALAB_COLD_START_VERIFY workflow_run_id={run}', flush=True)
+            yield
+
+    app.router.lifespan_context = verify_startup
+    return app
