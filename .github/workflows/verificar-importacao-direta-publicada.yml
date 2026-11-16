@@ -1,0 +1,45 @@
+name: Verificar o FaixaLab publicado
+on:
+  push:
+    branches: [verificar-importacao-direta-publicada]
+permissions:
+  contents: read
+  statuses: write
+jobs:
+  pages:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - name: Conferir a revisão servida pelo Pages
+        env:
+          SITE: https://marcelo-preigschadt.github.io/FaixaLab
+          BLOB: dcae19d0342a49bbb17d970bd80c3261f00b0090
+        run: |
+          cd "$RUNNER_TEMP"
+          for attempt in {1..12}; do
+            if curl --fail --silent --show-error --max-time 5 "$SITE/?v=dcae19d0342a-$attempt" -o index.html &&
+               grep -Fq 'src="./app.js?v=dcae19d0342a"' index.html &&
+               curl --fail --silent --show-error --max-time 5 "$SITE/app.js?v=dcae19d0342a-$attempt" -o app.js &&
+               [[ "$(git hash-object app.js)" == "$BLOB" ]]; then
+              node --check app.js
+              if grep -Eq 'getDisplayMedia|MediaRecorder|captureYouTubeTab|youtube-tab-capture' app.js index.html; then
+                echo 'A gravação ainda aparece na publicação.'
+                exit 1
+              fi
+              echo "Revisão publicada confirmada: $BLOB"
+              exit 0
+            fi
+            sleep 8
+          done
+          exit 1
+      - name: Registrar resultado
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULTADO: ${{ job.status }}
+        run: |
+          resultado="$RESULTADO"
+          if [[ "$resultado" != success ]]; then resultado=failure; fi
+          gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            --field "state=$resultado" --field 'context=faixalab/publicacao-importacao-direta' \
+            --field "target_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
