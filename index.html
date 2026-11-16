@@ -10,7 +10,7 @@
     <meta name="referrer" content="no-referrer" />
     <script src="./pages-config.js?v=524b21c82d66" defer></script>
     <script src="./pages-connection.js?v=68d0050dd45a" defer></script>
-    <script src="./app.js?v=6f7c155d23f5" defer></script>
+    <script src="./app.js?v=b5908bfee640" defer></script>
     <link rel="stylesheet" href="./mobile.css" />
     <link rel="manifest" href="./manifest.webmanifest?v=2cb18ba0abb6" />
     <meta name="theme-color" content="#101213" />
@@ -401,9 +401,14 @@
             disabled
           />
           <p class="small muted" id="youtube-import-help">Cole o link e escolha as opções de separação.</p>
+          <div id="youtube-tab-capture" hidden>
+            <button type="button" id="youtube-open-video" class="button secondary">Abrir vídeo no YouTube ↗</button>
+            <p class="small muted" id="youtube-capture-status" role="status">Abra o vídeo e pause no começo. Volte ao FaixaLab, clique em Compartilhar áudio da aba e escolha a aba do vídeo com a opção de áudio marcada.</p>
+          </div>
           <details id="youtube-import-setup" hidden>
             <summary>Configurar importador do YouTube</summary>
             <p class="small muted" id="youtube-setup-help"></p>
+            <label id="youtube-local-option" class="check-label" hidden><input id="youtube-use-local" type="checkbox" /> Usar importador local já instalado</label>
             <p class="small">
               <a id="youtube-import-download" class="button primary">Instalar importador</a>
               <a id="youtube-open-importer" class="button secondary" hidden>Abrir importador</a>
