@@ -104,7 +104,10 @@ with sync_playwright() as p:
                 assert manifest['start_url'] == './' and 'id' not in manifest
                 page.locator('#install-faixalab').click()
                 expect(page.locator('#install-faixalab-dialog')).to_contain_text('Instalar esta página como um app')
-                page.locator('#install-faixalab-dialog button').click()
+                expect(page.locator('#install-faixalab-importer')).to_be_visible()
+                expect(page.locator('#install-faixalab-importer')).to_have_attribute(
+                    'href', 'https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/FaixaLab_Audio_Android.apk')
+                page.locator('[data-close=install-faixalab-dialog]').click()
                 page.evaluate("""() => {
                     const event = new Event('beforeinstallprompt', {cancelable: true});
                     event.prompt = () => { window.faixaLabPromptShown = true; };
@@ -112,8 +115,12 @@ with sync_playwright() as p:
                     window.dispatchEvent(event);
                 }""")
                 page.locator('#install-faixalab').click()
+                page.locator('#install-faixalab-web').click()
                 assert page.evaluate('window.faixaLabPromptShown')
-                expect(page.locator('#install-faixalab')).to_be_hidden()
+                expect(page.locator('#install-faixalab-web')).to_be_hidden()
+                expect(page.locator('#install-faixalab-importer')).to_be_visible()
+                page.locator('[data-close=install-faixalab-dialog]').click()
+                expect(page.locator('#install-faixalab')).to_have_text('Importador do FaixaLab')
             else:
                 expect(page.locator('#install-faixalab')).to_be_hidden()
             download = page.locator('#install-faixalab-windows')

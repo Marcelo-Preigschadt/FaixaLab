@@ -395,11 +395,12 @@ function localImportSettings() {
   if (ios) return null;
 
   const releases = "https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/";
+  const androidPackage = releases + "FaixaLab_Audio_Android.apk";
   if (/Android/i.test(agent + platform)) {
     return {
       platform: "Android",
       ports: [17863, 17862],
-      install: releases + "FaixaLab_Audio_Android.apk",
+      install: androidPackage,
       help: "Instale uma vez. Se o importador estiver parado, toque em Abrir importador e volte a esta aba.",
     };
   }
@@ -407,6 +408,7 @@ function localImportSettings() {
     return {
       platform: "Chromebook",
       ports: [17861],
+      androidPackage,
       help: "Para colar um link, o Importador FaixaLab precisa estar em execução neste Chromebook. O botão de instalação do Chrome adiciona a interface do FaixaLab.",
     };
   }
@@ -447,31 +449,44 @@ function setupAppInstallation() {
   }
   if (localImporter?.platform !== "Chromebook") return;
   const install = $("#install-faixalab");
-  const standalone = matchMedia("(display-mode: standalone)");
-  install.hidden = standalone.matches;
+  const dialog = $("#install-faixalab-dialog");
+  const webInstall = $("#install-faixalab-web");
+  const instructions = $("#install-faixalab-instructions");
+  $("#install-faixalab-importer").href = localImporter.androidPackage;
+  let installed = matchMedia("(display-mode: standalone)").matches;
   let availablePrompt;
 
+  function updateInstallOptions() {
+    install.textContent = installed ? "Importador do FaixaLab" : "Instalar FaixaLab";
+    webInstall.hidden = installed || !availablePrompt;
+    instructions.hidden = installed || Boolean(availablePrompt);
+  }
+
+  install.hidden = false;
+  updateInstallOptions();
   window.addEventListener("beforeinstallprompt", event => {
     event.preventDefault();
     availablePrompt = event;
-    install.hidden = standalone.matches;
+    updateInstallOptions();
   });
   window.addEventListener("appinstalled", () => {
     availablePrompt = undefined;
-    install.hidden = true;
+    installed = true;
+    updateInstallOptions();
   });
-  install.onclick = async () => {
-    if (!availablePrompt) {
-      $("#install-faixalab-dialog").showModal();
-      return;
-    }
+  install.onclick = () => dialog.showModal();
+  webInstall.onclick = async () => {
     const prompt = availablePrompt;
     availablePrompt = undefined;
+    webInstall.disabled = true;
     try {
       await prompt.prompt();
-      if ((await prompt.userChoice).outcome === "accepted") install.hidden = true;
+      if ((await prompt.userChoice).outcome === "accepted") installed = true;
     } catch {
-      $("#install-faixalab-dialog").showModal();
+      // Fall back to the Chrome menu when the install prompt is unavailable.
+    } finally {
+      webInstall.disabled = false;
+      updateInstallOptions();
     }
   };
 }
