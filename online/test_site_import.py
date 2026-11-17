@@ -94,7 +94,7 @@ with sync_playwright() as p:
             page.goto(SITE)
             expect(page.locator('#project-list')).to_contain_text('A biblioteca está indisponível', use_inner_text=False)
             expect(page.locator('#project-count')).to_have_text('—', use_inner_text=False)
-            if platform == 'Chrome OS':
+            if platform in ('Android', 'Chrome OS'):
                 expect(page.get_by_role('button', name='Instalar FaixaLab', exact=True)).to_be_visible()
                 expect(page.locator('#start-import')).to_be_visible()
                 devtools = page.context.new_cdp_session(page)
@@ -103,7 +103,12 @@ with sync_playwright() as p:
                 manifest = json.loads(devtools.send('Page.getAppManifest')['data'])
                 assert manifest['start_url'] == './' and 'id' not in manifest
                 page.locator('#install-faixalab').click()
-                expect(page.locator('#install-faixalab-dialog')).to_contain_text('Instalar esta página como um app')
+                install_menu = (
+                    'Instalar e criar atalho' if platform == 'Android' else 'Instalar esta página como um app'
+                )
+                expect(page.locator('#install-faixalab-dialog')).to_contain_text(install_menu)
+                if platform == 'Android':
+                    expect(page.locator('#install-faixalab-apk-help')).to_contain_text('FaixaLab Áudio')
                 expect(page.locator('#install-faixalab-importer')).to_be_visible()
                 expect(page.locator('#install-faixalab-importer')).to_have_attribute(
                     'href', 'https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/FaixaLab_Audio_Android.apk')

@@ -1,7 +1,7 @@
 name: Testar importação do site
 on:
   push:
-    branches: [faixalab-site-import, faixalab-import-retry, retomada-faixalab, instalar-app-web-chromebook, instalar-importador-grafico, instalar-faixalab-online, importacao-direta-chromebook, download-importador-chromebook]
+    branches: [faixalab-site-import, faixalab-import-retry, retomada-faixalab, instalar-app-web-chromebook, instalar-importador-grafico, instalar-faixalab-online, importacao-direta-chromebook, download-importador-chromebook, instalacao-faixalab-android]
 permissions:
   contents: read
   statuses: write
@@ -25,10 +25,10 @@ jobs:
           node online/build-pages.mjs "$RUNNER_TEMP/site-wake" expert-space-funicular-gjxr569wq4939wg9 https://faixalab-retomada.onrender.com
           python online/test_site_import.py "$RUNNER_TEMP/site" "$RUNNER_TEMP/site-wake"
       - name: Conferir disponibilidade do APK
-        if: github.ref_name == 'download-importador-chromebook'
+        if: github.ref_name == 'download-importador-chromebook' || github.ref_name == 'instalacao-faixalab-android'
         run: curl --head --location --fail --silent --show-error --max-time 25 'https://github.com/Marcelo-Preigschadt/FaixaLab/releases/download/v0.10.1/FaixaLab_Audio_Android.apk'
       - name: Registrar resultado da importação local
-        if: always() && (github.ref_name == 'importacao-direta-chromebook' || github.ref_name == 'download-importador-chromebook')
+        if: always() && (github.ref_name == 'importacao-direta-chromebook' || github.ref_name == 'download-importador-chromebook' || github.ref_name == 'instalacao-faixalab-android')
         env:
           GH_TOKEN: ${{ github.token }}
           RESULTADO: ${{ job.status }}
