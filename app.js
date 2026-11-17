@@ -447,12 +447,19 @@ function setupAppInstallation() {
     download.hidden = false;
     return;
   }
-  if (localImporter?.platform !== "Chromebook") return;
+  const android = localImporter?.platform === "Android";
+  if (!android && localImporter?.platform !== "Chromebook") return;
   const install = $("#install-faixalab");
   const dialog = $("#install-faixalab-dialog");
   const webInstall = $("#install-faixalab-web");
   const instructions = $("#install-faixalab-instructions");
-  $("#install-faixalab-importer").href = localImporter.androidPackage;
+  const importerDownload = $("#install-faixalab-importer");
+  importerDownload.href = android ? localImporter.install : localImporter.androidPackage;
+  if (android) {
+    instructions.textContent = "No Chrome, toque em ⋮ → Instalar e criar atalho → Instalar.";
+    $("#install-faixalab-apk-help").textContent =
+      "Abra o APK baixado para instalar. Depois, abra o app FaixaLab Áudio antes de importar um link.";
+  }
   let installed = matchMedia("(display-mode: standalone)").matches;
   let availablePrompt;
 
