@@ -146,7 +146,10 @@ class StemPlayer {
     this.onState?.();updateMediaSession();
   }
   format() {
-    return ['localhost','127.0.0.1','::1','[::1]'].includes(location.hostname)?'wav':'m4a';
+    const platform=navigator.userAgentData?.platform||navigator.platform||'';
+    const desktop=/Windows|Win32|Win64|MacIntel|Linux x86_64/i.test(platform+' '+navigator.userAgent)
+      && !/Android|iPhone|iPad|iPod|CrOS/i.test(navigator.userAgent);
+    return desktop||['localhost','127.0.0.1','::1','[::1]'].includes(location.hostname)?'wav':'m4a';
   }
   makeAudio(url) {
     const audio=new Audio(),epoch=this.loadId;
@@ -775,8 +778,9 @@ async function refreshLibrary() {
           };
           const subtitle = p.duration && !["processing", "queued"].includes(p.status)
             ? time(p.duration) : label[p.status] || "Importação";
-          const remove = p.can_delete_import
-            ? `<button type="button" class="project-delete" data-delete-import="${p.id}" aria-label="Excluir tentativa: ${escapeHTML(p.title)}">Excluir</button>` : "";
+          const deletable = p.can_delete_project ?? !["queued", "processing"].includes(p.status);
+          const remove = deletable
+            ? `<button type="button" class="project-delete" data-delete-import="${p.id}" data-project-title="${escapeHTML(p.title)}" aria-label="Excluir música: ${escapeHTML(p.title)}" title="Excluir música">×</button>` : "";
           return `<div class="project-row"><button type="button" class="project-item ${p.id === state.project?.id ? "current" : ""}" data-id="${p.id}"><span class="project-icon">♫</span><span><b>${escapeHTML(p.title)}</b><small>${subtitle}</small></span></button>${remove}</div>`;
         })
         .join("")
@@ -792,9 +796,14 @@ async function refreshLibrary() {
 }
 let projectSelection=0;
 async function deleteImport(button) {
-  if (!window.confirm("Excluir esta tentativa de importação da biblioteca?")) return;
+  if (!window.confirm(`Excluir “${button.dataset.projectTitle}” e todas as suas faixas, cifras e letras?`)) return;
   const id = button.dataset.deleteImport;
   const selection = projectSelection;
+  const selected = state.project?.id === id ? state.project : null;
+  const mix = new Map(player.tracks.map(track => [track.name, {
+    gain: track.gain, mute: track.mute, solo: track.solo,
+  }]));
+  if (selected) player.dispose();
   button.disabled = true;
   try {
     await api("/api/projects/" + id, { method: "DELETE" });
@@ -806,8 +815,13 @@ async function deleteImport(button) {
       $("#welcome").hidden = false;
     }
     await refreshLibrary();
-    toast("Tentativa de importação excluída.");
+    toast("Música excluída da biblioteca.");
   } catch (error) {
+    if (selected && state.project?.id === id && projectSelection === selection) {
+      player.load(selected, true);
+      for (const track of player.tracks) Object.assign(track, mix.get(track.name));
+      player.applyMix();
+    }
     toast(error.message);
   } finally {
     button.disabled = false;
@@ -1484,7 +1498,7 @@ function studioInitialize(){
       $('#settings-refine').disabled=busy;
       $('#settings-instruments').disabled=busy||!state.project.stems?.some(s=>s.name==='drums');
       $('#settings-guitars').disabled=busy||!state.project.stems?.some(s=>s.name==='guitar');
-      $('#refine-quality-option').value=state.project.options?.quality||'balanced';
+      $('#refine-quality-option').value='quality';
       $('#chord-mode-option').value=state.project.options?.chord_stability||'stable';
       $('#settings-chords').textContent=busy?'Parar separação e recalcular a cifra':'Recalcular somente a cifra';
       $('#separation-dialog').showModal();
