@@ -25,7 +25,8 @@
   const dictionary = new Map([['/api/chord-dictionary', './chord-dictionary.json'],
                               ['/api/instruments', './instruments.json']]);
   const connected = () => tokenPattern.test(session?.api) && tokenPattern.test(session?.media)
-    && Number(session.api.split('.')[0]) > Date.now() / 1000;
+    && Number(session.api.split('.')[0]) > Date.now() / 1000
+    && Number(session.media.split('.')[0]) > Date.now() / 1000;
   const hasIdentity = () => wakeServer && typeof identity?.credential === 'string'
     && identity.expires > Date.now() / 1000;
   let checkedLibrary = false;
@@ -230,6 +231,23 @@
   }
 
   window.faixaLabPages = {
+    async prepareMedia() {
+      if (connected()) return;
+      const renewed = await renewGatewaySession();
+      if (renewed === 'connected') {
+        unavailable = false;
+        document.getElementById('pages-retry').hidden = true;
+        status('');
+        return;
+      }
+      if (renewed === 'expired') {
+        await sessionExpired();
+        throw new Error('Entre com Google para reproduzir as faixas.');
+      }
+      markUnavailable();
+      showRetry();
+      throw new Error(unavailableMessage);
+    },
     async request(path, { onWaiting, ...options }) {
       if (dictionary.has(path)) return fetch(dictionary.get(path), options);
       const library = path === '/api/projects';
