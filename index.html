@@ -4,13 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>FaixaLab — da música ao seu instrumento</title>
-    <link rel="stylesheet" href="./style.css?v=117d767b1977" />
+    <link rel="stylesheet" href="./style.css?v=524bf59e38e8" />
     <link rel="stylesheet" href="./studio.css" />
     <script src="./guitar.js" defer></script>
     <meta name="referrer" content="no-referrer" />
     <script src="./pages-config.js?v=524b21c82d66" defer></script>
     <script src="./pages-connection.js?v=794a28753418" defer></script>
-    <script src="./app.js?v=f11548a28125" defer></script>
+    <script src="./app.js?v=6f8da29b6cd2" defer></script>
     <link rel="stylesheet" href="./mobile.css" />
     <link rel="manifest" href="./manifest.webmanifest?v=2cb18ba0abb6" />
     <meta name="theme-color" content="#101213" />
@@ -340,7 +340,7 @@
         <button id="settings-instruments" class="button primary wide">Refinar instrumentos por IA</button>
         <small>Processamento local. Primeiro uso: modelo de 1,37 GB. O modo detalhado pode levar vários minutos em CPU.</small>
       </section>
-      <label class="settings-field">Separação<select id="refine-quality-option"><option value="balanced">Equilibrado · um modelo</option><option value="quality">Estúdio · vários modelos, mais lento</option><option value="fast">Mais rápido · menor sobreposição</option></select></label>
+      <label class="settings-field">Separação<select id="refine-quality-option"><option value="quality" selected>Estúdio · vários modelos, mais lento</option><option value="balanced">Equilibrado · um modelo</option><option value="fast">Mais rápido · menor sobreposição</option></select></label>
       <button id="settings-refine" class="button secondary wide">Separar tudo novamente</button>
       <button id="settings-guitars" class="button secondary wide">Separar guitarra solo e guitarra base</button>
       <label class="settings-field">Cifra<select id="chord-mode-option"><option value="stable">Estável · acordes sustentados</option><option value="detailed">Detalhada · extensões e inversões</option></select></label>
@@ -426,8 +426,8 @@
             </select></label
           ><label
             >Processamento<select id="quality-option">
-              <option value="quality">Estúdio · vários modelos, mais lento</option>
-              <option value="balanced" selected>Equilibrado</option>
+              <option value="quality" selected>Estúdio · vários modelos, mais lento</option>
+              <option value="balanced">Equilibrado</option>
               <option value="fast">Mais rápido</option>
             </select></label
           ><label
