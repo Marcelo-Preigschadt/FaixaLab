@@ -11,6 +11,10 @@ from demucs.apply import apply_model, BagOfModels
 from .compute import configure_torch
 
 
+# The vocal member of upstream demucs/remote/htdemucs_ft.yaml.
+VOCAL_FT_MODEL = '04573f0d'
+
+
 class ProgressPool:
     """Demucs' serial, lazy executor, with progress after each actual window.
 
@@ -37,32 +41,37 @@ class ProgressPool:
         return Result()
 
 
-def infer(audio, name, device, shifts, overlap, report=None):
+def infer(audio, name, device, shifts, overlap, report=None, targets=None,
+          label='Separando instrumentos'):
     model = get_model(name).eval()
+    source_names = list(targets or model.sources)
+    indices = [model.sources.index(source) for source in source_names]
     reference = audio.mean(0)
     mean, scale = reference.mean(), reference.std().clamp_min(1e-8)
     normalized = ((audio - mean) / scale)[None]
     with torch.inference_mode():
         members = list(zip(model.models, model.weights)) if isinstance(model, BagOfModels) else [(model, [1] * len(model.sources))]
-        prediction = torch.zeros(len(model.sources), *audio.shape)
-        weights = torch.zeros(len(model.sources))
+        members = [(member, [gains[index] for index in indices]) for member, gains in members]
+        members = [(member, gains) for member, gains in members if any(gains)]
+        prediction = torch.zeros(len(source_names), *audio.shape)
+        weights = torch.zeros(len(source_names))
         for index, (member, gains) in enumerate(members):
             def chunk_progress(fraction, text):
                 if report:
-                    title = f'Refinando instrumentos — etapa {index + 1}/{len(members)}' if len(members) > 1 else 'Separando instrumentos'
+                    title = f'{label} — etapa {index + 1}/{len(members)}' if len(members) > 1 else label
                     report((index + fraction) / len(members),
                            f'{title} · {text}')
             pool = ProgressPool(chunk_progress)
             out = apply_model(member, normalized, device=device, shifts=shifts,
                               split=True, overlap=overlap, segment=7,
-                              progress=False, num_workers=0, pool=pool)[0].cpu()
+                              progress=False, num_workers=0, pool=pool)[0, indices].cpu()
             gains = torch.tensor(gains)
             prediction += out * gains[:, None, None]
             weights += gains
             member.to('cpu')
         prediction /= weights[:, None, None]
         prediction = prediction * scale + mean
-    sources = {source: prediction[i] for i, source in enumerate(model.sources)}
+    sources = {source: prediction[i] for i, source in enumerate(source_names)}
     del model
     gc.collect()
     if device == 'cuda':
@@ -74,17 +83,33 @@ def separate(audio, stems=6, quality='quality', device='cpu', report=None):
     random.seed(2026)
     torch.manual_seed(2026)
     shifts = 0 if quality == 'fast' else 1
-    overlap = .25 if quality == 'fast' else .5
-    if quality == 'quality':
+    overlap = .25 if quality == 'fast' or (quality == 'quality' and device == 'cpu') else .5
+    profile = 'single_model'
+    if quality == 'quality' and device == 'cpu':
+        name = 'htdemucs_6s' if stems == 6 else 'htdemucs'
+        targets = ['drums', 'bass', 'guitar', 'piano'] if stems == 6 else ['drums', 'bass']
+        primary = infer(audio, name, device, shifts, overlap,
+                        lambda fraction, text: report(.5 * fraction, text) if report else None,
+                        targets=targets, label='Separando instrumentos — etapa 1/2')
+        vocals = infer(audio, VOCAL_FT_MODEL, device, shifts, overlap,
+                       lambda fraction, text: report(.5 + .5 * fraction, text) if report else None,
+                       targets=['vocals'], label='Refinando voz — etapa 2/2')
+        primary['vocals'] = vocals['vocals']
+        model_name = name + ' + htdemucs_ft/vocals'
+        profile = 'studio_vocal_cpu'
+    elif quality == 'quality':
         primary = infer(audio, 'htdemucs_ft', device, shifts, overlap,
-                        lambda fraction, text: report(fraction * (.8 if stems == 6 else 1), text) if report else None)
+                        lambda fraction, text: report(fraction * (.75 if stems == 6 else 1), text) if report else None,
+                        targets=['vocals', 'drums', 'bass'])
         if stems == 6:
             if report:
-                report(.8, 'Separando guitarra e piano da gravação original')
+                report(.75, 'Separando guitarra e piano da gravação original')
             extra = infer(audio, 'htdemucs_6s', device, shifts, overlap,
-                          lambda fraction, text: report(.8 + .2 * fraction, text) if report else None)
+                          lambda fraction, text: report(.75 + .25 * fraction, text) if report else None,
+                          targets=['guitar', 'piano'])
             primary['guitar'], primary['piano'] = extra['guitar'], extra['piano']
         model_name = 'htdemucs_ft + htdemucs_6s' if stems == 6 else 'htdemucs_ft'
+        profile = 'studio_ensemble_gpu'
     else:
         name = 'htdemucs_6s' if stems == 6 else 'htdemucs'
         primary = infer(audio, name, device, shifts, overlap, report)
@@ -93,7 +118,8 @@ def separate(audio, stems=6, quality='quality', device='cpu', report=None):
     # residual in Other, rather than injecting it into isolated target sources.
     primary['other'] = audio - sum(value for key, value in primary.items() if key != 'other')
     return primary, {'model': model_name, 'quality': quality, 'overlap': overlap,
-                     'shifts': shifts, 'mixture_consistent': True, 'input': 'original_mix'}
+                     'shifts': shifts, 'mixture_consistent': True, 'input': 'original_mix',
+                     'profile': profile}
 
 
 def main():

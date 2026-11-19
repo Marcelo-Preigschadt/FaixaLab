@@ -129,7 +129,7 @@ def refine_instruments(p, folder, options, cancel, progress, base=16):
 def separate(audio, folder, options, cancel, progress):
     import torch
     quality = options.get('quality', 'quality')
-    model = ('studio_v3_' if quality == 'quality' else quality + '_v2_') + str(options['stems'])
+    model = ('studio_v4_' if quality == 'quality' else quality + '_v2_') + str(options['stems'])
     device = 'cuda' if options.get('device', 'auto') != 'cpu' and torch.cuda.is_available() else 'cpu'
     output = folder / 'separated'
     destination = output / model / (audio.stem + '_' + uuid.uuid4().hex[:12])
