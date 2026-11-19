@@ -25,7 +25,7 @@ def _encode(inputs, filters, destination, duration=None):
         for source in inputs:args.extend(['-i',str(source)])
         if filters:args.extend(['-filter_complex',filters,'-map','[mix]'])
         else:args.extend(['-map','0:a:0'])
-        args.extend(['-vn','-c:a','aac','-b:a','160k','-threads','1','-movflags','+faststart'])
+        args.extend(['-vn','-c:a','aac','-b:a','320k','-threads','1','-movflags','+faststart'])
         if duration is not None:args.extend(['-t',str(duration)])
         args.append(str(temporary))
         try:
@@ -38,7 +38,7 @@ def _encode(inputs, filters, destination, duration=None):
 
 def stream(source, root):
     source=Path(source);stat=source.stat()
-    key=hashlib.sha256(json.dumps([str(source.resolve()),stat.st_size,stat.st_mtime_ns,'aac-160k-v1']).encode()).hexdigest()[:24]
+    key=hashlib.sha256(json.dumps([str(source.resolve()),stat.st_size,stat.st_mtime_ns,'aac-320k-v2']).encode()).hexdigest()[:24]
     return _encode([source],None,Path(root)/'mobile'/('stem_'+key+'.m4a'))
 
 
@@ -56,15 +56,16 @@ def prepare(project, gains=None, preset='no_vocals_lead'):
     if not active:raise ValueError('Ative ao menos uma faixa para a backing track.')
     sources=[];signature=[]
     for name in active:
-        source=(root/available[name]['file']).resolve()
+        stem=available[name]
+        source=(root/stem.get('playback_file',stem['file'])).resolve()
         if not source.is_relative_to(root) or not source.is_file():raise ValueError('O áudio de uma faixa não está disponível.')
         stat=source.stat();sources.append(source)
         signature.append([name,normalized[name],stat.st_size,stat.st_mtime_ns])
-    key=hashlib.sha256(json.dumps([project.get('audio_revision'),signature,'backing-aac-v1']).encode()).hexdigest()[:24]
+    key=hashlib.sha256(json.dumps([project.get('audio_revision'),signature,'backing-aac-320k-v2']).encode()).hexdigest()[:24]
     destination=root/'mobile'/('backing_'+key+'.m4a')
     filters=';'.join('[%d:a]volume=%.4f[a%d]'%(i,normalized[name],i) for i,name in enumerate(active))
     filters+=';'+''.join('[a%d]'%i for i in range(len(active)))
     filters+='amix=inputs=%d:duration=longest:dropout_transition=0:normalize=0,alimiter=limit=0.98:level=0:latency=1[mix]'%len(active)
     _encode(sources,filters,destination,project.get('duration'))
     return {'key':key,'gains':normalized,'preset':preset,'file':destination.relative_to(root).as_posix(),
-            'url':'/api/projects/%s/backing/%s'%(project['id'],key),'format':'m4a','bitrate':160000}
+            'url':'/api/projects/%s/backing/%s'%(project['id'],key),'format':'m4a','bitrate':320000}

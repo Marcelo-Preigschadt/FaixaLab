@@ -80,9 +80,8 @@ def separate(audio, stems=6, quality='quality', device='cpu', report=None):
                         lambda fraction, text: report(fraction * (.8 if stems == 6 else 1), text) if report else None)
         if stems == 6:
             if report:
-                report(.8, 'Isolando guitarra e piano do acompanhamento limpo')
-            harmonic = audio - primary['vocals'] - primary['drums'] - primary['bass']
-            extra = infer(harmonic, 'htdemucs_6s', device, shifts, overlap,
+                report(.8, 'Separando guitarra e piano da gravação original')
+            extra = infer(audio, 'htdemucs_6s', device, shifts, overlap,
                           lambda fraction, text: report(.8 + .2 * fraction, text) if report else None)
             primary['guitar'], primary['piano'] = extra['guitar'], extra['piano']
         model_name = 'htdemucs_ft + htdemucs_6s' if stems == 6 else 'htdemucs_ft'
@@ -94,7 +93,7 @@ def separate(audio, stems=6, quality='quality', device='cpu', report=None):
     # residual in Other, rather than injecting it into isolated target sources.
     primary['other'] = audio - sum(value for key, value in primary.items() if key != 'other')
     return primary, {'model': model_name, 'quality': quality, 'overlap': overlap,
-                     'shifts': shifts, 'mixture_consistent': True}
+                     'shifts': shifts, 'mixture_consistent': True, 'input': 'original_mix'}
 
 
 def main():

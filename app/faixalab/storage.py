@@ -50,7 +50,7 @@ def update_project(identifier, **changes):
             new_revision = changes.get('audio_revision', data.get('audio_revision')) or 'original'
             if previous and (before != after or old_revision != new_revision):
                 history = dict(data.get('audio_history') or {})
-                history[old_revision] = {stem['name']: stem['file'] for stem in previous}
+                history[old_revision] = {stem['name']: stem.get('playback_file', stem['file']) for stem in previous}
                 data['audio_history'] = history
         data.update(changes, updated_at=now())
         tmp = p.with_suffix('.tmp')
@@ -70,7 +70,7 @@ def new_project(title, source, options):
 
 
 def _import_key(source_key,options):
-    parts = ['imports-v1',source_key,options]
+    parts = ['imports-studio-1',source_key,options]
     if (account := REQUEST_ACCOUNT.get()):
         parts.append(account)
     return hashlib.sha256(json.dumps(parts,sort_keys=True).encode()).hexdigest()

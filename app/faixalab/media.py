@@ -180,7 +180,7 @@ def download_youtube(url, folder, cancel, progress, *, max_bytes=1024 ** 3, max_
 def decode_audio(source, target, cancel):
     run_process([ffmpeg_executable(), '-v', 'error', '-nostdin', '-y',
                  '-protocol_whitelist', 'file,pipe', '-i', str(source), '-vn',
-                 '-ar', '44100', '-ac', '2', '-c:a', 'pcm_s16le', str(target)], cancel)
+                 '-ar', '44100', '-ac', '2', '-c:a', 'pcm_s24le', str(target)], cancel)
     import soundfile as sf
     info = sf.info(target)
     if info.duration < .2:

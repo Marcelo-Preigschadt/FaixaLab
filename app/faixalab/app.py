@@ -118,7 +118,7 @@ def project(identifier):
 
 class Options(BaseModel):
     stems: int = 6
-    quality: str = 'balanced'
+    quality: str = 'quality'
     language: str = ''
     lyrics: bool = True
     lyrics_model: str = 'small'
@@ -481,9 +481,9 @@ def audio(identifier: str, name: str, download: bool = False, format: str = 'wav
     if v is not None and v != revision:
         entry = (p.get('audio_history') or {}).get(v, {}).get(name)
     else:
-        entry = next((s['file'] for s in p.get('stems', []) if s['name'] == name), None)
+        entry = next((s.get('playback_file', s['file']) for s in p.get('stems', []) if s['name'] == name), None)
     if name == 'original':
-        entry = 'original.wav'
+        entry = (p.get('audio_standard') or {}).get('reference_file', 'original.wav')
     if entry is None:
         raise HTTPException(404)
     root = storage.project_dir(identifier)
@@ -638,7 +638,7 @@ def export(identifier: str, kind: str, transpose: int = 0):
     handle.close()
     with zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED, compresslevel=1) as archive:
         for s in p.get('stems', []):
-            path = (root / s['file']).resolve()
+            path = (root / s.get('playback_file', s['file'])).resolve()
             if path.is_relative_to(root) and path.is_file():
                 archive.write(path, s['name'] + '.wav')
         archive.writestr('letra.lrc', lyric_text(p, True))

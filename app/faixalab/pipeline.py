@@ -128,8 +128,8 @@ def refine_instruments(p, folder, options, cancel, progress, base=16):
 
 def separate(audio, folder, options, cancel, progress):
     import torch
-    quality = options.get('quality', 'balanced')
-    model = ('studio_v2_' if quality == 'quality' else quality + '_v2_') + str(options['stems'])
+    quality = options.get('quality', 'quality')
+    model = ('studio_v3_' if quality == 'quality' else quality + '_v2_') + str(options['stems'])
     device = 'cuda' if options.get('device', 'auto') != 'cpu' and torch.cuda.is_available() else 'cpu'
     output = folder / 'separated'
     destination = output / model / (audio.stem + '_' + uuid.uuid4().hex[:12])
@@ -377,6 +377,14 @@ def process_project(identifier, cancel_event, retry=None):
                 raise
             except Exception as exc:
                 warnings.append({'stage': 'lyrics', 'message': 'As faixas estão prontas, mas a letra não foi transcrita: ' + str(exc)[-700:]})
+        if not retry or retry in {'separation', 'guitars', 'instruments'}:
+            from .audio_standard import standardize
+            progress('Preparando áudio de estúdio · 44,1 kHz e 24 bits', 99)
+            current = storage.read_project(identifier)
+            normalized, standard = timed('audio_standard', standardize, audio, folder,
+                                         current['stems'], cancel_event)
+            storage.update_project(identifier, stems=normalized, audio_standard=standard,
+                                   audio_revision=uuid.uuid4().hex)
         progress('Finalizando o projeto', 99)
         storage.update_project(identifier, status='partial' if warnings else 'ready', stage='Pronto para tocar',
                                progress=100, warnings=warnings, error=None, worker_runtime=None,

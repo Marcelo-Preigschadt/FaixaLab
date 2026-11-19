@@ -146,7 +146,10 @@ class StemPlayer {
     this.onState?.();updateMediaSession();
   }
   format() {
-    return ['localhost','127.0.0.1','::1','[::1]'].includes(location.hostname)?'wav':'m4a';
+    const platform=navigator.userAgentData?.platform||navigator.platform||'';
+    const desktop=/Windows|Win32|Win64|MacIntel|Linux x86_64/i.test(platform+' '+navigator.userAgent)
+      && !/Android|iPhone|iPad|iPod|CrOS/i.test(navigator.userAgent);
+    return desktop||['localhost','127.0.0.1','::1','[::1]'].includes(location.hostname)?'wav':'m4a';
   }
   makeAudio(url) {
     const audio=new Audio(),epoch=this.loadId;
@@ -1484,7 +1487,7 @@ function studioInitialize(){
       $('#settings-refine').disabled=busy;
       $('#settings-instruments').disabled=busy||!state.project.stems?.some(s=>s.name==='drums');
       $('#settings-guitars').disabled=busy||!state.project.stems?.some(s=>s.name==='guitar');
-      $('#refine-quality-option').value=state.project.options?.quality||'balanced';
+      $('#refine-quality-option').value='quality';
       $('#chord-mode-option').value=state.project.options?.chord_stability||'stable';
       $('#settings-chords').textContent=busy?'Parar separação e recalcular a cifra':'Recalcular somente a cifra';
       $('#separation-dialog').showModal();
