@@ -137,6 +137,7 @@ class StemPlayer {
     this.operation=0;this.loadId=0;this.pendingProject=null;this.reference=null;
     this.syncTimer=null;this.waitTimer=null;this.message='';this.recoveries=0;
     this.lastSeek=new WeakMap();this.lastClock=0;this.lastAdvance=0;
+    this.audioPaths=new WeakMap();
   }
   emit() {
     const button=$('#play');
@@ -151,6 +152,7 @@ class StemPlayer {
     const audio=new Audio(),epoch=this.loadId;
     if(window.faixaLabPages)audio.crossOrigin='anonymous';
     audio.preload='none';audio.src=mediaUrl(url);audio.preservesPitch=true;audio.playbackRate=this.speed;
+    this.audioPaths.set(audio,url);
     audio.addEventListener('loadedmetadata',()=>{if(epoch===this.loadId)this.place(audio,this.position);});
     const ready=()=>{if(epoch===this.loadId&&this.wantsPlay&&this.buffering&&!this.starting&&this.canResume())this.play(true);};
     audio.addEventListener('canplay',ready);audio.addEventListener('seeked',ready);
@@ -166,6 +168,16 @@ class StemPlayer {
       if(audio.currentTime>=this.duration-.3){this.pause();this.seek(0);}else this.recover(audio,false);
     });
     return audio;
+  }
+  refreshAudioSources() {
+    for(const audio of [...this.tracks.map(track=>track.audio),this.original,this.backingAudio]){
+      if(!audio)continue;
+      const path=this.audioPaths.get(audio);
+      const source=mediaUrl(path);
+      if(source==='#')throw new Error('Entre com Google para reproduzir as faixas.');
+      const resolved=new URL(source,location.href||'http://localhost').href;
+      if(audio.src!==resolved||audio.error)audio.src=resolved;
+    }
   }
   load(project,acceptUpdate=false) {
     const key=audioKey(project);
@@ -247,6 +259,11 @@ class StemPlayer {
     clearInterval(this.syncTimer);this.syncTimer=setInterval(()=>this.synchronize(),350);
     let deadline;
     try{
+      if(window.faixaLabPages?.prepareMedia){
+        await window.faixaLabPages.prepareMedia();
+        if(token!==this.operation||!this.wantsPlay)return;
+        this.refreshAudioSources();
+      }
       // Pausing an active preload=none stream can suspend its download. Keep
       // active streams fetching so a short underrun can refill without reload.
       for(const a of active)a.preload='auto';
@@ -325,7 +342,12 @@ class StemPlayer {
       if(audio){
         if(formatError&&!audio.formatFallback){
           const url=new URL(audio.src,location.href||'http://localhost');
-          if(url.searchParams.has('format')){url.searchParams.set('format',url.searchParams.get('format')==='m4a'?'wav':'m4a');audio.formatFallback=true;audio.src=url.href;}
+          if(url.searchParams.has('format')){
+            url.searchParams.set('format',url.searchParams.get('format')==='m4a'?'wav':'m4a');
+            audio.formatFallback=true;
+            this.audioPaths.set(audio,url.pathname+'?'+new URLSearchParams([...url.searchParams].filter(([key])=>key!=='access')));
+            audio.src=url.href;
+          }
         }
         if(formatError||audio.error||audio.readyState===0)audio.load();
       }
