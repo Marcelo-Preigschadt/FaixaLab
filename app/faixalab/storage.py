@@ -151,6 +151,8 @@ def list_projects(*, owned=False):
                     continue
                 summary = {k: p.get(k) for k in ['id', 'title', 'status', 'stage', 'progress', 'duration', 'key', 'bpm', 'created_at', 'updated_at']}
                 summary['can_delete_import'] = is_incomplete_youtube_import(p)
+                summary['can_delete_project'] = (p.get('status') not in {'queued', 'processing'}
+                    and (p.get('tablature') or {}).get('status') not in {'queued', 'processing'})
                 projects.append(summary)
             except (OSError, ValueError):
                 continue

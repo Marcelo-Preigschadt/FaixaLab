@@ -192,7 +192,8 @@ small {
   border: 0;
   border-radius: 6px;
   color: #f1a6a2;
-  font-size: 11px;
+  font-size: 22px;
+  min-width: 44px;
   min-height: 44px;
   padding: 0 7px;
 }
